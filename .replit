@@ -37,3 +37,8 @@ externalPort = 80
 deploymentTarget = "static"
 build = ["bash", "-c", "cd config && npm run build"]
 publicDir = "config/build_output"
+
+[userenv]
+
+[userenv.shared]
+VITE_SUPABASE_URL = "https://mpjezwlweapgltrimtqy.supabase.co"

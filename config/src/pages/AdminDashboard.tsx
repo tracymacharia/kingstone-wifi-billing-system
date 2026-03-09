@@ -94,7 +94,7 @@ interface AdminData {
 
 const AdminDashboard = () => {
   console.log('AdminDashboard component mounted');
-  const { user, logout } = useAuth();
+  const { user, logout, changePassword } = useAuth();
   const navigate = useNavigate();
   const {
     settings: visibilitySettings,
@@ -266,9 +266,16 @@ const AdminDashboard = () => {
         })));
       }
 
+      // Load admin business name from admins table
+      const { data: adminRecord } = await supabase
+        .from('admins')
+        .select('business_name, email')
+        .eq('id', adminId)
+        .single();
+
       setAdminData({
-        email: user.email,
-        businessName: 'Admin Dashboard',
+        email: adminRecord?.email || user.email,
+        businessName: adminRecord?.business_name || user.username || 'Admin Dashboard',
         profilePicture: ''
       });
 
@@ -299,10 +306,11 @@ const AdminDashboard = () => {
   };
 
   const handleChangePassword = async (oldPassword: string, newPassword: string): Promise<boolean> => {
-    if (oldPassword === 'admin123') {
-      return true;
-    }
-    return false;
+    if (!user?.username) return false;
+    const success = await changePassword(user.username, newPassword);
+    if (success) toast.success('Password changed successfully');
+    else toast.error('Failed to change password');
+    return success;
   };
 
   const handleManageMikrotik = (mikrotikId: string) => {

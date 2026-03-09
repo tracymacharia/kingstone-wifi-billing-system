@@ -24,6 +24,8 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+import { getAdminIdFromUser } from "@/hooks/useAdminId";
 
 interface Payment {
   id: string;
@@ -44,6 +46,7 @@ interface Payment {
 }
 
 const PaymentHistory = () => {
+  const { user } = useAuth();
   const [payments, setPayments] = useState<Payment[]>([]);
   const [filteredPayments, setFilteredPayments] = useState<Payment[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -52,8 +55,8 @@ const PaymentHistory = () => {
   const [dateFilter, setDateFilter] = useState<string>("all");
 
   useEffect(() => {
-    fetchPayments();
-  }, []);
+    if (user) fetchPayments();
+  }, [user]);
 
   useEffect(() => {
     filterPayments();
@@ -62,6 +65,12 @@ const PaymentHistory = () => {
   const fetchPayments = async () => {
     setIsLoading(true);
     try {
+      const adminId = getAdminIdFromUser(user);
+      if (!adminId) {
+        setIsLoading(false);
+        return;
+      }
+
       const { data, error } = await supabase
         .from('payments')
         .select(`
@@ -71,6 +80,7 @@ const PaymentHistory = () => {
             router_id
           )
         `)
+        .eq('admin_id', adminId)
         .order('created_at', { ascending: false })
         .limit(100);
 

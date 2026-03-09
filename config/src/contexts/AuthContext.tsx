@@ -227,7 +227,7 @@ useEffect(() => {
           email: `${usernameOrEmail}@kingstone.local`,
           role: role as 'owner' | 'admin',
           credentialId: credential_id,
-          adminId: role === 'admin' ? credential_id : undefined
+          adminId: role === 'admin' ? admin_id : undefined
         };
 
         console.log('Admin login successful for:', usernameOrEmail);

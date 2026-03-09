@@ -47,7 +47,7 @@ export const useAdminId = () => {
   };
 
   // Synchronous admin ID for immediate use
-  const adminId = user?.role === 'admin' ? (user.credentialId || user.id) : null;
+  const adminId = user?.role === 'admin' ? (user.adminId || user.credentialId || user.id) : null;
 
   // Enhanced role checking
   const hasAdminAccess = user?.role === 'admin' || user?.role === 'owner';
@@ -71,7 +71,7 @@ export const getAdminIdFromUser = (user: any): string | null => {
   if (!user) return null;
   
   if (user.role === 'admin') {
-    return user.credentialId || user.id;
+    return user.adminId || user.credentialId || user.id;
   }
   
   return null;

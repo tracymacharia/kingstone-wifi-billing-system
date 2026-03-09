@@ -52,3 +52,24 @@ deployment/      # Deployment-related files
 - `/client-portal` - Client portal
 - `/wifi-login` - WiFi user login
 - `/payment` - Payment portal
+
+## Auth Architecture (Critical Notes)
+
+- **Custom session-token auth** — NOT standard Supabase Auth. Uses `system_credentials` + `user_sessions` tables.
+- **Owner login**: requires `@gmail.com` email; calls `verify_credentials_secure` RPC
+- **Admin login**: uses username (no `@`); calls `verify_admin_simple` RPC
+- **Session stored in**: `sessionStorage` as `kingstone_session_token` and `kingstone_user`
+- **`user.adminId`**: UUID from `admins` table (used for ALL DB queries)
+- **`user.credentialId`**: UUID from `system_credentials` table (different from adminId!)
+- **`getAdminIdFromUser(user)`**: helper in `useAdminId.ts` — always use this to get admin ID for queries
+- **Owner ID**: fetched via `get_owner_profile_by_session` RPC; cached in `localStorage` as `ownerId`
+- **Edge functions**: must use custom session token or anon key as Bearer (no standard Supabase auth session)
+- **Key RPCs**: `get_owner_admins`, `get_owner_profile_by_session`, `owner_account_exists`, `register_admin_simple`, `owner_reset_admin_password`, `owner_delete_admin`, `update_credential_password`
+
+## Fixed Bugs
+
+1. `AuthContext.tsx`: admin login stores actual `admin_id` from `admins` table in `user.adminId`
+2. `useAdminId.ts`: `getAdminIdFromUser` returns `user.adminId` first
+3. `AdminRegister.tsx`: edge function uses session token or anon key instead of null Supabase auth token
+4. `AdminDashboard.tsx`: business name fetched from `admins` table; `changePassword` imported and connected
+5. `PaymentHistory.tsx`: filters payments by `admin_id` (was showing all payments to all admins)

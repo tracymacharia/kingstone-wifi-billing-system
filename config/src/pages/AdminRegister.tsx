@@ -211,8 +211,7 @@ const AdminRegister = () => {
   };
 
   const getAccessToken = async () => {
-    const { data: { session } } = await supabase.auth.getSession();
-    return session?.access_token || '';
+    return sessionStorage.getItem('kingstone_session_token') || import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || '';
   };
 
   const handleNext = () => {

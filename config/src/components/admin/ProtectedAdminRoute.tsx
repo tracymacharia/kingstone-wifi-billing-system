@@ -20,20 +20,15 @@ const ProtectedAdminRoute = ({ children }: ProtectedAdminRouteProps) => {
   const [trialInfo, setTrialInfo] = useState<TrialInfo | null>(null);
 
   useEffect(() => {
-    console.log('ProtectedAdminRoute useEffect triggered');
-    console.log('User in ProtectedAdminRoute:', user);
-    console.log('Is loading in ProtectedAdminRoute:', isLoading);
 
     // If not authenticated or not admin, redirect to login
     if (!isLoading && (!user || user.role !== 'admin')) {
-      console.log('User not authenticated as admin, redirecting to /admin');
       navigate('/admin', { replace: true });
       return;
     }
 
     // If user is admin, immediately allow access
     if (user?.role === 'admin') {
-      console.log('Admin user detected, allowing access immediately');
       // Show trial popup for new trial users (check from sessionStorage)
       const hasSeenPopup = sessionStorage.getItem('trial_popup_dismissed');
       if (!hasSeenPopup) {
@@ -58,7 +53,6 @@ const ProtectedAdminRoute = ({ children }: ProtectedAdminRouteProps) => {
   }
 
   // Admin is active - allow access
-  console.log('Admin subscription is active, allowing access to current page');
 
   // Render the children with optional trial popup
   return (

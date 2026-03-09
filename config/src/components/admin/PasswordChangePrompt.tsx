@@ -91,7 +91,7 @@ const PasswordChangePrompt = ({ onPasswordChanged, isFirstLogin = false }: Passw
                   type={showPasswords ? "text" : "password"}
                   value={currentPassword}
                   onChange={(e) => setCurrentPassword(e.target.value)}
-                  placeholder={isFirstLogin ? "Kingstone123" : "Enter current password"}
+                  placeholder={isFirstLogin ? "Enter your temporary password" : "Enter current password"}
                   className="pr-10"
                 />
                 <Button
@@ -110,7 +110,7 @@ const PasswordChangePrompt = ({ onPasswordChanged, isFirstLogin = false }: Passw
               </div>
               {isFirstLogin && (
                 <p className="text-xs text-muted-foreground mt-1">
-                  Default password: <strong>Kingstone123</strong>
+                  Use the temporary password provided when your account was created.
                 </p>
               )}
             </div>

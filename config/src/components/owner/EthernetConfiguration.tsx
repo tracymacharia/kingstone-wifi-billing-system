@@ -119,7 +119,6 @@ export const EthernetConfiguration = ({
       const commands = generatePortCommands();
       
       // TODO: Implement actual API call to save configuration
-      console.log("Ethernet commands:", commands);
       
       toast.success("Ethernet configuration saved successfully!");
       

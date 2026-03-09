@@ -51,7 +51,6 @@ const WiFiUserLogin = () => {
     }
 
     try {
-      console.log('Authenticating WiFi user:', username);
       
       // Authenticate WiFi user by checking credentials in database
       // This does NOT use the admin session - it's a separate authentication
@@ -67,7 +66,6 @@ const WiFiUserLogin = () => {
         return;
       }
 
-      console.log('Authentication result:', data);
 
       if (!data || data.length === 0 || !data[0].success) {
         const errorMsg = data?.[0]?.message || 'Invalid username or password';

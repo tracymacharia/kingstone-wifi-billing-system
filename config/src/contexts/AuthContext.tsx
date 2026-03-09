@@ -75,13 +75,11 @@ useEffect(() => {
 
         if (error || !data || data.length === 0) {
           // Invalid session, clear everything
-          console.log('Invalid session on reload, clearing auth state');
           sessionStorage.removeItem("kingstone_session_token");
           sessionStorage.removeItem("kingstone_user");
           setUser(null);
         } else {
           // Valid session, restore user from storage
-          console.log('Valid session found, restoring user:', storedUser.username);
           setUser(storedUser);
         }
       }
@@ -138,43 +136,35 @@ useEffect(() => {
       // Clean up any leftover Supabase auth state and sign out globally to prevent limbo
       cleanupAuthState();
       try { await supabase.auth.signOut({ scope: 'global' } as any); } catch (e) { /* ignore */ }
-      console.log('Attempting login for user:', usernameOrEmail);
-      console.log('Is email format:', usernameOrEmail.includes('@'));
 
       // Check if it's an email (owner login) or username (admin login)
       const isEmailLogin = usernameOrEmail.includes('@');
 
       if (isEmailLogin) {
         // Owner login: use secure RPC to avoid RLS issues (no direct table reads)
-        console.log('Calling verify_credentials_secure with:', { input_username: usernameOrEmail, input_password: '***' });
         const { data: verifyResult, error: verifyError } = await supabase
           .rpc('verify_credentials_secure', {
             input_username: usernameOrEmail,
             input_password: password
           });
 
-        console.log('verify_credentials_secure response:', { verifyResult, verifyError });
         
         if (verifyError || !verifyResult || verifyResult.length === 0) {
-          console.log('Owner credentials verification failed:', verifyError);
           return false;
         }
 
         const { role, credential_id, owner_id } = verifyResult[0];
         if (role !== 'owner') {
-          console.log('Role mismatch for email login');
           return false;
         }
 
         // Create secure session for owner
-        console.log('Creating session for credential_id:', credential_id, 'role:', role, 'owner_id:', owner_id);
         const { data: sessionToken, error: sessionError } = await supabase
           .rpc('create_user_session', {
             p_user_id: owner_id,  // Pass owner_id, not credential_id!
             p_role: role
           });
 
-        console.log('Session creation result:', { sessionToken, sessionError });
 
         if (sessionError || !sessionToken) {
           console.error('Owner session creation error:', sessionError);
@@ -189,7 +179,6 @@ useEffect(() => {
           credentialId: credential_id
         };
 
-        console.log('Owner login successful for:', usernameOrEmail);
         setUser(userData);
         sessionStorage.setItem("kingstone_session_token", sessionToken);
         sessionStorage.setItem("kingstone_user", JSON.stringify(userData));
@@ -203,7 +192,6 @@ useEffect(() => {
           });
 
         if (credError || !credentialData || credentialData.length === 0) {
-          console.log('Admin credentials verification failed');
           return false;
         }
 
@@ -230,7 +218,6 @@ useEffect(() => {
           adminId: role === 'admin' ? admin_id : undefined
         };
 
-        console.log('Admin login successful for:', usernameOrEmail);
         setUser(userData);
         sessionStorage.setItem("kingstone_session_token", sessionToken);
         sessionStorage.setItem("kingstone_user", JSON.stringify(userData));
@@ -274,7 +261,6 @@ useEffect(() => {
 
   const logout = async () => {
     try {
-      console.log('Logging out...');
       // Clean up auth artifacts first
       cleanupAuthState();
       // Invalidate session token in DB
@@ -299,7 +285,6 @@ useEffect(() => {
     localStorage.removeItem("kingstone_user");
     // Final cleanup and hard redirect for clean state
     cleanupAuthState();
-    console.log('Logout completed');
     window.location.href = '/auth';
   };
 

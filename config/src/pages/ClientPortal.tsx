@@ -345,7 +345,6 @@ const ClientPortal = () => {
       // Always prioritize username-based access if available
       if (storedUsername) {
         // Load by username (new method - no token required)
-        console.log('Loading client data by username:', storedUsername);
         const result = await supabase
           .rpc('get_client_portal_data_by_username', { p_username: storedUsername });
         data = result.data;
@@ -356,13 +355,11 @@ const ClientPortal = () => {
         }
         
         if (data && data.length > 0) {
-          console.log('Client data loaded successfully:', data[0]);
         } else {
           console.warn('No client data found for username:', storedUsername);
         }
       } else if (token && token !== 'demo') {
         // Load by portal token (legacy method) - skip 'demo' token
-        console.log('Loading client data by token:', token);
         const result = await supabase
           .rpc('get_client_portal_data', { p_portal_token: token });
         data = result.data;
@@ -385,10 +382,6 @@ const ClientPortal = () => {
         return;
       }
 
-      console.log('Client data loaded:', data[0]);
-      console.log('Admin contact phone:', data[0].admin_contact_phone);
-      console.log('Admin contact email:', data[0].admin_contact_email);
-      console.log('Admin business name:', data[0].admin_business_name);
 
       setClientData(data[0] as ClientData);
     } catch (error) {
@@ -403,7 +396,6 @@ const ClientPortal = () => {
       
       // For now, skip usage data if loading by username (can be added later)
       if (storedUsername) {
-        console.log('Skipping usage data for username-based access');
         return;
       }
       
@@ -436,7 +428,6 @@ const ClientPortal = () => {
       
       // For now, skip invoices if loading by username (can be added later)
       if (storedUsername) {
-        console.log('Skipping invoices for username-based access');
         return;
       }
       
@@ -462,7 +453,6 @@ const ClientPortal = () => {
       
       // For now, skip tickets if loading by username (can be added later)
       if (storedUsername) {
-        console.log('Skipping tickets for username-based access');
         return;
       }
       
@@ -483,7 +473,6 @@ const ClientPortal = () => {
   const loadNotifications = async () => {
     try {
       // Skip notifications for now - function doesn't exist
-      console.log('Skipping notifications - function not available');
       return;
       
       // Original code commented out
@@ -507,7 +496,6 @@ const ClientPortal = () => {
       
       // For now, skip login history if loading by username (can be added later)
       if (storedUsername) {
-        console.log('Skipping login history for username-based access');
         return;
       }
       
@@ -683,12 +671,6 @@ const ClientPortal = () => {
     setIsProcessingPayment(true);
 
     try {
-      console.log('Initiating payment for:', {
-        userId: clientData.user_id,
-        amount: pendingInvoice.amount,
-        phone: formattedPhone
-      });
-
       // Check if we're in demo mode
       const isDemoMode = token === 'demo' || token === 'testtoken' || token?.startsWith('testtoken');
 
@@ -720,7 +702,6 @@ const ClientPortal = () => {
         }
         
         adminId = testAdminId;
-        console.log('Using test admin ID:', adminId);
       } else {
         // Get admin_id from clientData to ensure payment goes to the right admin
         // We need to fetch the admin_id from broadband_users table
@@ -740,12 +721,6 @@ const ClientPortal = () => {
         adminId = userData.admin_id;
       }
 
-      console.log('Calling edge function with:', {
-        admin_id: adminId,
-        phone: formattedPhone,
-        amount: Number(pendingInvoice.amount)
-      });
-
       // Call the edge function to initiate STK push
       const { data, error } = await supabase.functions.invoke('initiate-subscription-payment', {
         body: {
@@ -755,7 +730,6 @@ const ClientPortal = () => {
         }
       });
 
-      console.log('Edge function response:', { data, error });
 
       if (error) {
         console.error('Payment error:', error);

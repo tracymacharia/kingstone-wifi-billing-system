@@ -87,8 +87,6 @@ const WiFiUserManager = () => {
     try {
       const userId = getAdminIdFromUser(user);
 
-      console.log('WiFiUserManager loadUsers - Context user:', user);
-      console.log('WiFiUserManager loadUsers - Using admin ID:', userId);
 
       if (!userId) {
         console.error('No admin ID available for loading wifi users');
@@ -150,7 +148,6 @@ const WiFiUserManager = () => {
         return;
       }
 
-      console.log('Loading packages for admin:', userId);
 
       const { data, error } = await supabase
         .from('packages')
@@ -165,7 +162,6 @@ const WiFiUserManager = () => {
         return;
       }
 
-      console.log('Loaded packages:', data);
       setPackages(data || []);
     } catch (error) {
       console.error('Error loading packages - Exception:', error);
@@ -253,8 +249,6 @@ const WiFiUserManager = () => {
     try {
       const userId = getAdminIdFromUser(user);
 
-      console.log('WiFiUserManager handleSave - Context user:', user);
-      console.log('WiFiUserManager handleSave - Using admin ID:', userId);
 
       if (!userId) {
         console.error('WiFiUserManager handleSave - No admin ID available');
@@ -533,7 +527,6 @@ Pay via Till/Paybill: [Payment Details]`;
       // Here you would integrate with your SMS service
       // For now, we'll just show the message
       toast.success(`SMS sent to ${selectedUser.phone_number}`);
-      console.log('SMS to:', selectedUser.phone_number, 'Message:', smsMessage);
       
       setShowSmsDialog(false);
       setSmsMessage('');
@@ -555,7 +548,6 @@ Pay via Till/Paybill: [Payment Details]`;
     try {
       // Here you would send SMS to all users
       toast.success(`Bulk SMS sent to ${usersWithPhone.length} users`);
-      console.log('Bulk SMS sent to:', usersWithPhone.map(u => u.phone_number));
     } catch (error) {
       console.error('Error sending bulk SMS:', error);
       toast.error("Failed to send bulk SMS");

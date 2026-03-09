@@ -113,7 +113,6 @@ export const SystemDemo: React.FC = () => {
   };
 
   const handleFileUploadComplete = (uploadResults: any[]) => {
-    console.log('Upload results:', uploadResults);
     setResults(prev => ({ ...prev, fileUploads: uploadResults }));
   };
 

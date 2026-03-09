@@ -44,7 +44,6 @@ const SubscriptionStatus = ({ businessName }: SubscriptionStatusProps) => {
 
   const fetchPaymentSettings = async (ownerId: string) => {
     try {
-      console.log('📥 Fetching payment settings for owner:', ownerId);
       const { data, error } = await supabase
         .from('owner_payment_settings')
         .select('*')
@@ -57,8 +56,6 @@ const SubscriptionStatus = ({ businessName }: SubscriptionStatusProps) => {
         return [];
       }
 
-      console.log('✅ Fetched payment settings:', data);
-      console.log('📊 Number of settings:', data?.length || 0);
       return data || [];
     } catch (error) {
       console.error('❌ Error fetching payment settings:', error);
@@ -78,7 +75,6 @@ const SubscriptionStatus = ({ businessName }: SubscriptionStatusProps) => {
           return;
         }
 
-        console.log('Fetching admin data for username:', adminUsername);
 
         // Use RPC function to get admin data (bypasses RLS issues)
         const { data: adminData, error: adminError } = await supabase
@@ -99,14 +95,11 @@ const SubscriptionStatus = ({ businessName }: SubscriptionStatusProps) => {
         }
 
         const admin = adminData[0];
-        console.log('Admin data fetched:', admin);
-        console.log('🔑 Admin owner_id:', admin.owner_id);
 
         // If we have owner_id, try to fetch owner data separately
         let ownerData = null;
         let settings: PaymentSetting[] = [];
         if (admin.owner_id) {
-          console.log('🔍 Fetching payment settings for owner_id:', admin.owner_id);
           
           const { data: ownerResult, error: ownerError } = await supabase
             .from('owners')
@@ -122,9 +115,7 @@ const SubscriptionStatus = ({ businessName }: SubscriptionStatusProps) => {
 
           // Fetch payment settings from owner_payment_settings table
           settings = await fetchPaymentSettings(admin.owner_id);
-          console.log('📋 Initial payment settings loaded:', settings.length);
           
-          console.log('Setting up real-time subscription for owner:', admin.owner_id);
           
           // Set up real-time subscription for payment settings changes
           channel = supabase
@@ -138,15 +129,9 @@ const SubscriptionStatus = ({ businessName }: SubscriptionStatusProps) => {
                 filter: `owner_id=eq.${admin.owner_id}`
               },
               async (payload) => {
-                console.log('=== PAYMENT SETTINGS CHANGE DETECTED ===');
-                console.log('Event type:', payload.eventType);
-                console.log('Payload:', payload);
-                console.log('New record:', payload.new);
-                console.log('Old record:', payload.old);
                 
                 // Refresh payment settings immediately
                 const updatedSettings = await fetchPaymentSettings(admin.owner_id);
-                console.log('Updated settings:', updatedSettings);
                 setPaymentSettings(updatedSettings);
                 
                 if (payload.eventType === 'INSERT') {
@@ -159,9 +144,7 @@ const SubscriptionStatus = ({ businessName }: SubscriptionStatusProps) => {
               }
             )
             .subscribe((status) => {
-              console.log('Real-time subscription status:', status);
               if (status === 'SUBSCRIBED') {
-                console.log('✅ Successfully subscribed to payment settings changes');
               } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
                 console.error('❌ Real-time subscription error:', status);
               }
@@ -187,7 +170,6 @@ const SubscriptionStatus = ({ businessName }: SubscriptionStatusProps) => {
     return () => {
       if (channel) {
         supabase.removeChannel(channel);
-        console.log('Real-time subscription cleaned up');
       }
     };
   }, [user]);
@@ -285,12 +267,6 @@ const SubscriptionStatus = ({ businessName }: SubscriptionStatusProps) => {
       // Get the custom session token from sessionStorage
       const sessionToken = sessionStorage.getItem('kingstone_session_token');
 
-      console.log('STK Push debug:', {
-        adminId,
-        sessionToken: sessionToken ? sessionToken.substring(0, 20) + '...' : 'MISSING',
-        user
-      });
-
       if (!sessionToken) {
         toast.error('Session expired. Please log in again.');
         setInitiatingStk(false);
@@ -311,10 +287,8 @@ const SubscriptionStatus = ({ businessName }: SubscriptionStatusProps) => {
         })
       });
 
-      console.log('STK Push response status:', response.status);
       
       const result = await response.json();
-      console.log('STK Push response:', result);
 
       if (result.success) {
         toast.success(
@@ -411,10 +385,6 @@ const SubscriptionStatus = ({ businessName }: SubscriptionStatusProps) => {
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
             <h3 className="font-semibold text-blue-800 mb-2">Payment Instructions</h3>
             <div className="space-y-4">
-              {/* Debug logging */}
-              {console.log('🎨 Rendering Payment Instructions - paymentSettings:', paymentSettings)}
-              {console.log('🎨 paymentSettings.length:', paymentSettings.length)}
-              
               {/* Display payment settings from owner_payment_settings table */}
               {paymentSettings.length > 0 ? (
                 <div className="space-y-3">

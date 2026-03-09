@@ -57,7 +57,6 @@ export class MikrotikAPI {
         
         this.socket.onopen = () => {
           this.connected = true;
-          console.log('Connected to Mikrotik:', this.config.host);
           resolve(true);
         };
 
@@ -68,7 +67,6 @@ export class MikrotikAPI {
 
         this.socket.onclose = () => {
           this.connected = false;
-          console.log('Disconnected from Mikrotik');
         };
       } catch (error) {
         reject(error);

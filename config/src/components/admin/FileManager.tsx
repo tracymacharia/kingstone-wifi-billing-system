@@ -62,7 +62,6 @@ export const FileManager: React.FC = () => {
   }, [refreshKey]);
 
   const handleFileUploadComplete = (results: any[]) => {
-    console.log('Files uploaded:', results);
     setRefreshKey(prev => prev + 1); // Refresh file list
   };
 

@@ -241,7 +241,6 @@ const WiFiUserAccountsList = ({ users, onRefresh, onEdit, onDelete }: WiFiUserAc
 
     // Simulate SMS sending - replace with actual SMS integration
     toast.success(`Portal link sent to ${user.phone_number}`);
-    console.log(`SMS to ${user.phone_number}: Your WiFi portal: ${portalLink}`);
   };
 
   const getStatusBadge = (user: WiFiUser) => {

@@ -95,7 +95,6 @@ const RealTimeMonitor = () => {
           table: 'connected_users'
         },
         () => {
-          console.log('Connected users changed - debounced fetch scheduled');
           debouncedFetchRealTimeData();
         }
       )
@@ -111,7 +110,6 @@ const RealTimeMonitor = () => {
           table: 'mikrotiks'
         },
         () => {
-          console.log('Mikrotik status changed - debounced fetch scheduled');
           debouncedFetchRealTimeData();
         }
       )
@@ -119,7 +117,6 @@ const RealTimeMonitor = () => {
 
     // Auto-refresh every 60 seconds (increased from 30s to reduce load)
     const interval = setInterval(() => {
-      console.log('Auto-refreshing real-time data');
       fetchRealTimeData();
     }, 60000);
 

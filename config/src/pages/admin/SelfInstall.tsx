@@ -127,18 +127,14 @@ const AdminSelfInstall = () => {
         return;
       }
 
-      console.log('Generating script for user:', user.id, user.email);
 
       // Get the session token manually
       const sessionToken = sessionStorage.getItem('kingstone_session_token');
-      console.log('Session token from storage:', sessionToken ? sessionToken.substring(0, 20) + '...' : 'none');
 
       // Get current session from Supabase auth
       const { data: { session } } = await supabase.auth.getSession();
-      console.log('Session from auth.getSession():', session ? 'exists' : 'none');
       
       const tokenToUse = session?.access_token || sessionToken;
-      console.log('Using token:', tokenToUse ? tokenToUse.substring(0, 20) + '...' : 'NONE');
 
       if (!tokenToUse) {
         toast.error('No authentication token found. Please login again.');
@@ -170,7 +166,6 @@ const AdminSelfInstall = () => {
       );
 
       const result = await response.json();
-      console.log('Edge Function response:', result);
 
       if (!response.ok) {
         console.error('Edge Function error:', result);

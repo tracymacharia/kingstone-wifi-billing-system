@@ -73,3 +73,13 @@ deployment/      # Deployment-related files
 3. `AdminRegister.tsx`: edge function uses session token or anon key instead of null Supabase auth token
 4. `AdminDashboard.tsx`: business name fetched from `admins` table; `changePassword` imported and connected
 5. `PaymentHistory.tsx`: filters payments by `admin_id` (was showing all payments to all admins)
+6. `AdminCharts.tsx`: replaced mock data with real Supabase queries (revenue, clients, packages, mikrotik status)
+7. `OwnerCharts.tsx`: replaced mock data with real queries (admin growth, mikrotik growth, revenue, admin status)
+8. Removed 5 `_Zeroed` dead backup files from the codebase
+9. Removed 239 `console.log` debug calls that were leaking sensitive data to browser console
+10. Removed hardcoded demo credentials from Login.tsx
+11. Removed hardcoded password ("Kingstone123") from password reset dialog and PasswordChangePrompt UI
+12. `database/SECURITY_FIX.sql`: proper RLS policies written — apply in Supabase SQL Editor to lock down tables
+
+## Security (Pending Application)
+Run `database/SECURITY_FIX.sql` in Supabase Dashboard > SQL Editor to re-enable RLS and lock down all sensitive tables.

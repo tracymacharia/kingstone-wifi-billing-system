@@ -62,8 +62,6 @@ const EnhancedPackageManager = () => {
     try {
       const userId = getAdminIdFromUser(user);
       
-      console.log('loadPackages - Context user:', user);
-      console.log('loadPackages - Using admin ID:', userId);
 
       if (!userId) {
         console.error('No admin ID available for loading packages');
@@ -119,14 +117,10 @@ const EnhancedPackageManager = () => {
   };
 
   const handleSave = async () => {
-    console.log('=== PACKAGE SAVE START ===');
     setLoading(true);
     try {
       const userId = getAdminIdFromUser(user);
       
-      console.log('PackageManager HandleSave - Context user:', user);
-      console.log('PackageManager HandleSave - Using admin ID:', userId);
-      console.log('PackageManager HandleSave - Form data:', formData);
       
       if (!userId) {
         console.error('PackageManager HandleSave - No admin ID available');
@@ -172,14 +166,12 @@ const EnhancedPackageManager = () => {
         is_active: formData.is_active
       };
 
-      console.log('PackageManager HandleSave - Package data to save:', packageData);
 
       let error;
       let result;
 
       if (editingPackage) {
         // Update existing package
-        console.log('PackageManager HandleSave - Updating package:', editingPackage.id);
         result = await supabase
           .from('packages')
           .update(packageData)
@@ -187,15 +179,12 @@ const EnhancedPackageManager = () => {
         error = result.error;
       } else {
         // Create new package
-        console.log('PackageManager HandleSave - Creating new package');
         result = await supabase
           .from('packages')
           .insert([packageData]);
         error = result.error;
       }
 
-      console.log('PackageManager HandleSave - Supabase result:', result);
-      console.log('PackageManager HandleSave - Supabase error:', error);
 
       if (error) {
         console.error('Error saving package:', error);
@@ -203,7 +192,6 @@ const EnhancedPackageManager = () => {
         return;
       }
 
-      console.log('PackageManager HandleSave - Package saved successfully');
       toast.success(editingPackage ? "Package updated!" : "Package created!");
       setShowCreateDialog(false);
       resetForm();
@@ -213,7 +201,6 @@ const EnhancedPackageManager = () => {
       toast.error(`Failed to save package: ${error.message || 'Unknown error'}`);
     } finally {
       setLoading(false);
-      console.log('=== PACKAGE SAVE END ===');
     }
   };
 

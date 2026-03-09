@@ -84,9 +84,6 @@ const PaymentPortal = () => {
   });
 
   useEffect(() => {
-    console.log('PaymentPortal: Component mounted');
-    console.log('PaymentPortal: mikrotikId=', mikrotikId);
-    console.log('PaymentPortal: searchParams=', Object.fromEntries(searchParams.entries()));
     
     // Extract client information from URL parameters
     const clientData: ClientInfo = {
@@ -97,7 +94,6 @@ const PaymentPortal = () => {
       linkOrig: searchParams.get('link_orig') || ''
     };
 
-    console.log('PaymentPortal: clientData=', clientData);
     setClientInfo(clientData);
 
     // Set mikrotik info based on router ID
@@ -116,7 +112,6 @@ const PaymentPortal = () => {
   }, [mikrotikId, searchParams]);
 
   const loadHotspotPackages = async () => {
-    console.log('Loading hotspot packages for router:', clientInfo.routerId);
     
     try {
       // Get mikrotik info first to find the admin
@@ -127,7 +122,6 @@ const PaymentPortal = () => {
         .single();
 
       if (mikrotikError || !mikrotik) {
-        console.log('Mikrotik not found, using fallback packages');
         // Fallback to mock data if mikrotik not found - HOTSPOT PACKAGES ONLY
         const fallbackPackages = [
           {
@@ -196,13 +190,11 @@ const PaymentPortal = () => {
                       pkg.duration_type === 'days' ? 'daily' : 'monthly') as 'hourly' | 'daily' | 'monthly'
         }));
         setPackages(formattedPackages);
-        console.log('Loaded hotspot packages:', formattedPackages);
 
         // Set default selection to first package
         setSelectedPackage(formattedPackages[0].id);
       } else {
         // No packages found, use fallback
-        console.log('No hotspot packages found, using fallback');
         const fallbackPackages = [
           {
             id: 'pkg001',
@@ -250,7 +242,6 @@ const PaymentPortal = () => {
         const expiry = new Date(session.expiresAt);
 
         if (expiry > now) {
-          console.log('Active session found, auto-reconnecting...');
           setHasActiveSession(true);
           
           // Try to re-authenticate with Mikrotik

@@ -228,17 +228,6 @@ const OwnerRegister = () => {
       // Trim and normalize email to lowercase
       const normalizedEmail = contactData.email.trim().toLowerCase();
 
-      console.log('Starting registration with data:', {
-        fullName: contactData.fullName,
-        fullNameTrimmed: contactData.fullName.trim(),
-        email: contactData.email,
-        normalizedEmail: normalizedEmail,
-        phoneNumber: contactData.phoneNumber,
-        phoneNumberTrimmed: contactData.phoneNumber.trim(),
-        passwordLength: securityData.password.length,
-        otp: otpForm.getValues().otp,
-      });
-
       // Call the register_owner function with OTP
       const { data: result, error } = await supabase.rpc('register_owner', {
         p_full_name: contactData.fullName.trim(),
@@ -248,7 +237,6 @@ const OwnerRegister = () => {
         p_otp: otpForm.getValues().otp,
       });
 
-      console.log('Supabase RPC response:', { result, error });
 
       if (error) {
         console.error('Registration error:', error);
@@ -264,7 +252,6 @@ const OwnerRegister = () => {
       }
 
       const registrationResult = result as any;
-      console.log('Registration successful:', registrationResult);
 
       setIsSuccess(true);
       toast.success("Account created successfully! Redirecting to login...");

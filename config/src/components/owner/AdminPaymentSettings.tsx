@@ -57,7 +57,6 @@ export const AdminPaymentSettings = () => {
         return;
       }
 
-      console.log('Loading payment settings for owner:', ownerId);
       
       const { data, error } = await supabase
         .from('owner_payment_settings')
@@ -70,7 +69,6 @@ export const AdminPaymentSettings = () => {
         // Handle auth/RLS errors (401, 406, 403), missing table (404), or missing column (42703)
         if (error.status === 401 || error.status === 406 || error.status === 403 ||
             error.code === '42P01' || error.code === '42703') {
-          console.log('Access denied or table issue, using empty settings');
           setSettings([]);
           return;
         }
@@ -78,7 +76,6 @@ export const AdminPaymentSettings = () => {
         return;
       }
 
-      console.log('Loaded payment settings:', data);
       setSettings((data || []).map(setting => ({
         ...setting,
         method: setting.method as 'paybill' | 'till'
@@ -132,10 +129,6 @@ export const AdminPaymentSettings = () => {
         return;
       }
 
-      console.log('=== SAVING PAYMENT SETTING ===');
-      console.log('Owner ID (from localStorage):', ownerId);
-      console.log('Editing ID:', editingId);
-      console.log('Form data:', formData);
 
       const saveData = {
         method: formData.method,
@@ -156,13 +149,11 @@ export const AdminPaymentSettings = () => {
         )
       };
 
-      console.log('Save data:', saveData);
 
       let result;
 
       if (editingId) {
         // Update existing setting
-        console.log('Updating existing setting:', editingId);
         result = await supabase
           .from('owner_payment_settings')
           .update(saveData)
@@ -170,14 +161,12 @@ export const AdminPaymentSettings = () => {
           .select(); // Get the updated record back
       } else {
         // Insert new setting
-        console.log('Inserting new setting');
         result = await supabase
           .from('owner_payment_settings')
           .insert([saveData])
           .select(); // Get the inserted record back
       }
 
-      console.log('Database result:', result);
 
       if (result.error) {
         console.error('Error saving payment setting:', result.error);
@@ -207,7 +196,6 @@ export const AdminPaymentSettings = () => {
         return;
       }
 
-      console.log('✅ Payment setting saved successfully!');
       toast.success(editingId ? 'Payment setting updated!' : 'Payment setting created!');
       resetForm();
       // Reload to get the saved data with proper ID

@@ -164,13 +164,10 @@ export const DeviceSettings = ({ mikrotik }: DeviceSettingsProps) => {
 
         // Store real interface data for wireless and ethernet configs
         if (deviceInfo.wireless) {
-          console.log("Real wireless data:", deviceInfo.wireless);
         }
         if (deviceInfo.interfaces) {
-          console.log("Real interface data:", deviceInfo.interfaces);
         }
         if (deviceInfo.poe) {
-          console.log("Real PoE data:", deviceInfo.poe);
         }
       }
     } catch (error) {
@@ -324,7 +321,6 @@ Standard: ${detectedModel.poe.standard}` : 'PoE: Not supported'}
                 model={detectedModel}
                 onSave={(config) => {
                   toast.success("Wireless configuration saved");
-                  console.log("Wireless config saved:", config);
                   // Refresh data after save
                   setTimeout(detectDevice, 1000);
                 }}
@@ -339,7 +335,6 @@ Standard: ${detectedModel.poe.standard}` : 'PoE: Not supported'}
                 model={detectedModel}
                 onSave={(config) => {
                   toast.success("Ethernet configuration saved");
-                  console.log("Ethernet config saved:", config);
                 }}
               />
             </TabsContent>

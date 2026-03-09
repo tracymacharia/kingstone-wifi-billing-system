@@ -15,6 +15,7 @@ export interface DashboardVisibilitySettings {
   packageStatsGraph: boolean;
   mikrotikStatusGraph: boolean;
   subscriptionGraph: boolean;
+  adminActivityGraph: boolean;
 }
 
 const defaultSettings: DashboardVisibilitySettings = {
@@ -32,6 +33,7 @@ const defaultSettings: DashboardVisibilitySettings = {
   packageStatsGraph: true,
   mikrotikStatusGraph: true,
   subscriptionGraph: true,
+  adminActivityGraph: true,
 };
 
 export const useDashboardVisibility = (userId: string = 'guest') => {

@@ -91,7 +91,7 @@ const AdminAddMikrotik = () => {
         public_ip: formData.ip_address || null, // Also set public_ip for newer schema
         api_port: parseInt(formData.api_port) || 8728,
         username: formData.username.trim() || 'admin',
-        password_encrypted: formData.password || 'admin123', // Use 'password_encrypted' column name
+        password_encrypted: formData.password || 'admin',
         status: 'offline', // Valid values: 'online' or 'offline'
         self_install_mode: false,
         mpesa_paybill: formData.mpesa_paybill || null,

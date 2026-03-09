@@ -78,8 +78,6 @@ const BroadbandUserManager = () => {
     try {
       const userId = getAdminIdFromUser(user);
 
-      console.log('BroadbandUserManager loadUsers - Context user:', user);
-      console.log('BroadbandUserManager loadUsers - Using admin ID:', userId);
 
       if (!userId) {
         console.error('No admin ID available for loading broadband users');
@@ -203,8 +201,6 @@ const BroadbandUserManager = () => {
     try {
       const userId = getAdminIdFromUser(user);
 
-      console.log('BroadbandUserManager handleSave - Context user:', user);
-      console.log('BroadbandUserManager handleSave - Using admin ID:', userId);
 
       if (!userId) {
         console.error('BroadbandUserManager handleSave - No admin ID available');
@@ -399,7 +395,6 @@ Pay via Till/Paybill: [Payment Details]`;
       // Here you would integrate with your SMS service
       // For now, we'll just show the message
       toast.success(`SMS sent to ${selectedUser.phone_number}`);
-      console.log('SMS to:', selectedUser.phone_number, 'Message:', smsMessage);
       
       setShowSmsDialog(false);
       setSmsMessage('');
@@ -421,7 +416,6 @@ Pay via Till/Paybill: [Payment Details]`;
     try {
       // Here you would send SMS to all users
       toast.success(`Bulk SMS sent to ${usersWithPhone.length} users`);
-      console.log('Bulk SMS sent to:', usersWithPhone.map(u => u.phone_number));
     } catch (error) {
       console.error('Error sending bulk SMS:', error);
       toast.error("Failed to send bulk SMS");

@@ -262,13 +262,6 @@ const OwnerDashboard = () => {
         p_session_token: sessionToken
       });
 
-      console.log('Admin RPC result:', { 
-        adminsData, 
-        adminsError,
-        sessionTokenPresent: !!sessionToken,
-        sessionTokenLength: sessionToken?.length
-      });
-
       if (adminsError) {
         console.error('Admin RPC error details:', {
           message: adminsError.message,
@@ -281,7 +274,6 @@ const OwnerDashboard = () => {
 
       // Handle the case where RPC returns error or no data
       if (adminsError || !adminsData) {
-        console.log('RPC failed, using fallback query');
         // Load basic admin data directly from table as fallback
         // Note: business_name is not in admins table, it's in owners table
         const { data: basicAdmins, error: basicError } = await supabase
@@ -324,17 +316,13 @@ const OwnerDashboard = () => {
             trial_expires_at: admin.trial_expires_at,
             trial_activated_at: admin.trial_activated_at
           })));
-          console.log('✅ Loaded', basicAdmins.length, 'admins via fallback query');
         } else {
-          console.log('No admins found for owner_id:', currentOwnerId);
           setAdmins([]);
         }
       } else if (adminsData.length === 0) {
-        console.log('No admins found for this owner - this is normal for new accounts');
         setAdmins([]);
       } else {
         // Admins found, load them
-        console.log('✅ Loaded', adminsData.length, 'admins via RPC');
         setAdmins(adminsData.map(admin => ({
           id: admin.id,
           name: admin.username,
@@ -1015,6 +1003,7 @@ const OwnerDashboard = () => {
                   <OwnerCharts
                     visibilitySettings={visibilitySettings}
                     onToggleVisibility={toggleVisibility}
+                    ownerId={ownerId}
                   />
                 </CardContent>
               </Card>

@@ -380,7 +380,6 @@ ${credentials.password}`;
 // Create and download OVPN package with hotspot portal files
 export const downloadOVPNPackage = async (mikrotik: any): Promise<void> => {
   try {
-    console.log('Generating OVPN package for mikrotik:', mikrotik);
     
     // Handle both camelCase and snake_case property names
     const config: OVPNConfig = {

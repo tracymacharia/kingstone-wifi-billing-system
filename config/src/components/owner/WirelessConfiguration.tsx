@@ -186,7 +186,6 @@ export const WirelessConfiguration = ({
       const commands = generateWirelessCommands();
       
       // TODO: Implement actual API call to save configuration
-      console.log("Wireless commands:", commands);
       
       toast.success("Wireless configuration saved successfully!");
       

@@ -55,15 +55,12 @@ const SubscriptionManagement: React.FC<SubscriptionManagementProps> = ({ admins,
   useEffect(() => {
     // Use prop ownerId if available, otherwise use localStorage, otherwise fetch
     if (propOwnerId) {
-      console.log('Using prop ownerId:', propOwnerId);
       setOwnerId(propOwnerId);
     } else {
       const storedOwnerId = localStorage.getItem('ownerId');
       if (storedOwnerId) {
-        console.log('Using localStorage ownerId:', storedOwnerId);
         setOwnerId(storedOwnerId);
       } else {
-        console.log('No ownerId found, fetching...');
         fetchOwnerId();
       }
     }
@@ -122,7 +119,6 @@ const SubscriptionManagement: React.FC<SubscriptionManagementProps> = ({ admins,
         .eq('owner_id', ownerId)
         .single();
 
-      console.log('Fetched settings:', { data, error });
 
       if (error && error.code !== 'PGRST116') { // PGRST116 means no rows returned
         console.error('Error fetching subscription settings:', error);
@@ -130,7 +126,6 @@ const SubscriptionManagement: React.FC<SubscriptionManagementProps> = ({ admins,
 
         // If table doesn't exist (404) or access denied (406), use defaults
         if (error.code === '42P01' || error.message?.includes('does not exist')) {
-          console.log('Table does not exist, using default settings');
           const defaultSettings = {
             id: '',
             owner_id: ownerId,
@@ -144,7 +139,6 @@ const SubscriptionManagement: React.FC<SubscriptionManagementProps> = ({ admins,
           setNewSettings({ ...defaultSettings });
           toast.info('Subscription settings table not found. Using defaults.');
         } else if (error.status === 406 || error.status === 403) {
-          console.log('Access denied by RLS policy, using default settings');
           const defaultSettings = {
             id: '',
             owner_id: ownerId,
@@ -161,7 +155,6 @@ const SubscriptionManagement: React.FC<SubscriptionManagementProps> = ({ admins,
           toast.error('Failed to fetch subscription settings: ' + error.message);
         }
       } else if (data) {
-        console.log('Settings loaded from database:', data);
         setSettings(data);
         setNewSettings({ ...data });
       } else {
@@ -202,10 +195,6 @@ const SubscriptionManagement: React.FC<SubscriptionManagementProps> = ({ admins,
     if (!newSettings || !ownerId) return;
 
     try {
-      console.log('=== SAVE START ===');
-      console.log('Current ownerId:', ownerId);
-      console.log('Settings before save:', settings);
-      console.log('New settings to save:', newSettings);
       
       // Use RPC function to bypass RLS
       const { data, error } = await supabase.rpc('update_owner_subscription_settings', {
@@ -215,7 +204,6 @@ const SubscriptionManagement: React.FC<SubscriptionManagementProps> = ({ admins,
         p_ppoe_static_price: newSettings.ppoe_static_price
       });
 
-      console.log('RPC result:', { data, error });
 
       if (error) {
         console.error('RPC error:', error);
@@ -223,7 +211,6 @@ const SubscriptionManagement: React.FC<SubscriptionManagementProps> = ({ admins,
       }
 
       if (data && data.length > 0) {
-        console.log('Saved via RPC:', data[0]);
         toast.success('Subscription settings updated successfully!');
         // Refetch to ensure we have the latest data
         await fetchSubscriptionSettings();

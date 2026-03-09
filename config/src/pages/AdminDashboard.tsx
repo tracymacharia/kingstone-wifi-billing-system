@@ -93,7 +93,6 @@ interface AdminData {
 }
 
 const AdminDashboard = () => {
-  console.log('AdminDashboard component mounted');
   const { user, logout, changePassword } = useAuth();
   const navigate = useNavigate();
   const {
@@ -119,14 +118,10 @@ const AdminDashboard = () => {
   const [userFilter, setUserFilter] = useState<string | null>(null);
 
   useEffect(() => {
-    console.log('AdminDashboard useEffect triggered');
-    console.log('User object:', user);
-    console.log('User role:', user?.role);
     
     // Since this component is protected by ProtectedAdminRoute, the user should always be an admin
     // If for some reason they're not, redirect to admin login
     if (!user || user.role !== 'admin') {
-      console.log('User not authenticated as admin, redirecting to /admin');
       navigate('/admin');
       return;
     }
@@ -140,7 +135,6 @@ const AdminDashboard = () => {
     // Set initial tab from URL
     const searchParams = new URLSearchParams(window.location.search);
     setActiveTab(searchParams.get('tab'));
-    console.log('Initial active tab from URL:', searchParams.get('tab'));
 
     window.addEventListener('popstate', handlePopState);
 
@@ -150,8 +144,6 @@ const AdminDashboard = () => {
   }, [user, navigate]);
 
   const loadDashboardData = useCallback(async () => {
-    console.log('Starting to load dashboard data...');
-    console.log('User object in loadDashboardData:', user);
     
     // Set loading to true initially
     setLoading(true);
@@ -166,7 +158,6 @@ const AdminDashboard = () => {
         return;
       }
 
-      console.log('Admin ID:', adminId);
 
       // Load packages
       const { data: packagesData, error: packagesError } = await supabase
@@ -178,7 +169,6 @@ const AdminDashboard = () => {
         console.error('Error loading packages:', packagesError);
         toast.error('Failed to load packages');
       } else if (packagesData) {
-        console.log('Loaded packages:', packagesData.length);
         setPackages(packagesData.map(pkg => ({
           id: pkg.id,
           name: pkg.name,
@@ -204,7 +194,6 @@ const AdminDashboard = () => {
         console.error('Error loading payments:', paymentsError);
         toast.error('Failed to load payments');
       } else if (paymentsData) {
-        console.log('Loaded payments:', paymentsData.length);
         setPayments(paymentsData.map(payment => ({
           id: payment.id,
           amount: payment.amount,
@@ -227,7 +216,6 @@ const AdminDashboard = () => {
         console.error('Error loading connected users:', connectedError);
         toast.error('Failed to load connected users');
       } else if (connectedData) {
-        console.log('Loaded connected users:', connectedData.length);
         setConnectedUsers(connectedData.map(conn => ({
           id: conn.id,
           username: conn.username,
@@ -251,7 +239,6 @@ const AdminDashboard = () => {
         console.error('Error loading Mikrotiks:', mikrotiksError);
         toast.error('Failed to load Mikrotik devices');
       } else if (mikrotiksData) {
-        console.log('Loaded Mikrotiks:', mikrotiksData.length);
         setAssignedMikrotiks(mikrotiksData.map(mk => ({
           id: mk.id,
           name: mk.name,
@@ -284,7 +271,6 @@ const AdminDashboard = () => {
       toast.error('Failed to load dashboard data');
     } finally {
       // Ensure loading is set to false even if there are errors
-      console.log('Setting loading to false in finally block');
       setLoading(false);
     }
   }, [user, setPackages, setPayments, setConnectedUsers, setAssignedMikrotiks, setAdminData, setLoading, toast]);
@@ -341,24 +327,14 @@ const AdminDashboard = () => {
   // If we reach this point, the user should be authenticated as an admin
 
   const renderContent = () => {
-    console.log('renderContent called');
-    console.log('Active tab:', activeTab);
-    console.log('Loading state:', loading);
-    console.log('User filter:', userFilter);
-    console.log('Number of packages:', packages.length);
-    console.log('Number of payments:', payments.length);
-    console.log('Number of connected users:', connectedUsers.length);
-    console.log('Number of assigned Mikrotiks:', assignedMikrotiks.length);
     
     // Check if all data arrays are empty
     if (packages.length === 0 && payments.length === 0 && connectedUsers.length === 0 && assignedMikrotiks.length === 0) {
-      console.log('All data arrays are empty, but should still render default dashboard');
     }
     
     try {
       // Show filtered users list if a filter is active
       if (userFilter) {
-        console.log('Rendering filtered users list');
         return (
           <FilteredUsersList
             filter={userFilter}
@@ -370,7 +346,6 @@ const AdminDashboard = () => {
       }
 
       if (!activeTab) {
-        console.log('Rendering default dashboard view');
         return (
           <>
             {/* New User Stats Cards */}
@@ -435,32 +410,23 @@ const AdminDashboard = () => {
         );
       }
 
-      console.log('Switching to tab:', activeTab);
       // Tab content rendering
       switch (activeTab) {
         case 'packages':
-          console.log('Rendering packages tab');
           return <EnhancedPackageManager />;
         case 'vouchers':
-          console.log('Rendering vouchers tab');
           return <VoucherManager />;
         case 'reconnections':
-          console.log('Rendering reconnections tab');
           return <ReconnectionManager />;
         case 'wifi-users':
-          console.log('Rendering wifi-users tab');
           return <WiFiUserManager />;
         case 'broadband-users':
-          console.log('Rendering broadband-users tab');
           return <BroadbandUserManager />;
         case 'wifi-settings':
-          console.log('Rendering wifi-settings tab');
           return <WiFiSettings />;
         case 'recycle-bin':
-          console.log('Rendering recycle-bin tab');
           return <RecycleBin />;
         case 'payments':
-          console.log('Rendering payments tab');
           return (
             <Card>
               <CardHeader>
@@ -496,7 +462,6 @@ const AdminDashboard = () => {
             </Card>
           );
         case 'users':
-          console.log('Rendering users tab');
           return (
             <Card>
               <CardHeader>
@@ -545,7 +510,6 @@ const AdminDashboard = () => {
             </Card>
           );
         case 'mikrotiks':
-          console.log('Rendering mikrotiks tab');
           return (
             <AssignedMikrotiks
               mikrotiks={assignedMikrotiks}
@@ -553,19 +517,14 @@ const AdminDashboard = () => {
             />
           );
         case 'sms':
-          console.log('Rendering sms tab');
           return <SMSSettings businessName={adminData.businessName} />;
         case 'subscription':
-          console.log('Rendering subscription tab');
           return <SubscriptionStatus businessName={adminData.businessName} />;
         case 'password-management':
-          console.log('Rendering password-management tab');
           return <AdminPasswordManager />;
         case 'business-contact':
-          console.log('Rendering business-contact tab');
           return <BusinessContactInfo />;
         case 'settings':
-          console.log('Rendering settings tab');
           return (
             <AccountSettings
               adminData={adminData}
@@ -574,19 +533,14 @@ const AdminDashboard = () => {
             />
           );
         case 'analytics':
-          console.log('Rendering analytics tab');
           return <GraphDashboard adminId={user?.adminId || user?.id || ''} />;
         case 'monitor':
-          console.log('Rendering monitor tab');
           return <RealTimeMonitor />;
         case 'payment-history':
-          console.log('Rendering payment-history tab');
           return <PaymentHistory />;
         case 'audit-logs':
-          console.log('Rendering audit-logs tab');
           return <SystemAuditLogs userRole="admin" userId={user?.id} />;
         default:
-          console.log('Rendering default view for unknown tab');
           // Default to showing dashboard overview if tab is unknown
           return (
             <>
@@ -669,7 +623,6 @@ const AdminDashboard = () => {
     }
   };
 
-  console.log('About to render AdminDashboard JSX');
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full bg-gradient-to-br from-slate-950 via-blue-950/50 to-purple-950/30 relative">

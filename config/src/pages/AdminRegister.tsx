@@ -160,7 +160,6 @@ const AdminRegister = () => {
         return;
       }
 
-      console.log('Submitting admin registration with owner_id:', ownerIdToSend);
 
       // Call the register-admin edge function
       const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/register-admin`, {
@@ -183,7 +182,6 @@ const AdminRegister = () => {
 
       const result = await response.json();
 
-      console.log('Edge function response:', result);
 
       if (!response.ok) {
         console.error('Registration error:', result.error, result.details);

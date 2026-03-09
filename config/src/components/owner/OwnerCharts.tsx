@@ -1,73 +1,206 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { useState, useEffect } from "react";
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { VisibilityCard } from "@/components/ui/visibility-card";
 import { DashboardVisibilitySettings } from "@/hooks/useDashboardVisibility";
+import { supabase } from "@/integrations/supabase/client";
+import { formatKES } from "@/lib/utils";
 
 interface OwnerChartsProps {
   visibilitySettings: DashboardVisibilitySettings;
   onToggleVisibility: (key: keyof DashboardVisibilitySettings) => void;
+  ownerId?: string | null;
 }
 
-// Mock data for owner charts
-const subscriptionPaymentsData = [
-  { month: 'Jan', payments: 15400 },
-  { month: 'Feb', payments: 18200 },
-  { month: 'Mar', payments: 22100 },
-  { month: 'Apr', payments: 19800 },
-  { month: 'May', payments: 25300 },
-  { month: 'Jun', payments: 28700 },
-];
+interface MonthData { month: string; value: number; }
+interface AdminStatusMonth { month: string; active: number; inactive: number; }
 
-const mikrotikGrowthData = [
-  { month: 'Jan', mikrotiks: 5 },
-  { month: 'Feb', mikrotiks: 8 },
-  { month: 'Mar', mikrotiks: 12 },
-  { month: 'Apr', mikrotiks: 15 },
-  { month: 'May', mikrotiks: 18 },
-  { month: 'Jun', mikrotiks: 22 },
-];
+const MONTH_LABELS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 
-const totalRevenueData = [
-  { month: 'Jan', revenue: 45200 },
-  { month: 'Feb', revenue: 52100 },
-  { month: 'Mar', revenue: 68400 },
-  { month: 'Apr', revenue: 72300 },
-  { month: 'May', revenue: 89500 },
-  { month: 'Jun', revenue: 95800 },
-];
+function getLastSixMonths(): { label: string; year: number; month: number }[] {
+  const result = [];
+  for (let i = 5; i >= 0; i--) {
+    const d = new Date();
+    d.setMonth(d.getMonth() - i);
+    result.push({ label: MONTH_LABELS[d.getMonth()], year: d.getFullYear(), month: d.getMonth() });
+  }
+  return result;
+}
 
-const adminStatusData = [
-  { month: 'Jan', active: 8, inactive: 2 },
-  { month: 'Feb', active: 12, inactive: 1 },
-  { month: 'Mar', active: 15, inactive: 3 },
-  { month: 'Apr', active: 18, inactive: 2 },
-  { month: 'May', active: 20, inactive: 1 },
-  { month: 'Jun', active: 22, inactive: 2 },
-];
+export const OwnerCharts = ({ visibilitySettings, onToggleVisibility, ownerId }: OwnerChartsProps) => {
+  const [adminGrowthData, setAdminGrowthData] = useState<MonthData[]>([]);
+  const [mikrotikGrowthData, setMikrotikGrowthData] = useState<MonthData[]>([]);
+  const [revenueData, setRevenueData] = useState<MonthData[]>([]);
+  const [adminStatusData, setAdminStatusData] = useState<AdminStatusMonth[]>([]);
+  const [loading, setLoading] = useState(true);
 
-export const OwnerCharts = ({ visibilitySettings, onToggleVisibility }: OwnerChartsProps) => {
+  useEffect(() => {
+    loadChartData();
+  }, [ownerId]);
+
+  const loadChartData = async () => {
+    setLoading(true);
+    try {
+      await Promise.all([
+        loadAdminGrowth(),
+        loadMikrotikGrowth(),
+        loadRevenueTrend(),
+        loadAdminStatus(),
+      ]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loadAdminGrowth = async () => {
+    const months = getLastSixMonths();
+    const since = new Date();
+    since.setMonth(since.getMonth() - 5);
+    since.setDate(1);
+
+    const query = supabase
+      .from('admins')
+      .select('created_at')
+      .gte('created_at', since.toISOString());
+
+    if (ownerId) {
+      query.eq('owner_id', ownerId);
+    }
+
+    const { data } = await query;
+
+    const byMonth: Record<string, number> = {};
+    months.forEach(m => { byMonth[m.label] = 0; });
+
+    (data || []).forEach(a => {
+      const d = new Date(a.created_at);
+      const label = MONTH_LABELS[d.getMonth()];
+      if (label in byMonth) byMonth[label] += 1;
+    });
+
+    setAdminGrowthData(months.map(m => ({ month: m.label, value: byMonth[m.label] })));
+  };
+
+  const loadMikrotikGrowth = async () => {
+    const months = getLastSixMonths();
+    const since = new Date();
+    since.setMonth(since.getMonth() - 5);
+    since.setDate(1);
+
+    const { data } = await supabase
+      .from('mikrotiks')
+      .select('created_at')
+      .gte('created_at', since.toISOString());
+
+    const byMonth: Record<string, number> = {};
+    months.forEach(m => { byMonth[m.label] = 0; });
+
+    (data || []).forEach(mk => {
+      const d = new Date(mk.created_at);
+      const label = MONTH_LABELS[d.getMonth()];
+      if (label in byMonth) byMonth[label] += 1;
+    });
+
+    setMikrotikGrowthData(months.map(m => ({ month: m.label, value: byMonth[m.label] })));
+  };
+
+  const loadRevenueTrend = async () => {
+    const months = getLastSixMonths();
+    const since = new Date();
+    since.setMonth(since.getMonth() - 5);
+    since.setDate(1);
+
+    const { data } = await supabase
+      .from('payments')
+      .select('amount, created_at')
+      .eq('status', 'completed')
+      .gte('created_at', since.toISOString());
+
+    const byMonth: Record<string, number> = {};
+    months.forEach(m => { byMonth[m.label] = 0; });
+
+    (data || []).forEach(p => {
+      const d = new Date(p.created_at);
+      const label = MONTH_LABELS[d.getMonth()];
+      if (label in byMonth) byMonth[label] += Number(p.amount) || 0;
+    });
+
+    setRevenueData(months.map(m => ({ month: m.label, value: byMonth[m.label] })));
+  };
+
+  const loadAdminStatus = async () => {
+    const months = getLastSixMonths();
+
+    const query = supabase
+      .from('admins')
+      .select('subscription_status, created_at');
+
+    if (ownerId) {
+      query.eq('owner_id', ownerId);
+    }
+
+    const { data } = await query;
+
+    const activeSet = new Set<string>();
+    const byMonth: Record<string, { active: number; inactive: number }> = {};
+    months.forEach(m => { byMonth[m.label] = { active: 0, inactive: 0 }; });
+
+    (data || []).forEach(a => {
+      if (a.subscription_status === 'active') activeSet.add(a.created_at);
+    });
+
+    let runningActive = 0;
+    let runningInactive = 0;
+    (data || []).forEach(a => {
+      const d = new Date(a.created_at);
+      const label = MONTH_LABELS[d.getMonth()];
+      if (label in byMonth) {
+        if (a.subscription_status === 'active' || a.subscription_status === 'trial') {
+          byMonth[label].active += 1;
+        } else {
+          byMonth[label].inactive += 1;
+        }
+      }
+    });
+
+    setAdminStatusData(months.map(m => ({
+      month: m.label,
+      active: byMonth[m.label].active,
+      inactive: byMonth[m.label].inactive,
+    })));
+  };
+
+  if (loading) {
+    return (
+      <div className="grid md:grid-cols-2 gap-6 mb-8">
+        {[1,2,3,4].map(i => (
+          <div key={i} className="h-64 rounded-lg bg-muted animate-pulse" />
+        ))}
+      </div>
+    );
+  }
+
   return (
     <div className="grid md:grid-cols-2 gap-6 mb-8">
       <VisibilityCard
-        title="Admin Subscription Payments"
+        title="New Admins Registered (Monthly)"
         value=""
         isVisible={visibilitySettings.subscriptionGraph}
         onToggleVisibility={() => onToggleVisibility('subscriptionGraph')}
         className="md:col-span-1"
       >
         <ResponsiveContainer width="100%" height={300}>
-          <BarChart data={subscriptionPaymentsData}>
+          <BarChart data={adminGrowthData}>
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis dataKey="month" />
-            <YAxis />
-            <Tooltip formatter={(value) => [`KSh ${value}`, 'Payments']} />
-            <Bar dataKey="payments" fill="hsl(var(--primary))" radius={4} />
+            <YAxis allowDecimals={false} />
+            <Tooltip formatter={(value: number) => [`${value}`, 'New Admins']} />
+            <Bar dataKey="value" fill="hsl(var(--primary))" radius={4} />
           </BarChart>
         </ResponsiveContainer>
       </VisibilityCard>
 
       <VisibilityCard
-        title="Mikrotik Growth Timeline"
+        title="Mikrotik Routers Added (Monthly)"
         value=""
         isVisible={visibilitySettings.mikrotikStatusGraph}
         onToggleVisibility={() => onToggleVisibility('mikrotikStatusGraph')}
@@ -77,12 +210,12 @@ export const OwnerCharts = ({ visibilitySettings, onToggleVisibility }: OwnerCha
           <LineChart data={mikrotikGrowthData}>
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis dataKey="month" />
-            <YAxis />
-            <Tooltip formatter={(value) => [`${value}`, 'Mikrotiks Added']} />
-            <Line 
-              type="monotone" 
-              dataKey="mikrotiks" 
-              stroke="hsl(var(--secondary))" 
+            <YAxis allowDecimals={false} />
+            <Tooltip formatter={(value: number) => [`${value}`, 'Mikrotiks Added']} />
+            <Line
+              type="monotone"
+              dataKey="value"
+              stroke="hsl(var(--secondary))"
               strokeWidth={2}
               dot={{ fill: 'hsl(var(--secondary))' }}
             />
@@ -91,39 +224,45 @@ export const OwnerCharts = ({ visibilitySettings, onToggleVisibility }: OwnerCha
       </VisibilityCard>
 
       <VisibilityCard
-        title="Total Revenue Collected"
+        title="Platform Revenue (Monthly)"
         value=""
         isVisible={visibilitySettings.revenueGraph}
         onToggleVisibility={() => onToggleVisibility('revenueGraph')}
         className="md:col-span-1"
       >
         <ResponsiveContainer width="100%" height={300}>
-          <BarChart data={totalRevenueData}>
+          <LineChart data={revenueData}>
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis dataKey="month" />
             <YAxis />
-            <Tooltip formatter={(value) => [`KSh ${value}`, 'Revenue']} />
-            <Bar dataKey="revenue" fill="hsl(var(--accent))" radius={4} />
-          </BarChart>
+            <Tooltip formatter={(value: number) => [formatKES(value), 'Revenue']} />
+            <Line
+              type="monotone"
+              dataKey="value"
+              stroke="#22c55e"
+              strokeWidth={2}
+              dot={{ fill: '#22c55e' }}
+            />
+          </LineChart>
         </ResponsiveContainer>
       </VisibilityCard>
 
       <VisibilityCard
-        title="Admin Activity Status"
+        title="Admin Activity This Period"
         value=""
-        isVisible={visibilitySettings.clientsGraph}
-        onToggleVisibility={() => onToggleVisibility('clientsGraph')}
+        isVisible={visibilitySettings.adminActivityGraph ?? true}
+        onToggleVisibility={() => onToggleVisibility('adminActivityGraph' as keyof DashboardVisibilitySettings)}
         className="md:col-span-1"
       >
         <ResponsiveContainer width="100%" height={300}>
           <BarChart data={adminStatusData}>
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis dataKey="month" />
-            <YAxis />
+            <YAxis allowDecimals={false} />
             <Tooltip />
             <Legend />
-            <Bar dataKey="active" stackId="a" fill="#22c55e" name="Active Admins" />
-            <Bar dataKey="inactive" stackId="a" fill="#ef4444" name="Inactive Admins" />
+            <Bar dataKey="active" name="Active" fill="#22c55e" radius={4} />
+            <Bar dataKey="inactive" name="Inactive/Trial" fill="#f59e0b" radius={4} />
           </BarChart>
         </ResponsiveContainer>
       </VisibilityCard>

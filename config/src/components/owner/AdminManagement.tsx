@@ -116,17 +116,14 @@ const AdminManagement = ({ admins, onAdminAdd, onAdminUpdate, onAdminDelete, onA
   // Initialize ownerId from props or localStorage
   useEffect(() => {
     if (propOwnerId) {
-      console.log('Setting ownerId from props:', propOwnerId);
       setOwnerId(propOwnerId);
       return;
     }
 
     const cachedOwnerId = localStorage.getItem('ownerId');
     if (cachedOwnerId) {
-      console.log('Setting ownerId from localStorage:', cachedOwnerId);
       setOwnerId(cachedOwnerId);
     } else {
-      console.log('No ownerId found in props or localStorage');
     }
   }, [propOwnerId]);
 
@@ -170,17 +167,14 @@ const AdminManagement = ({ admins, onAdminAdd, onAdminUpdate, onAdminDelete, onA
       const cachedOwnerId = localStorage.getItem('ownerId');
       
       if (!cachedOwnerId) {
-        console.log('Diagnostic: No ownerId in localStorage, fetching from database...');
 
         // Get session token from sessionStorage (custom auth system)
         const sessionToken = sessionStorage.getItem('kingstone_session_token');
 
         if (!sessionToken) {
-          console.log('Diagnostic: No session token found');
           return;
         }
 
-        console.log('Diagnostic: Found session token, validating...');
 
         // Use the validate_session RPC to get user info
         const { data: sessionData, error: sessionError } = await supabase
@@ -192,12 +186,10 @@ const AdminManagement = ({ admins, onAdminAdd, onAdminUpdate, onAdminDelete, onA
         }
 
         const userData = sessionData[0];
-        console.log('Diagnostic: Session valid for user:', userData);
 
         // For owners, try multiple ways to find the owner record
         if (userData.role === 'owner') {
           const profileId = userData.user_id;
-          console.log('Diagnostic: Owner profile_id from session:', profileId);
 
           // Method 1: Try direct profile_id match
           let { data: ownerData, error: ownerError } = await supabase
@@ -208,7 +200,6 @@ const AdminManagement = ({ admins, onAdminAdd, onAdminUpdate, onAdminDelete, onA
 
           // Method 2: If not found, get ANY owner record (single owner system)
           if (ownerError || !ownerData) {
-            console.log('Diagnostic: Direct profile_id match failed, trying to get any owner record...');
             
             const { data: allOwners, error: allError } = await supabase
               .from('owners')
@@ -217,7 +208,6 @@ const AdminManagement = ({ admins, onAdminAdd, onAdminUpdate, onAdminDelete, onA
             
             if (allOwners && allOwners.length > 0) {
               ownerData = allOwners[0];
-              console.log('Diagnostic: Found owner record (fallback):', ownerData);
             } else {
               console.error('Diagnostic: No owner records found at all:', allError);
               toast.error('No owner record found. Please contact support.');
@@ -226,7 +216,6 @@ const AdminManagement = ({ admins, onAdminAdd, onAdminUpdate, onAdminDelete, onA
           }
 
           if (ownerData) {
-            console.log('Diagnostic: Found owner record:', ownerData);
             localStorage.setItem('ownerId', ownerData.id);
             setOwnerId(ownerData.id);
             toast.success('Owner ID loaded successfully!');
@@ -234,12 +223,10 @@ const AdminManagement = ({ admins, onAdminAdd, onAdminUpdate, onAdminDelete, onA
           }
         }
         
-        console.log('Diagnostic: User is not an owner or no owner record found');
         toast.error('No owner record found. Please contact support.');
         return;
       }
 
-      console.log('Diagnostic: Checking ownerId in database:', cachedOwnerId);
       
       // Check if this ID exists in owners table
       const { data: ownerData, error: ownerError } = await supabase
@@ -249,7 +236,6 @@ const AdminManagement = ({ admins, onAdminAdd, onAdminUpdate, onAdminDelete, onA
         .single();
 
       if (ownerError) {
-        console.log('Diagnostic: Owner ID not found in owners.id, checking owners.profile_id...');
         // Try finding by profile_id
         const { data: byProfileId, error: profileError } = await supabase
           .from('owners')
@@ -258,8 +244,6 @@ const AdminManagement = ({ admins, onAdminAdd, onAdminUpdate, onAdminDelete, onA
           .single();
         
         if (byProfileId) {
-          console.log('Diagnostic: Found owner by profile_id!', byProfileId);
-          console.log('Diagnostic: The correct owner_id should be:', byProfileId.id);
           localStorage.setItem('ownerId', byProfileId.id);
           setOwnerId(byProfileId.id);
           toast.success('Fixed owner ID. Please try generating code again.');
@@ -268,7 +252,6 @@ const AdminManagement = ({ admins, onAdminAdd, onAdminUpdate, onAdminDelete, onA
           toast.error('Owner record not found. Please contact support.');
         }
       } else if (ownerData) {
-        console.log('Diagnostic: Owner found:', ownerData);
       }
     };
 
@@ -279,11 +262,9 @@ const AdminManagement = ({ admins, onAdminAdd, onAdminUpdate, onAdminDelete, onA
     const currentOwnerId = ownerId || localStorage.getItem('ownerId');
     
     if (!currentOwnerId) {
-      console.log('loadRegistrationCodes: No ownerId available');
       return;
     }
 
-    console.log('loadRegistrationCodes: Loading codes for owner_id:', currentOwnerId);
     setLoadingCodes(true);
     try {
       const { data, error } = await supabase
@@ -297,10 +278,8 @@ const AdminManagement = ({ admins, onAdminAdd, onAdminUpdate, onAdminDelete, onA
         console.error('Error details:', JSON.stringify(error, null, 2));
         toast.error('Failed to load registration codes: ' + error.message);
       } else if (data) {
-        console.log('loadRegistrationCodes: Loaded', data.length, 'codes');
         setRegistrationCodes(data);
       } else {
-        console.log('loadRegistrationCodes: No codes found');
         setRegistrationCodes([]);
       }
     } catch (error) {
@@ -343,7 +322,6 @@ const AdminManagement = ({ admins, onAdminAdd, onAdminUpdate, onAdminDelete, onA
         return;
       }
 
-      console.log('Creating admin with owner_id:', effectiveOwnerId);
 
       const phoneNumber = newAdminPhone || '+254700000000';
       const tempPassword = newAdminPassword || 'Kingstone123';
@@ -498,7 +476,6 @@ const AdminManagement = ({ admins, onAdminAdd, onAdminUpdate, onAdminDelete, onA
         return;
       }
 
-      console.log('Attempting to delete admin:', adminId);
 
       // Use RPC function instead of Edge Function
       const { data, error } = await supabase.rpc('owner_delete_admin', {
@@ -541,7 +518,6 @@ const AdminManagement = ({ admins, onAdminAdd, onAdminUpdate, onAdminDelete, onA
         return;
       }
 
-      console.log('Activating admin trial:', adminId, 'for', trialDays, 'days');
 
       // Call the activate_admin_trial RPC function
       const { data, error } = await supabase.rpc('activate_admin_trial', {
@@ -793,8 +769,6 @@ const AdminManagement = ({ admins, onAdminAdd, onAdminUpdate, onAdminDelete, onA
       return;
     }
 
-    console.log('=== GENERATING REGISTRATION CODE ===');
-    console.log('Using owner_id:', effectiveOwnerId);
     setIsGeneratingCode(true);
 
     try {
@@ -810,14 +784,6 @@ const AdminManagement = ({ admins, onAdminAdd, onAdminUpdate, onAdminDelete, onA
 
       const expiresAt = new Date();
       expiresAt.setDate(expiresAt.getDate() + parseInt(codeExpiryDays));
-
-      console.log('Inserting into registration_codes:', {
-        owner_id: effectiveOwnerId,
-        code: formattedCode,
-        business_name: codeBusinessName,
-        subscription_type: codeSubscriptionType,
-        expires_at: expiresAt.toISOString()
-      });
 
       const { data, error } = await supabase
         .from('registration_codes')
@@ -851,7 +817,6 @@ const AdminManagement = ({ admins, onAdminAdd, onAdminUpdate, onAdminDelete, onA
         return;
       }
 
-      console.log('✅ SUCCESS! Code saved:', data);
       setGeneratedCode(data);
       setRegistrationCodes([data, ...registrationCodes]);
       toast.success('Registration code generated and saved!');
@@ -868,10 +833,8 @@ const AdminManagement = ({ admins, onAdminAdd, onAdminUpdate, onAdminDelete, onA
   };
 
   const copyRegistrationCode = async (code: string) => {
-    console.log('📋 Attempting to copy code:', code);
     try {
       await navigator.clipboard.writeText(code);
-      console.log('✅ Copy successful');
       toast.success('Registration code copied to clipboard!');
     } catch (err) {
       console.error('❌ Clipboard API failed:', err);
@@ -885,7 +848,6 @@ const AdminManagement = ({ admins, onAdminAdd, onAdminUpdate, onAdminDelete, onA
         textArea.select();
         document.execCommand('copy');
         document.body.removeChild(textArea);
-        console.log('✅ Fallback copy successful');
         toast.success('Registration code copied to clipboard!');
       } catch (fallbackErr) {
         console.error('❌ Fallback also failed:', fallbackErr);
@@ -896,10 +858,8 @@ const AdminManagement = ({ admins, onAdminAdd, onAdminUpdate, onAdminDelete, onA
 
   const shareRegistrationCode = async (code: RegistrationCode) => {
     const registrationUrl = `${window.location.origin}/admin/register?code=${code.code}`;
-    console.log('📋 Attempting to share URL:', registrationUrl);
     try {
       await navigator.clipboard.writeText(registrationUrl);
-      console.log('✅ Share successful');
       toast.success('Registration link copied to clipboard! Share it with the potential admin.');
     } catch (err) {
       console.error('❌ Clipboard API failed:', err);
@@ -913,7 +873,6 @@ const AdminManagement = ({ admins, onAdminAdd, onAdminUpdate, onAdminDelete, onA
         textArea.select();
         document.execCommand('copy');
         document.body.removeChild(textArea);
-        console.log('✅ Fallback share successful');
         toast.success('Registration link copied to clipboard! Share it with the potential admin.');
       } catch (fallbackErr) {
         console.error('❌ Fallback also failed:', fallbackErr);
@@ -1046,10 +1005,8 @@ const AdminManagement = ({ admins, onAdminAdd, onAdminUpdate, onAdminDelete, onA
 
   const copyRegistrationLink = async (code: string) => {
     const registrationUrl = `${window.location.origin}/admin/register?code=${code}`;
-    console.log('📋 Attempting to copy link:', registrationUrl);
     try {
       await navigator.clipboard.writeText(registrationUrl);
-      console.log('✅ Link copy successful');
       toast.success('Registration link copied to clipboard!');
     } catch (err) {
       console.error('❌ Clipboard API failed:', err);
@@ -1063,7 +1020,6 @@ const AdminManagement = ({ admins, onAdminAdd, onAdminUpdate, onAdminDelete, onA
         textArea.select();
         document.execCommand('copy');
         document.body.removeChild(textArea);
-        console.log('✅ Fallback link copy successful');
         toast.success('Registration link copied to clipboard!');
       } catch (fallbackErr) {
         console.error('❌ Fallback also failed:', fallbackErr);
@@ -1621,8 +1577,8 @@ const AdminManagement = ({ admins, onAdminAdd, onAdminUpdate, onAdminDelete, onA
                                 Are you sure you want to reset <strong>{admin.name}</strong>'s login credentials?
                                 <br /><br />
                                 New credentials will be:
-                                <br />• Username: <strong>admin</strong>
-                                <br />• Password: <strong>Kingstone123</strong>
+                                <br />• Username: <strong>{admin.name?.toLowerCase().replace(/\s+/g, '') || 'admin'}</strong>
+                                <br />• Password: A temporary password (sent via email/SMS)
                                 <br /><br />
                                 {admin.email && "📧 Email notification will be sent"}
                                 {admin.email && admin.phone && " and "}

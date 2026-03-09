@@ -333,7 +333,7 @@ const PaymentPortal = () => {
       }
 
       // Process M-Pesa payment via edge function
-      const { data, error } = await supabase.functions.invoke('process-mpesa-payment', {
+      const { data, error } = await supabase.functions.invoke('mpesa-stk-push', {
         body: {
           phone: phoneNumber,
           amount: selectedPkg?.price,

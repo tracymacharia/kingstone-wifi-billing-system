@@ -234,9 +234,6 @@ const AuthPage = () => {
                   <Button variant="outline" asChild className="flex-1">
                     <Link to="/owner/register">Owner Registration</Link>
                   </Button>
-                  <Button variant="outline" asChild className="flex-1">
-                    <Link to="/admin/register">Admin Registration</Link>
-                  </Button>
                 </div>
               </div>
 

@@ -37,9 +37,6 @@ const Index = () => {
                 </Link>
               </Button>
               <Button asChild variant="outline" size="sm" className="border-white/20 bg-white/5 hover:bg-white/10 text-white backdrop-blur-sm">
-                <Link to="/admin/register">Admin Register</Link>
-              </Button>
-              <Button asChild variant="outline" size="sm" className="border-white/20 bg-white/5 hover:bg-white/10 text-white backdrop-blur-sm">
                 <Link to="/owner">Owner Login</Link>
               </Button>
               <Button asChild variant="outline" size="sm" className="border-white/20 bg-white/5 hover:bg-white/10 text-white backdrop-blur-sm">
@@ -83,12 +80,6 @@ const Index = () => {
                 <Link to="/owner/register" className="flex items-center gap-3">
                   <Play className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                   Start Your Journey
-                </Link>
-              </Button>
-              <Button asChild size="lg" className="bg-gradient-to-r from-secondary to-accent hover:from-secondary/90 hover:to-accent/90 text-white shadow-lg shadow-secondary/25 text-lg px-8 py-4 h-auto group w-full sm:w-auto">
-                <Link to="/admin/register" className="flex items-center gap-3">
-                  <Users className="w-5 h-5" />
-                  Register as Admin
                 </Link>
               </Button>
               <Button asChild variant="outline" size="lg" className="border-white/20 bg-white/5 hover:bg-white/10 text-white backdrop-blur-sm text-lg px-8 py-4 h-auto w-full sm:w-auto">

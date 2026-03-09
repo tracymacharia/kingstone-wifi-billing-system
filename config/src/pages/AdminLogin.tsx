@@ -313,11 +313,6 @@ const AdminLogin = () => {
                   </Link>
                 </Button>
 
-                <Button variant="ghost" size="sm" asChild className="hover-lift flex-1">
-                  <Link to="/admin/register" className="flex items-center justify-center">
-                    Don't have an account?
-                  </Link>
-                </Button>
               </div>
             }
           />

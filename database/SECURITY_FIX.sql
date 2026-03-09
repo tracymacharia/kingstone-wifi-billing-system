@@ -13,6 +13,29 @@
 -- ============================================================
 
 -- ============================================================
+-- STEP 0: Create missing tables if they don't exist yet
+-- ============================================================
+
+-- Broadband users (PPPoE / Static IP users managed separately from hotspot)
+CREATE TABLE IF NOT EXISTS broadband_users (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  admin_id UUID NOT NULL,
+  username VARCHAR(100) NOT NULL,
+  password VARCHAR(255) NOT NULL,
+  user_type VARCHAR(20) NOT NULL DEFAULT 'pppoe' CHECK (user_type IN ('pppoe', 'static')),
+  phone_number VARCHAR(20),
+  portal_token VARCHAR(255),
+  package_id UUID REFERENCES packages(id) ON DELETE SET NULL,
+  package_expires_at TIMESTAMPTZ,
+  bandwidth_used_mb DECIMAL DEFAULT 0,
+  is_active BOOLEAN NOT NULL DEFAULT TRUE,
+  last_login TIMESTAMPTZ,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE(admin_id, username)
+);
+
+-- ============================================================
 -- STEP 1: Re-enable RLS on all auth tables and lock them down
 -- ============================================================
 
@@ -196,21 +219,17 @@ CREATE POLICY "admins_own_vouchers"
   FOR ALL
   USING (admin_id = get_session_admin_id());
 
--- CONNECTED_USERS
-ALTER TABLE connected_users ENABLE ROW LEVEL SECURITY;
-DROP POLICY IF EXISTS "admins_own_connected_users" ON connected_users;
-CREATE POLICY "admins_own_connected_users"
-  ON connected_users
-  FOR ALL
-  USING (admin_id = get_session_admin_id());
-
--- BROADBAND_USERS
+-- BROADBAND_USERS (PPPoE / Static IP users — created in STEP 0)
 ALTER TABLE broadband_users ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "admins_own_broadband_users" ON broadband_users;
 CREATE POLICY "admins_own_broadband_users"
   ON broadband_users
   FOR ALL
   USING (admin_id = get_session_admin_id());
+
+-- NOTE: connected_users table is not used — real-time session data
+-- comes from MikroTik API. Active users are tracked via wifi_users
+-- (is_active = true) and broadband_users (is_active = true).
 
 
 -- ============================================================

@@ -204,26 +204,27 @@ const AdminDashboard = () => {
         })));
       }
 
-      // Load connected users
+      // Load active wifi users as connected users
       const { data: connectedData, error: connectedError } = await supabase
-        .from('connected_users')
-        .select('*')
+        .from('wifi_users')
+        .select('id, username, phone_number, package_expires_at, created_at, package:current_package_id(name)')
         .eq('admin_id', adminId)
-        .eq('status', 'active')
-        .order('session_start', { ascending: false });
+        .eq('is_active', true)
+        .order('created_at', { ascending: false });
 
       if (connectedError) {
-        console.error('Error loading connected users:', connectedError);
-        toast.error('Failed to load connected users');
+        console.error('Error loading active users:', connectedError);
       } else if (connectedData) {
-        setConnectedUsers(connectedData.map(conn => ({
-          id: conn.id,
-          username: conn.username,
-          package: conn.package_name || 'Unknown',
-          ipAddress: conn.ip_address,
-          connectedAt: new Date(conn.session_start).toLocaleString(),
-          dataUsed: `${((conn.bytes_in + conn.bytes_out) / 1024 / 1024).toFixed(1)} MB`,
-          timeRemaining: conn.expires_at ? `${Math.max(0, Math.floor((new Date(conn.expires_at).getTime() - Date.now()) / 60000))} min` : 'Unlimited'
+        setConnectedUsers(connectedData.map((u: any) => ({
+          id: u.id,
+          username: u.username,
+          package: (u.package as any)?.name || 'Unknown',
+          ipAddress: u.phone_number || 'N/A',
+          connectedAt: new Date(u.created_at).toLocaleString(),
+          dataUsed: 'N/A',
+          timeRemaining: u.package_expires_at
+            ? `${Math.max(0, Math.floor((new Date(u.package_expires_at).getTime() - Date.now()) / 60000))} min`
+            : 'Unlimited'
         })));
       }
 

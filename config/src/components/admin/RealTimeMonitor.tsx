@@ -86,13 +86,13 @@ const RealTimeMonitor = () => {
 
     // Set up real-time subscriptions with debouncing to prevent constant reloading
     const usersChannel = supabase
-      .channel('connected-users-changes')
+      .channel('wifi-users-changes')
       .on(
         'postgres_changes',
         {
           event: '*',
           schema: 'public',
-          table: 'connected_users'
+          table: 'wifi_users'
         },
         () => {
           debouncedFetchRealTimeData();
@@ -150,17 +150,30 @@ const RealTimeMonitor = () => {
 
   const fetchConnectedUsers = async () => {
     const { data, error } = await supabase
-      .from('connected_users')
-      .select('*')
-      .eq('status', 'active')
-      .order('session_start', { ascending: false });
+      .from('wifi_users')
+      .select('id, username, phone_number, package_expires_at, is_active, created_at')
+      .eq('is_active', true)
+      .order('created_at', { ascending: false });
 
     if (error) {
-      console.error('Error fetching connected users:', error);
+      console.error('Error fetching active users:', error);
       return;
     }
 
-    setConnectedUsers(data || []);
+    const mapped = (data || []).map((u: any) => ({
+      id: u.id,
+      username: u.username,
+      mac_address: 'N/A',
+      ip_address: u.phone_number || 'N/A',
+      session_start: u.created_at,
+      expires_at: u.package_expires_at || '',
+      package_name: null,
+      status: 'active',
+      bytes_in: 0,
+      bytes_out: 0
+    }));
+
+    setConnectedUsers(mapped);
   };
 
   const fetchMikrotikStatus = async () => {
@@ -180,11 +193,8 @@ const RealTimeMonitor = () => {
   const disconnectUser = async (userId: string, username: string) => {
     try {
       const { error } = await supabase
-        .from('connected_users')
-        .update({ 
-          status: 'disconnected',
-          session_end: new Date().toISOString()
-        })
+        .from('wifi_users')
+        .update({ is_active: false })
         .eq('id', userId);
 
       if (error) throw error;

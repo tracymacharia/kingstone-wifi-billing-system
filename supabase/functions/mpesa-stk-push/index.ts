@@ -7,15 +7,19 @@ const corsHeaders = {
 };
 
 interface STKPushRequest {
-  admin_id: string;
-  phone_number: string;
+  phone: string;
   amount: number;
-  package_id: string;
-  package_name: string;
+  packageId: string;
+  packageName: string;
+  packageType?: string;
+  durationHours?: number;
+  mikrotikId?: string;
+  adminId: string;
+  mpesaType: "till" | "paybill";
+  mpesaNumber: string;
 }
 
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
   }
@@ -25,50 +29,47 @@ serve(async (req) => {
       throw new Error("Method not allowed");
     }
 
-    const { admin_id, phone_number, amount, package_id, package_name }: STKPushRequest = await req.json();
+    const body: STKPushRequest = await req.json();
+    const { phone, amount, packageId, packageName, adminId, mpesaType, mpesaNumber } = body;
 
-    // Validate required fields
-    if (!admin_id || !phone_number || !amount || !package_id || !package_name) {
-      throw new Error("Missing required fields");
+    if (!phone || !amount || !packageId || !packageName || !adminId || !mpesaNumber) {
+      throw new Error("Missing required fields: phone, amount, packageId, packageName, adminId, mpesaNumber");
     }
 
-    // Validate phone number (Kenyan format)
     const phoneRegex = /^(\+254|0)[17]\d{8}$/;
-    if (!phoneRegex.test(phone_number)) {
-      throw new Error("Invalid phone number format. Use 0712345678 or +254712345678");
+    if (!phoneRegex.test(phone)) {
+      throw new Error("Invalid phone number. Use format 0712345678 or +254712345678");
     }
 
-    // Format phone number for M-Pesa (2547XXXXXXXX)
-    const formattedPhone = phone_number.startsWith("+254") 
-      ? phone_number.substring(1) 
-      : phone_number.startsWith("0") 
-        ? "254" + phone_number.substring(1) 
-        : phone_number;
+    const formattedPhone = phone.startsWith("+254")
+      ? phone.substring(1)
+      : phone.startsWith("0")
+        ? "254" + phone.substring(1)
+        : phone;
 
-    // Get Supabase credentials
     const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
     const supabaseServiceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
     const mpesaConsumerKey = Deno.env.get("MPESA_CONSUMER_KEY") ?? "";
     const mpesaConsumerSecret = Deno.env.get("MPESA_CONSUMER_SECRET") ?? "";
     const mpesaPasskey = Deno.env.get("MPESA_PASSKEY") ?? "";
-    const mpesaShortcode = Deno.env.get("MPESA_SHORTCODE") ?? "";
     const mpesaEnvironment = Deno.env.get("MPESA_ENVIRONMENT") ?? "sandbox";
 
     if (!supabaseUrl || !supabaseServiceRoleKey) {
       throw new Error("Server configuration error: Missing Supabase credentials");
     }
 
-    if (!mpesaConsumerKey || !mpesaConsumerSecret || !mpesaPasskey || !mpesaShortcode) {
-      throw new Error("Server configuration error: Missing M-Pesa credentials");
+    if (!mpesaConsumerKey || !mpesaConsumerSecret || !mpesaPasskey) {
+      throw new Error("MPESA credentials not configured. Set MPESA_CONSUMER_KEY, MPESA_CONSUMER_SECRET, and MPESA_PASSKEY in Supabase Edge Function secrets.");
     }
 
     const supabase = createClient(supabaseUrl, supabaseServiceRoleKey);
 
-    // Get M-Pesa access token
+    const baseUrl = mpesaEnvironment === "production"
+      ? "https://api.safaricom.co.ke"
+      : "https://sandbox.safaricom.co.ke";
+
     const tokenResponse = await fetch(
-      mpesaEnvironment === "production"
-        ? "https://api.safaricom.co.ke/oauth/v1/generate?grant_type=client_credentials"
-        : "https://sandbox.safaricom.co.ke/oauth/v1/generate?grant_type=client_credentials",
+      `${baseUrl}/oauth/v1/generate?grant_type=client_credentials`,
       {
         method: "GET",
         headers: {
@@ -78,38 +79,41 @@ serve(async (req) => {
     );
 
     if (!tokenResponse.ok) {
-      throw new Error("Failed to get M-Pesa access token");
+      const err = await tokenResponse.text();
+      console.error("MPESA token error:", err);
+      throw new Error("Failed to get MPESA access token. Check your Consumer Key and Secret.");
     }
 
     const tokenData = await tokenResponse.json();
     const accessToken = tokenData.access_token;
 
-    // Generate password for STK Push
     const timestamp = new Date().toISOString().replace(/[^0-9]/g, "").slice(0, 14);
-    const password = btoa(`${mpesaShortcode}${mpesaPasskey}${timestamp}`);
+    const password = btoa(`${mpesaNumber}${mpesaPasskey}${timestamp}`);
 
-    // Create payment record in database
     const { data: paymentRecord, error: paymentError } = await supabase
       .from("payments")
       .insert({
-        admin_id: admin_id,
-        user_phone: phone_number,
+        admin_id: adminId,
+        mikrotik_id: body.mikrotikId || null,
+        user_phone: formattedPhone,
         amount: amount,
-        package_name: package_name,
+        package_name: packageName,
         status: "pending",
       })
       .select()
       .single();
 
     if (paymentError) {
+      console.error("Payment record error:", paymentError);
       throw new Error("Failed to create payment record");
     }
 
-    // Initiate STK Push
+    const transactionType = mpesaType === "till"
+      ? "CustomerBuyGoodsOnline"
+      : "CustomerPayBillOnline";
+
     const stkResponse = await fetch(
-      mpesaEnvironment === "production"
-        ? "https://api.safaricom.co.ke/mpesa/stkpush/v1/processrequest"
-        : "https://sandbox.safaricom.co.ke/mpesa/stkpush/v1/processrequest",
+      `${baseUrl}/mpesa/stkpush/v1/processrequest`,
       {
         method: "POST",
         headers: {
@@ -117,60 +121,53 @@ serve(async (req) => {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          BusinessShortCode: mpesaShortcode,
+          BusinessShortCode: mpesaNumber,
           Password: password,
           Timestamp: timestamp,
-          TransactionType: "CustomerPayBillOnline",
+          TransactionType: transactionType,
           Amount: Math.floor(amount),
           PartyA: formattedPhone,
-          PartyB: mpesaShortcode,
+          PartyB: mpesaNumber,
           PhoneNumber: formattedPhone,
           CallBackURL: `${supabaseUrl}/functions/v1/mpesa-callback`,
-          AccountReference: `KingstoneWiFi-${paymentRecord.id}`,
-          TransactionDesc: `Payment for ${package_name} package`,
+          AccountReference: `WiFi-${paymentRecord.id.substring(0, 8)}`,
+          TransactionDesc: `${packageName} WiFi Package`,
         }),
       }
     );
 
     const stkData = await stkResponse.json();
 
-    if (!stkResponse.ok) {
-      throw new Error(stkData.errorMessage || "Failed to initiate STK Push");
+    if (!stkResponse.ok || stkData.ResponseCode !== "0") {
+      const errMsg = stkData.errorMessage || stkData.ResponseDescription || "STK Push failed";
+      console.error("STK push failed:", JSON.stringify(stkData));
+      await supabase.from("payments").update({ status: "failed" }).eq("id", paymentRecord.id);
+      throw new Error(errMsg);
     }
 
-    // Update payment record with CheckoutRequestID
     await supabase
       .from("payments")
-      .update({
-        transaction_id: stkData.CheckoutRequestID,
-      })
+      .update({ transaction_id: stkData.CheckoutRequestID })
       .eq("id", paymentRecord.id);
 
     return new Response(
       JSON.stringify({
         success: true,
-        message: "STK Push initiated successfully. Please check your phone.",
+        message: "STK Push sent. Please check your phone and enter your MPESA PIN.",
         checkout_request_id: stkData.CheckoutRequestID,
         payment_id: paymentRecord.id,
         merchant_request_id: stkData.MerchantRequestID,
       }),
-      {
-        status: 200,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      }
+      { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (error) {
-    console.error("Error in mpesa-stk-push function:", error);
-
+    console.error("Error in mpesa-stk-push:", error);
     return new Response(
       JSON.stringify({
         success: false,
         error: error instanceof Error ? error.message : "An unexpected error occurred",
       }),
-      {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      }
+      { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
 });

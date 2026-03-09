@@ -147,19 +147,24 @@ const OwnerRegister = () => {
         throw new Error((data as any)?.error || 'Failed to send OTP');
       }
 
-      // In production, the OTP is sent via email
-      // For development, we log it (remove in production)
       const otpCode = (data as any)._debug_otp;
-      setOtpValue(otpCode || '');
 
-      if (otpCode) {
-        toast.info(`[DEV MODE] Your OTP: ${otpCode}`);
-      } else {
-        toast.success('OTP sent to your email!');
+      // Call the edge function to actually send the email
+      const { error: emailError } = await supabase.functions.invoke('send-otp-email', {
+        body: {
+          email: normalizedEmail,
+          otp: otpCode,
+          fullName: fullName.trim(),
+        }
+      });
+
+      if (emailError) {
+        console.error('Email send error:', emailError);
       }
 
+      toast.success('Verification code sent to your email!');
       setOtpSent(true);
-      setCountdown(120); // 2 minutes resend cooldown
+      setCountdown(120);
       return true;
     } catch (error: any) {
       console.error('OTP send error:', error);

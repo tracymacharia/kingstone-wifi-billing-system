@@ -42,3 +42,4 @@ publicDir = "config/build_output"
 
 [userenv.shared]
 VITE_SUPABASE_URL = "https://mpjezwlweapgltrimtqy.supabase.co"
+VITE_SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1wamV6d2x3ZWFwZ2x0cmltdHF5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE5OTgzNjgsImV4cCI6MjA4NzU3NDM2OH0.f3a1y4HTkNtuLOWD-cbLDbBEHUu01FuUrvR2gOnoLos"

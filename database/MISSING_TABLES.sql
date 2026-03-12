@@ -1,33 +1,21 @@
 -- MISSING TABLES SETUP
--- Run this in Supabase SQL Editor to create all tables that the app needs
--- Safe to run multiple times (uses CREATE TABLE IF NOT EXISTS)
+-- Fully defensive: safe to run whether tables exist or not, and regardless of their current schema.
+-- Strategy: CREATE TABLE IF NOT EXISTS (bare skeleton), then ADD COLUMN IF NOT EXISTS for every column.
 
 -- ============================================================
--- 1. NOTIFICATION TEMPLATES (Owner dashboard → Notification Templates tab)
+-- 1. NOTIFICATION TEMPLATES
 -- ============================================================
 CREATE TABLE IF NOT EXISTS notification_templates (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  updated_at TIMESTAMPTZ DEFAULT NOW()
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid()
 );
-
--- Add columns if they don't exist (safe for tables created with different schemas)
-ALTER TABLE notification_templates ADD COLUMN IF NOT EXISTS template_type VARCHAR(50);
+ALTER TABLE notification_templates ADD COLUMN IF NOT EXISTS template_type    VARCHAR(50);
 ALTER TABLE notification_templates ADD COLUMN IF NOT EXISTS template_content TEXT;
+ALTER TABLE notification_templates ADD COLUMN IF NOT EXISTS created_at       TIMESTAMPTZ DEFAULT NOW();
+ALTER TABLE notification_templates ADD COLUMN IF NOT EXISTS updated_at       TIMESTAMPTZ DEFAULT NOW();
 
--- Drop NOT NULL constraints from columns our app doesn't control (they block inserts)
-DO $$
-BEGIN
-  ALTER TABLE notification_templates ALTER COLUMN name DROP NOT NULL;
-EXCEPTION WHEN OTHERS THEN NULL;
-END $$;
-DO $$
-BEGIN
-  ALTER TABLE notification_templates ALTER COLUMN description DROP NOT NULL;
-EXCEPTION WHEN OTHERS THEN NULL;
-END $$;
+DO $$ BEGIN ALTER TABLE notification_templates ALTER COLUMN name        DROP NOT NULL; EXCEPTION WHEN OTHERS THEN NULL; END $$;
+DO $$ BEGIN ALTER TABLE notification_templates ALTER COLUMN description  DROP NOT NULL; EXCEPTION WHEN OTHERS THEN NULL; END $$;
 
--- Add unique constraint on template_type if not already present
 DO $$
 BEGIN
   IF NOT EXISTS (
@@ -40,16 +28,15 @@ BEGIN
 EXCEPTION WHEN OTHERS THEN NULL;
 END $$;
 
--- Seed default templates (wrapped in DO block to skip gracefully if schema conflicts remain)
 DO $$
 BEGIN
   INSERT INTO notification_templates (template_type, template_content) VALUES
-    ('sms_reset', 'Hello {admin_name}, your login credentials have been reset. Username: {username}, Password: {password}. Login at your dashboard. - {owner_name}'),
+    ('sms_reset',           'Hello {admin_name}, your credentials were reset. Username: {username}, Password: {password}. - {owner_name}'),
     ('email_reset_subject', 'Your {system_name} Login Credentials'),
-    ('email_reset_body', 'Hello {admin_name}, your login credentials have been reset by {owner_name}. Username: {username} Password: {password} Please log in and change your password immediately. - {owner_name}')
+    ('email_reset_body',    'Hello {admin_name}, your credentials were reset by {owner_name}. Username: {username} Password: {password} Please change your password after logging in.')
   ON CONFLICT (template_type) DO NOTHING;
 EXCEPTION WHEN OTHERS THEN
-  RAISE NOTICE 'Could not seed notification_templates: %. Templates can be added manually from the dashboard.', SQLERRM;
+  RAISE NOTICE 'Skipped seeding notification_templates: %. Enter templates manually in the dashboard.', SQLERRM;
 END $$;
 
 ALTER TABLE notification_templates ENABLE ROW LEVEL SECURITY;
@@ -58,55 +45,62 @@ CREATE POLICY "owners_manage_templates" ON notification_templates FOR ALL USING 
 
 
 -- ============================================================
--- 2. SYSTEM AUDIT LOGS (Owner dashboard → Activity Logs tab)
+-- 2. SYSTEM AUDIT LOGS
 -- ============================================================
 CREATE TABLE IF NOT EXISTS system_audit_logs (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  actor_id UUID,
-  actor_role VARCHAR(20) NOT NULL DEFAULT 'system',
-  action_type VARCHAR(20) NOT NULL,
-  entity_type VARCHAR(50) NOT NULL,
-  entity_id UUID,
-  entity_name VARCHAR(255),
-  details JSONB DEFAULT '{}',
-  success BOOLEAN NOT NULL DEFAULT true,
-  created_at TIMESTAMPTZ DEFAULT NOW()
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid()
 );
+ALTER TABLE system_audit_logs ADD COLUMN IF NOT EXISTS actor_id    UUID;
+ALTER TABLE system_audit_logs ADD COLUMN IF NOT EXISTS actor_role  VARCHAR(20)  DEFAULT 'system';
+ALTER TABLE system_audit_logs ADD COLUMN IF NOT EXISTS action_type VARCHAR(20);
+ALTER TABLE system_audit_logs ADD COLUMN IF NOT EXISTS entity_type VARCHAR(50);
+ALTER TABLE system_audit_logs ADD COLUMN IF NOT EXISTS entity_id   UUID;
+ALTER TABLE system_audit_logs ADD COLUMN IF NOT EXISTS entity_name VARCHAR(255);
+ALTER TABLE system_audit_logs ADD COLUMN IF NOT EXISTS details     JSONB        DEFAULT '{}';
+ALTER TABLE system_audit_logs ADD COLUMN IF NOT EXISTS success     BOOLEAN      DEFAULT true;
+ALTER TABLE system_audit_logs ADD COLUMN IF NOT EXISTS created_at  TIMESTAMPTZ  DEFAULT NOW();
 
-CREATE INDEX IF NOT EXISTS idx_audit_logs_actor ON system_audit_logs(actor_id);
+DO $$ BEGIN ALTER TABLE system_audit_logs ALTER COLUMN actor_role  DROP NOT NULL; EXCEPTION WHEN OTHERS THEN NULL; END $$;
+DO $$ BEGIN ALTER TABLE system_audit_logs ALTER COLUMN action_type DROP NOT NULL; EXCEPTION WHEN OTHERS THEN NULL; END $$;
+DO $$ BEGIN ALTER TABLE system_audit_logs ALTER COLUMN entity_type DROP NOT NULL; EXCEPTION WHEN OTHERS THEN NULL; END $$;
+
+CREATE INDEX IF NOT EXISTS idx_audit_logs_actor   ON system_audit_logs(actor_id);
 CREATE INDEX IF NOT EXISTS idx_audit_logs_created ON system_audit_logs(created_at DESC);
 
 ALTER TABLE system_audit_logs ENABLE ROW LEVEL SECURITY;
-DROP POLICY IF EXISTS "audit_logs_readable" ON system_audit_logs;
-CREATE POLICY "audit_logs_readable" ON system_audit_logs FOR SELECT USING (true);
+DROP POLICY IF EXISTS "audit_logs_readable"   ON system_audit_logs;
+CREATE POLICY "audit_logs_readable"   ON system_audit_logs FOR SELECT USING (true);
 DROP POLICY IF EXISTS "audit_logs_insertable" ON system_audit_logs;
 CREATE POLICY "audit_logs_insertable" ON system_audit_logs FOR INSERT WITH CHECK (true);
 
 
 -- ============================================================
--- 3. RECONNECTION REQUESTS (Admin dashboard → Reconnection Manager)
+-- 3. RECONNECTION REQUESTS
 -- ============================================================
 CREATE TABLE IF NOT EXISTS reconnection_requests (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  admin_id UUID NOT NULL,
-  phone_number VARCHAR(20) NOT NULL,
-  transaction_code VARCHAR(50),
-  mpesa_message TEXT,
-  mac_address VARCHAR(50),
-  ip_address VARCHAR(50),
-  status VARCHAR(20) NOT NULL DEFAULT 'pending'
-    CHECK (status IN ('pending', 'processing', 'completed', 'rejected')),
-  amount DECIMAL(10,2),
-  mpesa_account VARCHAR(100),
-  notes TEXT,
-  is_trial BOOLEAN DEFAULT false,
-  is_session BOOLEAN DEFAULT false,
-  completed_at TIMESTAMPTZ,
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  updated_at TIMESTAMPTZ DEFAULT NOW()
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid()
 );
+ALTER TABLE reconnection_requests ADD COLUMN IF NOT EXISTS admin_id         UUID;
+ALTER TABLE reconnection_requests ADD COLUMN IF NOT EXISTS phone_number     VARCHAR(20);
+ALTER TABLE reconnection_requests ADD COLUMN IF NOT EXISTS transaction_code VARCHAR(50);
+ALTER TABLE reconnection_requests ADD COLUMN IF NOT EXISTS mpesa_message    TEXT;
+ALTER TABLE reconnection_requests ADD COLUMN IF NOT EXISTS mac_address      VARCHAR(50);
+ALTER TABLE reconnection_requests ADD COLUMN IF NOT EXISTS ip_address       VARCHAR(50);
+ALTER TABLE reconnection_requests ADD COLUMN IF NOT EXISTS status           VARCHAR(20)   DEFAULT 'pending';
+ALTER TABLE reconnection_requests ADD COLUMN IF NOT EXISTS amount           DECIMAL(10,2);
+ALTER TABLE reconnection_requests ADD COLUMN IF NOT EXISTS mpesa_account    VARCHAR(100);
+ALTER TABLE reconnection_requests ADD COLUMN IF NOT EXISTS notes            TEXT;
+ALTER TABLE reconnection_requests ADD COLUMN IF NOT EXISTS is_trial         BOOLEAN       DEFAULT false;
+ALTER TABLE reconnection_requests ADD COLUMN IF NOT EXISTS is_session       BOOLEAN       DEFAULT false;
+ALTER TABLE reconnection_requests ADD COLUMN IF NOT EXISTS completed_at     TIMESTAMPTZ;
+ALTER TABLE reconnection_requests ADD COLUMN IF NOT EXISTS created_at       TIMESTAMPTZ   DEFAULT NOW();
+ALTER TABLE reconnection_requests ADD COLUMN IF NOT EXISTS updated_at       TIMESTAMPTZ   DEFAULT NOW();
 
-CREATE INDEX IF NOT EXISTS idx_reconnection_admin ON reconnection_requests(admin_id);
+DO $$ BEGIN ALTER TABLE reconnection_requests ALTER COLUMN admin_id     DROP NOT NULL; EXCEPTION WHEN OTHERS THEN NULL; END $$;
+DO $$ BEGIN ALTER TABLE reconnection_requests ALTER COLUMN phone_number DROP NOT NULL; EXCEPTION WHEN OTHERS THEN NULL; END $$;
+DO $$ BEGIN ALTER TABLE reconnection_requests ALTER COLUMN status       DROP NOT NULL; EXCEPTION WHEN OTHERS THEN NULL; END $$;
+
+CREATE INDEX IF NOT EXISTS idx_reconnection_admin  ON reconnection_requests(admin_id);
 CREATE INDEX IF NOT EXISTS idx_reconnection_status ON reconnection_requests(status);
 
 ALTER TABLE reconnection_requests ENABLE ROW LEVEL SECURITY;
@@ -115,20 +109,35 @@ CREATE POLICY "admins_own_reconnections" ON reconnection_requests FOR ALL USING 
 
 
 -- ============================================================
--- 4. SMS SETTINGS (Admin dashboard → SMS Settings tab)
+-- 4. SMS SETTINGS
 -- ============================================================
 CREATE TABLE IF NOT EXISTS sms_settings (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  admin_id UUID NOT NULL UNIQUE,
-  enabled BOOLEAN NOT NULL DEFAULT false,
-  provider VARCHAR(50) NOT NULL DEFAULT 'twilio',
-  sender_number VARCHAR(20),
-  username VARCHAR(100),
-  api_key_encrypted TEXT,
-  message_template TEXT NOT NULL DEFAULT 'Your Wi-Fi package will expire on {expiry_date}. Please renew to continue service.',
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  updated_at TIMESTAMPTZ DEFAULT NOW()
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid()
 );
+ALTER TABLE sms_settings ADD COLUMN IF NOT EXISTS admin_id         UUID;
+ALTER TABLE sms_settings ADD COLUMN IF NOT EXISTS enabled          BOOLEAN      DEFAULT false;
+ALTER TABLE sms_settings ADD COLUMN IF NOT EXISTS provider         VARCHAR(50)  DEFAULT 'twilio';
+ALTER TABLE sms_settings ADD COLUMN IF NOT EXISTS sender_number    VARCHAR(20);
+ALTER TABLE sms_settings ADD COLUMN IF NOT EXISTS username         VARCHAR(100);
+ALTER TABLE sms_settings ADD COLUMN IF NOT EXISTS api_key_encrypted TEXT;
+ALTER TABLE sms_settings ADD COLUMN IF NOT EXISTS message_template TEXT         DEFAULT 'Your Wi-Fi package will expire on {expiry_date}. Please renew to continue service.';
+ALTER TABLE sms_settings ADD COLUMN IF NOT EXISTS created_at       TIMESTAMPTZ  DEFAULT NOW();
+ALTER TABLE sms_settings ADD COLUMN IF NOT EXISTS updated_at       TIMESTAMPTZ  DEFAULT NOW();
+
+DO $$ BEGIN ALTER TABLE sms_settings ALTER COLUMN enabled          DROP NOT NULL; EXCEPTION WHEN OTHERS THEN NULL; END $$;
+DO $$ BEGIN ALTER TABLE sms_settings ALTER COLUMN provider         DROP NOT NULL; EXCEPTION WHEN OTHERS THEN NULL; END $$;
+DO $$ BEGIN ALTER TABLE sms_settings ALTER COLUMN message_template DROP NOT NULL; EXCEPTION WHEN OTHERS THEN NULL; END $$;
+
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint
+    WHERE conname = 'sms_settings_admin_id_key' AND conrelid = 'sms_settings'::regclass
+  ) THEN
+    ALTER TABLE sms_settings ADD CONSTRAINT sms_settings_admin_id_key UNIQUE (admin_id);
+  END IF;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
 
 ALTER TABLE sms_settings ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "admins_own_sms_settings" ON sms_settings;
@@ -136,20 +145,21 @@ CREATE POLICY "admins_own_sms_settings" ON sms_settings FOR ALL USING (true);
 
 
 -- ============================================================
--- 5. SMS LOGS (Admin dashboard → SMS Settings tab → log section)
+-- 5. SMS LOGS
 -- ============================================================
 CREATE TABLE IF NOT EXISTS sms_logs (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  admin_id UUID NOT NULL,
-  recipient VARCHAR(20) NOT NULL,
-  message TEXT NOT NULL,
-  status VARCHAR(20) NOT NULL DEFAULT 'pending'
-    CHECK (status IN ('sent', 'failed', 'pending')),
-  type VARCHAR(20) NOT NULL DEFAULT 'manual'
-    CHECK (type IN ('expiry', 'manual')),
-  error_message TEXT,
-  created_at TIMESTAMPTZ DEFAULT NOW()
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid()
 );
+ALTER TABLE sms_logs ADD COLUMN IF NOT EXISTS admin_id      UUID;
+ALTER TABLE sms_logs ADD COLUMN IF NOT EXISTS recipient     VARCHAR(20);
+ALTER TABLE sms_logs ADD COLUMN IF NOT EXISTS message       TEXT;
+ALTER TABLE sms_logs ADD COLUMN IF NOT EXISTS status        VARCHAR(20)  DEFAULT 'pending';
+ALTER TABLE sms_logs ADD COLUMN IF NOT EXISTS type          VARCHAR(20)  DEFAULT 'manual';
+ALTER TABLE sms_logs ADD COLUMN IF NOT EXISTS error_message TEXT;
+ALTER TABLE sms_logs ADD COLUMN IF NOT EXISTS created_at    TIMESTAMPTZ  DEFAULT NOW();
+
+DO $$ BEGIN ALTER TABLE sms_logs ALTER COLUMN recipient DROP NOT NULL; EXCEPTION WHEN OTHERS THEN NULL; END $$;
+DO $$ BEGIN ALTER TABLE sms_logs ALTER COLUMN message   DROP NOT NULL; EXCEPTION WHEN OTHERS THEN NULL; END $$;
 
 CREATE INDEX IF NOT EXISTS idx_sms_logs_admin ON sms_logs(admin_id);
 
@@ -159,23 +169,42 @@ CREATE POLICY "admins_own_sms_logs" ON sms_logs FOR ALL USING (true);
 
 
 -- ============================================================
--- 6. WIFI SETTINGS (Admin dashboard → WiFi Settings tab)
+-- 6. WIFI SETTINGS
 -- ============================================================
 CREATE TABLE IF NOT EXISTS wifi_settings (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  admin_id UUID NOT NULL UNIQUE,
-  hotspot_title VARCHAR(100) NOT NULL DEFAULT 'WiFi Access Portal',
-  enable_trial BOOLEAN NOT NULL DEFAULT true,
-  trial_minutes INTEGER NOT NULL DEFAULT 3,
-  enable_vouchers BOOLEAN NOT NULL DEFAULT false,
-  description TEXT NOT NULL DEFAULT 'Welcome to our WiFi service',
-  theme_color VARCHAR(20) NOT NULL DEFAULT '#ef4444',
-  faq_json JSONB NOT NULL DEFAULT '[]',
-  contact_phone VARCHAR(20) DEFAULT '',
-  contact_email VARCHAR(100) DEFAULT '',
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  updated_at TIMESTAMPTZ DEFAULT NOW()
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid()
 );
+ALTER TABLE wifi_settings ADD COLUMN IF NOT EXISTS admin_id       UUID;
+ALTER TABLE wifi_settings ADD COLUMN IF NOT EXISTS hotspot_title  VARCHAR(100) DEFAULT 'WiFi Access Portal';
+ALTER TABLE wifi_settings ADD COLUMN IF NOT EXISTS enable_trial   BOOLEAN      DEFAULT true;
+ALTER TABLE wifi_settings ADD COLUMN IF NOT EXISTS trial_minutes  INTEGER      DEFAULT 3;
+ALTER TABLE wifi_settings ADD COLUMN IF NOT EXISTS enable_vouchers BOOLEAN     DEFAULT false;
+ALTER TABLE wifi_settings ADD COLUMN IF NOT EXISTS description    TEXT         DEFAULT 'Welcome to our WiFi service';
+ALTER TABLE wifi_settings ADD COLUMN IF NOT EXISTS theme_color    VARCHAR(20)  DEFAULT '#ef4444';
+ALTER TABLE wifi_settings ADD COLUMN IF NOT EXISTS faq_json       JSONB        DEFAULT '[]';
+ALTER TABLE wifi_settings ADD COLUMN IF NOT EXISTS contact_phone  VARCHAR(20)  DEFAULT '';
+ALTER TABLE wifi_settings ADD COLUMN IF NOT EXISTS contact_email  VARCHAR(100) DEFAULT '';
+ALTER TABLE wifi_settings ADD COLUMN IF NOT EXISTS created_at     TIMESTAMPTZ  DEFAULT NOW();
+ALTER TABLE wifi_settings ADD COLUMN IF NOT EXISTS updated_at     TIMESTAMPTZ  DEFAULT NOW();
+
+DO $$ BEGIN ALTER TABLE wifi_settings ALTER COLUMN hotspot_title   DROP NOT NULL; EXCEPTION WHEN OTHERS THEN NULL; END $$;
+DO $$ BEGIN ALTER TABLE wifi_settings ALTER COLUMN enable_trial    DROP NOT NULL; EXCEPTION WHEN OTHERS THEN NULL; END $$;
+DO $$ BEGIN ALTER TABLE wifi_settings ALTER COLUMN trial_minutes   DROP NOT NULL; EXCEPTION WHEN OTHERS THEN NULL; END $$;
+DO $$ BEGIN ALTER TABLE wifi_settings ALTER COLUMN enable_vouchers DROP NOT NULL; EXCEPTION WHEN OTHERS THEN NULL; END $$;
+DO $$ BEGIN ALTER TABLE wifi_settings ALTER COLUMN description     DROP NOT NULL; EXCEPTION WHEN OTHERS THEN NULL; END $$;
+DO $$ BEGIN ALTER TABLE wifi_settings ALTER COLUMN theme_color     DROP NOT NULL; EXCEPTION WHEN OTHERS THEN NULL; END $$;
+DO $$ BEGIN ALTER TABLE wifi_settings ALTER COLUMN faq_json        DROP NOT NULL; EXCEPTION WHEN OTHERS THEN NULL; END $$;
+
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint
+    WHERE conname = 'wifi_settings_admin_id_key' AND conrelid = 'wifi_settings'::regclass
+  ) THEN
+    ALTER TABLE wifi_settings ADD CONSTRAINT wifi_settings_admin_id_key UNIQUE (admin_id);
+  END IF;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
 
 ALTER TABLE wifi_settings ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "admins_own_wifi_settings" ON wifi_settings;
@@ -183,19 +212,22 @@ CREATE POLICY "admins_own_wifi_settings" ON wifi_settings FOR ALL USING (true);
 
 
 -- ============================================================
--- 7. PAYMENT REQUESTS (Admin dashboard → Subscription Status)
+-- 7. PAYMENT REQUESTS
 -- ============================================================
 CREATE TABLE IF NOT EXISTS payment_requests (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  admin_id UUID NOT NULL,
-  phone VARCHAR(20) NOT NULL,
-  amount DECIMAL(10,2) NOT NULL,
-  status VARCHAR(20) NOT NULL DEFAULT 'pending'
-    CHECK (status IN ('pending', 'processing', 'completed', 'rejected')),
-  notes TEXT,
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  updated_at TIMESTAMPTZ DEFAULT NOW()
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid()
 );
+ALTER TABLE payment_requests ADD COLUMN IF NOT EXISTS admin_id   UUID;
+ALTER TABLE payment_requests ADD COLUMN IF NOT EXISTS phone      VARCHAR(20);
+ALTER TABLE payment_requests ADD COLUMN IF NOT EXISTS amount     DECIMAL(10,2);
+ALTER TABLE payment_requests ADD COLUMN IF NOT EXISTS status     VARCHAR(20)  DEFAULT 'pending';
+ALTER TABLE payment_requests ADD COLUMN IF NOT EXISTS notes      TEXT;
+ALTER TABLE payment_requests ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ  DEFAULT NOW();
+ALTER TABLE payment_requests ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ  DEFAULT NOW();
+
+DO $$ BEGIN ALTER TABLE payment_requests ALTER COLUMN phone  DROP NOT NULL; EXCEPTION WHEN OTHERS THEN NULL; END $$;
+DO $$ BEGIN ALTER TABLE payment_requests ALTER COLUMN amount DROP NOT NULL; EXCEPTION WHEN OTHERS THEN NULL; END $$;
+DO $$ BEGIN ALTER TABLE payment_requests ALTER COLUMN status DROP NOT NULL; EXCEPTION WHEN OTHERS THEN NULL; END $$;
 
 CREATE INDEX IF NOT EXISTS idx_payment_requests_admin ON payment_requests(admin_id);
 
@@ -205,24 +237,31 @@ CREATE POLICY "payment_requests_policy" ON payment_requests FOR ALL USING (true)
 
 
 -- ============================================================
--- 8. SUBSCRIPTION TIERS (Owner dashboard → used internally)
+-- 8. SUBSCRIPTION TIERS
 -- ============================================================
 CREATE TABLE IF NOT EXISTS subscription_tiers (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  name VARCHAR(100) NOT NULL,
-  description TEXT,
-  monthly_fee DECIMAL(10,2) NOT NULL DEFAULT 0,
-  max_revenue_threshold DECIMAL(12,2),
-  features JSONB DEFAULT '{}',
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  updated_at TIMESTAMPTZ DEFAULT NOW()
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid()
 );
+ALTER TABLE subscription_tiers ADD COLUMN IF NOT EXISTS name                   VARCHAR(100);
+ALTER TABLE subscription_tiers ADD COLUMN IF NOT EXISTS description            TEXT;
+ALTER TABLE subscription_tiers ADD COLUMN IF NOT EXISTS monthly_fee            DECIMAL(10,2) DEFAULT 0;
+ALTER TABLE subscription_tiers ADD COLUMN IF NOT EXISTS max_revenue_threshold  DECIMAL(12,2);
+ALTER TABLE subscription_tiers ADD COLUMN IF NOT EXISTS features               JSONB         DEFAULT '{}';
+ALTER TABLE subscription_tiers ADD COLUMN IF NOT EXISTS created_at             TIMESTAMPTZ   DEFAULT NOW();
+ALTER TABLE subscription_tiers ADD COLUMN IF NOT EXISTS updated_at             TIMESTAMPTZ   DEFAULT NOW();
 
-INSERT INTO subscription_tiers (name, description, monthly_fee, features) VALUES
-  ('Basic', 'For small ISPs - up to 50 customers', 1500.00, '{"max_customers": 50, "sms": false, "analytics": false}'),
-  ('Standard', 'For growing ISPs - up to 200 customers', 3000.00, '{"max_customers": 200, "sms": true, "analytics": false}'),
-  ('Enterprise', 'Unlimited customers + full features', 6000.00, '{"max_customers": -1, "sms": true, "analytics": true}')
-ON CONFLICT DO NOTHING;
+DO $$ BEGIN ALTER TABLE subscription_tiers ALTER COLUMN name        DROP NOT NULL; EXCEPTION WHEN OTHERS THEN NULL; END $$;
+DO $$ BEGIN ALTER TABLE subscription_tiers ALTER COLUMN monthly_fee DROP NOT NULL; EXCEPTION WHEN OTHERS THEN NULL; END $$;
+
+DO $$
+BEGIN
+  INSERT INTO subscription_tiers (name, description, monthly_fee, features) VALUES
+    ('Basic',      'For small ISPs - up to 50 customers',      1500.00, '{"max_customers":50,"sms":false,"analytics":false}'),
+    ('Standard',   'For growing ISPs - up to 200 customers',   3000.00, '{"max_customers":200,"sms":true,"analytics":false}'),
+    ('Enterprise', 'Unlimited customers and full features',    6000.00, '{"max_customers":-1,"sms":true,"analytics":true}');
+EXCEPTION WHEN OTHERS THEN
+  RAISE NOTICE 'Skipped seeding subscription_tiers: %', SQLERRM;
+END $$;
 
 ALTER TABLE subscription_tiers ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "tiers_readable" ON subscription_tiers;
@@ -230,22 +269,35 @@ CREATE POLICY "tiers_readable" ON subscription_tiers FOR ALL USING (true);
 
 
 -- ============================================================
--- 9. ADMIN SUBSCRIPTIONS (links admins to tiers)
+-- 9. ADMIN SUBSCRIPTIONS
 -- ============================================================
 CREATE TABLE IF NOT EXISTS admin_subscriptions (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  admin_id UUID NOT NULL REFERENCES admins(id) ON DELETE CASCADE,
-  tier_id UUID REFERENCES subscription_tiers(id),
-  status VARCHAR(20) NOT NULL DEFAULT 'trial'
-    CHECK (status IN ('trial', 'active', 'grace', 'suspended', 'cancelled')),
-  last_payment_date TIMESTAMPTZ,
-  next_due_date TIMESTAMPTZ,
-  grace_period_days INTEGER NOT NULL DEFAULT 7,
-  total_revenue DECIMAL(12,2) NOT NULL DEFAULT 0,
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  updated_at TIMESTAMPTZ DEFAULT NOW(),
-  UNIQUE(admin_id)
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid()
 );
+ALTER TABLE admin_subscriptions ADD COLUMN IF NOT EXISTS admin_id         UUID;
+ALTER TABLE admin_subscriptions ADD COLUMN IF NOT EXISTS tier_id          UUID;
+ALTER TABLE admin_subscriptions ADD COLUMN IF NOT EXISTS status           VARCHAR(20)   DEFAULT 'trial';
+ALTER TABLE admin_subscriptions ADD COLUMN IF NOT EXISTS last_payment_date TIMESTAMPTZ;
+ALTER TABLE admin_subscriptions ADD COLUMN IF NOT EXISTS next_due_date    TIMESTAMPTZ;
+ALTER TABLE admin_subscriptions ADD COLUMN IF NOT EXISTS grace_period_days INTEGER      DEFAULT 7;
+ALTER TABLE admin_subscriptions ADD COLUMN IF NOT EXISTS total_revenue    DECIMAL(12,2) DEFAULT 0;
+ALTER TABLE admin_subscriptions ADD COLUMN IF NOT EXISTS created_at       TIMESTAMPTZ   DEFAULT NOW();
+ALTER TABLE admin_subscriptions ADD COLUMN IF NOT EXISTS updated_at       TIMESTAMPTZ   DEFAULT NOW();
+
+DO $$ BEGIN ALTER TABLE admin_subscriptions ALTER COLUMN status           DROP NOT NULL; EXCEPTION WHEN OTHERS THEN NULL; END $$;
+DO $$ BEGIN ALTER TABLE admin_subscriptions ALTER COLUMN grace_period_days DROP NOT NULL; EXCEPTION WHEN OTHERS THEN NULL; END $$;
+DO $$ BEGIN ALTER TABLE admin_subscriptions ALTER COLUMN total_revenue    DROP NOT NULL; EXCEPTION WHEN OTHERS THEN NULL; END $$;
+
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint
+    WHERE conname = 'admin_subscriptions_admin_id_key' AND conrelid = 'admin_subscriptions'::regclass
+  ) THEN
+    ALTER TABLE admin_subscriptions ADD CONSTRAINT admin_subscriptions_admin_id_key UNIQUE (admin_id);
+  END IF;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
 
 ALTER TABLE admin_subscriptions ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "admin_subscriptions_policy" ON admin_subscriptions;
@@ -253,22 +305,41 @@ CREATE POLICY "admin_subscriptions_policy" ON admin_subscriptions FOR ALL USING 
 
 
 -- ============================================================
--- 10. SYSTEM SETTINGS (key-value store for platform config)
+-- 10. SYSTEM SETTINGS
 -- ============================================================
 CREATE TABLE IF NOT EXISTS system_settings (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  setting_key VARCHAR(100) NOT NULL UNIQUE,
-  setting_value JSONB NOT NULL,
-  description TEXT,
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  updated_at TIMESTAMPTZ DEFAULT NOW()
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid()
 );
+ALTER TABLE system_settings ADD COLUMN IF NOT EXISTS setting_key   VARCHAR(100);
+ALTER TABLE system_settings ADD COLUMN IF NOT EXISTS setting_value JSONB;
+ALTER TABLE system_settings ADD COLUMN IF NOT EXISTS description   TEXT;
+ALTER TABLE system_settings ADD COLUMN IF NOT EXISTS created_at    TIMESTAMPTZ DEFAULT NOW();
+ALTER TABLE system_settings ADD COLUMN IF NOT EXISTS updated_at    TIMESTAMPTZ DEFAULT NOW();
 
-INSERT INTO system_settings (setting_key, setting_value, description) VALUES
-  ('default_grace_period', '{"days": 7}', 'Default grace period in days before suspending unpaid subscriptions'),
-  ('platform_name', '"Kingstone WiFi Billing"', 'Platform display name'),
-  ('support_email', '"support@kingstonewifi.co.ke"', 'Support contact email')
-ON CONFLICT (setting_key) DO NOTHING;
+DO $$ BEGIN ALTER TABLE system_settings ALTER COLUMN setting_key   DROP NOT NULL; EXCEPTION WHEN OTHERS THEN NULL; END $$;
+DO $$ BEGIN ALTER TABLE system_settings ALTER COLUMN setting_value DROP NOT NULL; EXCEPTION WHEN OTHERS THEN NULL; END $$;
+
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint
+    WHERE conname = 'system_settings_setting_key_key' AND conrelid = 'system_settings'::regclass
+  ) THEN
+    ALTER TABLE system_settings ADD CONSTRAINT system_settings_setting_key_key UNIQUE (setting_key);
+  END IF;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+DO $$
+BEGIN
+  INSERT INTO system_settings (setting_key, setting_value, description) VALUES
+    ('default_grace_period', '{"days": 7}',                       'Grace period before suspending unpaid subscriptions'),
+    ('platform_name',        '"Kingstone WiFi Billing"',           'Platform display name'),
+    ('support_email',        '"support@kingstonewifi.co.ke"',      'Support contact email')
+  ON CONFLICT (setting_key) DO NOTHING;
+EXCEPTION WHEN OTHERS THEN
+  RAISE NOTICE 'Skipped seeding system_settings: %', SQLERRM;
+END $$;
 
 ALTER TABLE system_settings ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "system_settings_policy" ON system_settings;

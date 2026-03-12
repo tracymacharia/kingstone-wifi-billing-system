@@ -15,6 +15,18 @@ CREATE TABLE IF NOT EXISTS notification_templates (
 ALTER TABLE notification_templates ADD COLUMN IF NOT EXISTS template_type VARCHAR(50);
 ALTER TABLE notification_templates ADD COLUMN IF NOT EXISTS template_content TEXT;
 
+-- Drop NOT NULL constraints from columns our app doesn't control (they block inserts)
+DO $$
+BEGIN
+  ALTER TABLE notification_templates ALTER COLUMN name DROP NOT NULL;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+DO $$
+BEGIN
+  ALTER TABLE notification_templates ALTER COLUMN description DROP NOT NULL;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
 -- Add unique constraint on template_type if not already present
 DO $$
 BEGIN
@@ -28,22 +40,17 @@ BEGIN
 EXCEPTION WHEN OTHERS THEN NULL;
 END $$;
 
--- Seed default templates
-INSERT INTO notification_templates (template_type, template_content) VALUES
-  ('sms_reset', 'Hello {admin_name}, your login credentials have been reset. Username: {username}, Password: {password}. Login at your dashboard. - {owner_name}'),
-  ('email_reset_subject', 'Your {system_name} Login Credentials'),
-  ('email_reset_body', 'Hello {admin_name},
-
-Your login credentials have been reset by {owner_name}.
-
-Username: {username}
-Password: {password}
-
-Please log in and change your password immediately.
-
-Best regards,
-{owner_name}')
-ON CONFLICT (template_type) DO NOTHING;
+-- Seed default templates (wrapped in DO block to skip gracefully if schema conflicts remain)
+DO $$
+BEGIN
+  INSERT INTO notification_templates (template_type, template_content) VALUES
+    ('sms_reset', 'Hello {admin_name}, your login credentials have been reset. Username: {username}, Password: {password}. Login at your dashboard. - {owner_name}'),
+    ('email_reset_subject', 'Your {system_name} Login Credentials'),
+    ('email_reset_body', 'Hello {admin_name}, your login credentials have been reset by {owner_name}. Username: {username} Password: {password} Please log in and change your password immediately. - {owner_name}')
+  ON CONFLICT (template_type) DO NOTHING;
+EXCEPTION WHEN OTHERS THEN
+  RAISE NOTICE 'Could not seed notification_templates: %. Templates can be added manually from the dashboard.', SQLERRM;
+END $$;
 
 ALTER TABLE notification_templates ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "owners_manage_templates" ON notification_templates;

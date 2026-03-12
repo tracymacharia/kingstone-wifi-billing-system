@@ -45,37 +45,25 @@ END $$;
 
 -- ============================================================
 -- 2. SYSTEM AUDIT LOGS
+-- Table already exists with columns: user_id, action, table_name, record_id, old_value, new_value, ip_address
+-- Component has been updated to use these real column names.
+-- We only enable RLS and add access policies here.
 -- ============================================================
 DO $$
 BEGIN
-  CREATE TABLE IF NOT EXISTS system_audit_logs (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid()
-  );
-  ALTER TABLE system_audit_logs ADD COLUMN IF NOT EXISTS actor_id    UUID;
-  ALTER TABLE system_audit_logs ADD COLUMN IF NOT EXISTS actor_role  VARCHAR(20)  DEFAULT 'system';
-  ALTER TABLE system_audit_logs ADD COLUMN IF NOT EXISTS action_type VARCHAR(20);
-  ALTER TABLE system_audit_logs ADD COLUMN IF NOT EXISTS entity_type VARCHAR(50);
-  ALTER TABLE system_audit_logs ADD COLUMN IF NOT EXISTS entity_id   UUID;
-  ALTER TABLE system_audit_logs ADD COLUMN IF NOT EXISTS entity_name VARCHAR(255);
-  ALTER TABLE system_audit_logs ADD COLUMN IF NOT EXISTS details     JSONB        DEFAULT '{}';
-  ALTER TABLE system_audit_logs ADD COLUMN IF NOT EXISTS success     BOOLEAN      DEFAULT true;
-  ALTER TABLE system_audit_logs ADD COLUMN IF NOT EXISTS created_at  TIMESTAMPTZ  DEFAULT NOW();
-  BEGIN ALTER TABLE system_audit_logs ALTER COLUMN actor_role  DROP NOT NULL; EXCEPTION WHEN OTHERS THEN NULL; END;
-  BEGIN ALTER TABLE system_audit_logs ALTER COLUMN action_type DROP NOT NULL; EXCEPTION WHEN OTHERS THEN NULL; END;
-  BEGIN ALTER TABLE system_audit_logs ALTER COLUMN entity_type DROP NOT NULL; EXCEPTION WHEN OTHERS THEN NULL; END;
+  ALTER TABLE system_audit_logs ENABLE ROW LEVEL SECURITY;
+  DROP POLICY IF EXISTS "audit_logs_readable"   ON system_audit_logs;
+  CREATE POLICY "audit_logs_readable"   ON system_audit_logs FOR SELECT USING (true);
+  DROP POLICY IF EXISTS "audit_logs_insertable" ON system_audit_logs;
+  CREATE POLICY "audit_logs_insertable" ON system_audit_logs FOR INSERT WITH CHECK (true);
   BEGIN
-    CREATE INDEX IF NOT EXISTS idx_audit_logs_actor   ON system_audit_logs(actor_id);
+    CREATE INDEX IF NOT EXISTS idx_audit_logs_user_id  ON system_audit_logs(user_id);
   EXCEPTION WHEN OTHERS THEN NULL;
   END;
   BEGIN
     CREATE INDEX IF NOT EXISTS idx_audit_logs_created ON system_audit_logs(created_at DESC);
   EXCEPTION WHEN OTHERS THEN NULL;
   END;
-  ALTER TABLE system_audit_logs ENABLE ROW LEVEL SECURITY;
-  DROP POLICY IF EXISTS "audit_logs_readable"   ON system_audit_logs;
-  CREATE POLICY "audit_logs_readable"   ON system_audit_logs FOR SELECT USING (true);
-  DROP POLICY IF EXISTS "audit_logs_insertable" ON system_audit_logs;
-  CREATE POLICY "audit_logs_insertable" ON system_audit_logs FOR INSERT WITH CHECK (true);
 EXCEPTION WHEN OTHERS THEN
   RAISE NOTICE 'system_audit_logs section failed: %. Continuing...', SQLERRM;
 END $$;

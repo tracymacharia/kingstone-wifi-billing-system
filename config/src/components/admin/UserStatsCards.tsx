@@ -56,17 +56,6 @@ const UserStatsCards = ({ onCardClick }: UserStatsCardsProps) => {
         return;
       }
 
-      // Get connected users (hotspot)
-      const { data: connectedUsers, error: connectedError } = await supabase
-        .from('connected_users')
-        .select('id, status')
-        .eq('admin_id', adminId)
-        .eq('status', 'active');
-
-      if (connectedError) {
-        console.error('Error loading connected users:', connectedError);
-      }
-
       // Get broadband users (PPPoE/Static)
       const { data: broadbandUsers, error: broadbandError } = await supabase
         .from('broadband_users')
@@ -105,7 +94,9 @@ const UserStatsCards = ({ onCardClick }: UserStatsCardsProps) => {
         }
       });
 
-      const onlineHotspot = connectedUsers?.length || 0;
+      const onlineHotspot = wifiUsers?.filter(u =>
+        u.is_active && u.package_expires_at && new Date(u.package_expires_at) > now
+      ).length || 0;
       const onlinePPPoE = broadbandUsers?.filter(u => u.user_type === 'pppoe' && u.is_active).length || 0;
       const onlineStatic = broadbandUsers?.filter(u => u.user_type === 'static' && u.is_active).length || 0;
 

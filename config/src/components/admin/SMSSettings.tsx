@@ -60,6 +60,7 @@ const SMSSettings = ({ businessName }: SMSSettingsProps) => {
         .single();
 
       if (error && error.code !== 'PGRST116') {
+        if ((error as any).code === '42P01') return;
         console.error('Error loading SMS settings:', error);
         return;
       }
@@ -89,6 +90,7 @@ const SMSSettings = ({ businessName }: SMSSettingsProps) => {
         .limit(20);
 
       if (error) {
+        if ((error as any).code === '42P01') return;
         console.error('Error loading SMS logs:', error);
         return;
       }
@@ -133,6 +135,10 @@ const SMSSettings = ({ businessName }: SMSSettingsProps) => {
         });
 
       if (error) {
+        if ((error as any).code === '42P01') {
+          toast.error("SMS settings table not set up yet. Please run the database setup SQL first.");
+          return;
+        }
         console.error('Error saving SMS settings:', error);
         toast.error("Failed to save SMS settings");
         return;

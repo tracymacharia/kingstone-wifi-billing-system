@@ -48,6 +48,10 @@ const SystemAuditLogs = ({ userRole, userId }: SystemAuditLogsProps) => {
       const { data, error } = await query;
 
       if (error) {
+        if ((error as any).code === '42P01') {
+          setLoading(false);
+          return;
+        }
         console.error('Error loading audit logs:', error);
         return;
       }

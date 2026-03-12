@@ -34,11 +34,16 @@ const NotificationTemplateManager = () => {
         .from('notification_templates')
         .select('*');
 
-      if (error) throw error;
+      if (error) {
+        if ((error as any).code === '42P01') {
+          setLoading(false);
+          return;
+        }
+        throw error;
+      }
 
       setTemplates(data || []);
       
-      // Set form values
       data?.forEach((template) => {
         switch (template.template_type) {
           case 'sms_reset':
@@ -54,7 +59,6 @@ const NotificationTemplateManager = () => {
       });
     } catch (error) {
       console.error('Error fetching templates:', error);
-      toast.error("Failed to load notification templates");
     } finally {
       setLoading(false);
     }
@@ -74,7 +78,13 @@ const NotificationTemplateManager = () => {
           .from('notification_templates')
           .upsert(update, { onConflict: 'template_type' });
 
-        if (error) throw error;
+        if (error) {
+          if ((error as any).code === '42P01') {
+            toast.error("Notification templates table not set up yet. Please run the database setup SQL first.");
+            return;
+          }
+          throw error;
+        }
       }
 
       toast.success("Notification templates updated successfully!");

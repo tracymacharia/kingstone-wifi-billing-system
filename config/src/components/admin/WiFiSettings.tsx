@@ -80,6 +80,9 @@ const WiFiSettings = () => {
         .maybeSingle();
 
       if (error && error.code !== 'PGRST116') {
+        if ((error as any).code === '42P01') {
+          return;
+        }
         throw error;
       }
 
@@ -90,7 +93,7 @@ const WiFiSettings = () => {
         });
       }
     } catch (error) {
-      toast.error('Failed to load WiFi settings');
+      console.error('Failed to load WiFi settings:', error);
     }
   };
 
@@ -193,9 +196,16 @@ const WiFiSettings = () => {
           ...settings
         });
 
-      if (error) throw error;
+      if (error) {
+        if ((error as any).code === '42P01') {
+          toast.error('WiFi settings table not set up yet. Please run the database setup SQL first.');
+          return;
+        }
+        throw error;
+      }
       toast.success('WiFi settings saved successfully');
     } catch (error) {
+      console.error('Failed to save WiFi settings:', error);
       toast.error('Failed to save WiFi settings');
     } finally {
       setIsLoading(false);

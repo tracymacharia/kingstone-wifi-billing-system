@@ -240,7 +240,13 @@ const SubscriptionStatus = ({ businessName }: SubscriptionStatusProps) => {
           created_at: new Date().toISOString()
         });
 
-      if (error) throw error;
+      if (error) {
+        if ((error as any).code === '42P01') {
+          toast.error('Payment requests table not set up. Please contact support directly.');
+          return;
+        }
+        throw error;
+      }
 
       toast.success('Payment request submitted successfully! We will contact you shortly.');
       setRequestPhone('');

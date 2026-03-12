@@ -7,12 +7,28 @@
 -- ============================================================
 CREATE TABLE IF NOT EXISTS notification_templates (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  template_type VARCHAR(50) NOT NULL UNIQUE,
-  template_content TEXT NOT NULL,
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+-- Add columns if they don't exist (safe for tables created with different schemas)
+ALTER TABLE notification_templates ADD COLUMN IF NOT EXISTS template_type VARCHAR(50);
+ALTER TABLE notification_templates ADD COLUMN IF NOT EXISTS template_content TEXT;
+
+-- Add unique constraint on template_type if not already present
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint
+    WHERE conname = 'notification_templates_template_type_key'
+      AND conrelid = 'notification_templates'::regclass
+  ) THEN
+    ALTER TABLE notification_templates ADD CONSTRAINT notification_templates_template_type_key UNIQUE (template_type);
+  END IF;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+-- Seed default templates
 INSERT INTO notification_templates (template_type, template_content) VALUES
   ('sms_reset', 'Hello {admin_name}, your login credentials have been reset. Username: {username}, Password: {password}. Login at your dashboard. - {owner_name}'),
   ('email_reset_subject', 'Your {system_name} Login Credentials'),

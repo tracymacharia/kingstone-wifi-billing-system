@@ -21,7 +21,7 @@ const AdminPasswordManager = () => {
   const [recoveryEmail, setRecoveryEmail] = useState('');
   const [recoveryPhone, setRecoveryPhone] = useState('');
   
-  const { changePassword } = useAuth();
+  const { changePassword, user } = useAuth();
 
   // Load existing recovery contacts
   useEffect(() => {
@@ -30,17 +30,23 @@ const AdminPasswordManager = () => {
         const { data: credentials, error } = await supabase
           .from('system_credentials')
           .select('recovery_email, recovery_phone')
-          .eq('username', 'admin')
+          .eq('username', user?.username || '')
           .single();
 
-        if (error) throw error;
+        if (error) {
+          if (error.code === '42703' || error.code === 'PGRST116') {
+            return;
+          }
+          console.warn('Could not load recovery contacts:', error.message);
+          return;
+        }
 
         if (credentials) {
-          setRecoveryEmail(credentials.recovery_email || '');
-          setRecoveryPhone(credentials.recovery_phone || '');
+          setRecoveryEmail((credentials as any).recovery_email || '');
+          setRecoveryPhone((credentials as any).recovery_phone || '');
         }
       } catch (error) {
-        console.error('Error loading recovery contacts:', error);
+        console.warn('Recovery contacts not available:', error);
       }
     };
 
@@ -57,10 +63,16 @@ const AdminPasswordManager = () => {
         .update({
           recovery_email: recoveryEmail || null,
           recovery_phone: recoveryPhone || null
-        })
-        .eq('username', 'admin');
+        } as any)
+        .eq('username', user?.username || '');
 
-      if (error) throw error;
+      if (error) {
+        if (error.code === '42703') {
+          toast.error('Recovery contact fields are not yet set up in the database. Please run the database migration.');
+          return;
+        }
+        throw error;
+      }
 
       toast.success('Recovery contacts updated successfully!');
     } catch (error) {
@@ -95,7 +107,7 @@ const AdminPasswordManager = () => {
     }
 
     try {
-      const success = await changePassword('admin', newPassword);
+      const success = await changePassword(user?.username || '', newPassword);
       if (!success) {
         throw new Error('Failed to update password');
       }

@@ -63,6 +63,8 @@ const AdminMikrotikManager = () => {
   useEffect(() => {
     if (mikrotikId) {
       loadMikrotik(mikrotikId);
+    } else {
+      setLoading(false);
     }
   }, [mikrotikId]);
 
@@ -233,6 +235,7 @@ const AdminMikrotikManager = () => {
 
   return (
     <SidebarProvider defaultOpen={true}>
+      <AdminSidebar onLogout={handleLogout} businessName={mikrotik.name} />
       <div className="flex min-h-screen flex-col w-full">
         {/* Header */}
         <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">

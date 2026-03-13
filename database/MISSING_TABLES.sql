@@ -348,3 +348,13 @@ BEGIN
 EXCEPTION WHEN OTHERS THEN
   RAISE NOTICE 'system_settings section failed: %. Continuing...', SQLERRM;
 END $$;
+
+-- ===================================================================
+-- ADD RECOVERY CONTACT COLUMNS TO system_credentials
+-- ===================================================================
+DO $$ BEGIN
+  ALTER TABLE system_credentials ADD COLUMN IF NOT EXISTS recovery_email TEXT;
+  ALTER TABLE system_credentials ADD COLUMN IF NOT EXISTS recovery_phone TEXT;
+EXCEPTION WHEN OTHERS THEN
+  RAISE NOTICE 'system_credentials recovery columns: %', SQLERRM;
+END $$;

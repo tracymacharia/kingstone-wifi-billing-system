@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { KingstoneIcon } from "@/components/ui/Kingstone-icon";
@@ -10,7 +11,10 @@ import {
   DollarSign,
   Activity,
   LogOut,
-  Router
+  Router,
+  Eye,
+  EyeOff,
+  Lock
 } from "lucide-react";
 import { toast } from "sonner";
 import { useDashboardVisibility } from "@/hooks/useDashboardVisibility";
@@ -116,6 +120,11 @@ const AdminDashboard = () => {
   });
   const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
   const [userFilter, setUserFilter] = useState<string | null>(null);
+  const [showForceChange, setShowForceChange] = useState(!!user?.isFirstLogin);
+  const [forceNewPassword, setForceNewPassword] = useState('');
+  const [forceConfirmPassword, setForceConfirmPassword] = useState('');
+  const [forceChanging, setForceChanging] = useState(false);
+  const [showForceNewPw, setShowForceNewPw] = useState(false);
 
   useEffect(() => {
     
@@ -186,7 +195,6 @@ const AdminDashboard = () => {
         .from('payments')
         .select('*')
         .eq('admin_id', adminId)
-        .eq('is_deleted', false)
         .order('created_at', { ascending: false })
         .limit(20);
 
@@ -298,6 +306,38 @@ const AdminDashboard = () => {
     if (success) toast.success('Password changed successfully');
     else toast.error('Failed to change password');
     return success;
+  };
+
+  const handleForcePasswordChange = async () => {
+    if (!user?.username) return;
+    if (forceNewPassword.length < 8) {
+      toast.error('Password must be at least 8 characters');
+      return;
+    }
+    if (forceNewPassword !== forceConfirmPassword) {
+      toast.error('Passwords do not match');
+      return;
+    }
+    setForceChanging(true);
+    try {
+      const success = await changePassword(user.username, forceNewPassword);
+      if (success) {
+        toast.success('Password changed successfully. Welcome!');
+        setShowForceChange(false);
+        const stored = sessionStorage.getItem('kingstone_user');
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          parsed.isFirstLogin = false;
+          sessionStorage.setItem('kingstone_user', JSON.stringify(parsed));
+        }
+      } else {
+        toast.error('Failed to change password. Please try again.');
+      }
+    } catch {
+      toast.error('Failed to change password. Please try again.');
+    } finally {
+      setForceChanging(false);
+    }
   };
 
   const handleManageMikrotik = (mikrotikId: string) => {
@@ -626,6 +666,65 @@ const AdminDashboard = () => {
 
   return (
     <SidebarProvider>
+      {/* Force password change overlay for first login */}
+      {showForceChange && (
+        <div className="fixed inset-0 z-[999] flex items-center justify-center bg-black/70 backdrop-blur-sm">
+          <Card className="w-full max-w-md mx-4 shadow-2xl">
+            <CardHeader className="text-center">
+              <div className="mx-auto mb-3 flex items-center justify-center w-14 h-14 rounded-full bg-primary/10">
+                <Lock className="w-7 h-7 text-primary" />
+              </div>
+              <CardTitle className="text-xl">Set Your Password</CardTitle>
+              <CardDescription>
+                This is your first login. Please create a new password to continue.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium">New Password</label>
+                <div className="relative">
+                  <Input
+                    type={showForceNewPw ? 'text' : 'password'}
+                    placeholder="At least 8 characters"
+                    value={forceNewPassword}
+                    onChange={(e) => setForceNewPassword(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && handleForcePasswordChange()}
+                    disabled={forceChanging}
+                  />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="absolute right-1 top-1 h-8 w-8"
+                    onClick={() => setShowForceNewPw(!showForceNewPw)}
+                  >
+                    {showForceNewPw ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </Button>
+                </div>
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Confirm Password</label>
+                <Input
+                  type="password"
+                  placeholder="Repeat your new password"
+                  value={forceConfirmPassword}
+                  onChange={(e) => setForceConfirmPassword(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleForcePasswordChange()}
+                  disabled={forceChanging}
+                />
+              </div>
+              <Button
+                className="w-full"
+                onClick={handleForcePasswordChange}
+                disabled={forceChanging || !forceNewPassword || !forceConfirmPassword}
+              >
+                {forceChanging ? 'Saving...' : 'Set Password & Continue'}
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
       <div className="min-h-screen flex w-full bg-gradient-to-br from-slate-950 via-blue-950/50 to-purple-950/30 relative">
         {/* 3D Background - fixed position, doesn't affect layout */}
         <div className="fixed inset-0 bg-gradient-to-br from-slate-950 via-blue-950/50 to-purple-950/30 pointer-events-none">

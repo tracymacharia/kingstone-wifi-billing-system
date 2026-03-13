@@ -76,25 +76,33 @@ const SubscriptionStatus = ({ businessName }: SubscriptionStatusProps) => {
         }
 
 
-        // Use RPC function to get admin data (bypasses RLS issues)
-        const { data: adminData, error: adminError } = await supabase
-          .rpc('get_admin_by_username', { p_username: adminUsername });
-
-        if (adminError) {
-          console.error('Error fetching admin data via RPC:', adminError);
-          toast.error('Failed to load admin data: ' + adminError.message);
+        const adminId = getAdminIdFromUser(user);
+        if (!adminId) {
+          console.error('No admin ID available');
           setLoading(false);
           return;
         }
 
-        if (!adminData || adminData.length === 0) {
-          console.warn('No admin data found for username:', adminUsername);
+        const { data: adminRecord, error: adminError } = await supabase
+          .from('admins')
+          .select('id, owner_id, username, phone, email')
+          .eq('id', adminId)
+          .single();
+
+        if (adminError) {
+          console.error('Error fetching admin data:', adminError);
+          setLoading(false);
+          return;
+        }
+
+        if (!adminRecord) {
+          console.warn('No admin data found for ID:', adminId);
           toast.error('Admin record not found. Please contact the owner.');
           setLoading(false);
           return;
         }
 
-        const admin = adminData[0];
+        const admin = adminRecord;
 
         // If we have owner_id, try to fetch owner data separately
         let ownerData = null;

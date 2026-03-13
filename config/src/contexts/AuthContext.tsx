@@ -10,6 +10,7 @@ interface User {
   role: 'owner' | 'admin';
   credentialId?: string;
   adminId?: string; // Keep for backward compatibility
+  isFirstLogin?: boolean;
 }
 
 interface AuthContextType {
@@ -215,7 +216,8 @@ useEffect(() => {
           email: `${usernameOrEmail}@kingstone.local`,
           role: role as 'owner' | 'admin',
           credentialId: credential_id,
-          adminId: role === 'admin' ? admin_id : undefined
+          adminId: role === 'admin' ? admin_id : undefined,
+          isFirstLogin: role === 'admin' ? (is_first_login === true) : false
         };
 
         setUser(userData);

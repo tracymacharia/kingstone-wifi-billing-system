@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Phone, Mail, Building2, Save, Info, ExternalLink } from "lucide-react";
+import { Phone, Mail, Building2, Save, Info } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
@@ -13,18 +13,16 @@ import { getAdminIdFromUser } from "@/hooks/useAdminId";
 
 interface AdminContactData {
   business_name: string;
-  contact_phone: string;
-  contact_email: string;
-  business_description?: string;
+  phone: string;
+  email: string;
 }
 
 const BusinessContactInfo = () => {
   const { user } = useAuth();
   const [contactData, setContactData] = useState<AdminContactData>({
     business_name: '',
-    contact_phone: '',
-    contact_email: '',
-    business_description: ''
+    phone: '',
+    email: '',
   });
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -43,10 +41,9 @@ const BusinessContactInfo = () => {
 
       setIsLoading(true);
 
-      // Load from admins table
       const { data: adminData, error: adminError } = await supabase
         .from('admins')
-        .select('business_name, contact_phone, contact_email')
+        .select('phone, email')
         .eq('id', adminId)
         .single();
 
@@ -56,10 +53,9 @@ const BusinessContactInfo = () => {
 
       if (adminData) {
         setContactData({
-          business_name: adminData.business_name || '',
-          contact_phone: adminData.contact_phone || '',
-          contact_email: adminData.contact_email || '',
-          business_description: adminData.business_description || ''
+          business_name: user?.username || '',
+          phone: adminData.phone || '',
+          email: adminData.email || '',
         });
       }
     } catch (error) {
@@ -80,24 +76,16 @@ const BusinessContactInfo = () => {
 
       setIsSaving(true);
 
-      // Validate inputs
-      if (!contactData.business_name.trim()) {
-        toast.error('Business name is required');
-        return;
-      }
-
-      if (!contactData.contact_phone.trim() && !contactData.contact_email.trim()) {
+      if (!contactData.phone.trim() && !contactData.email.trim()) {
         toast.error('At least one contact method (phone or email) is required');
         return;
       }
 
-      // Update admins table
       const { error: updateError } = await supabase
         .from('admins')
         .update({
-          contact_phone: contactData.contact_phone.trim() || null,
-          contact_email: contactData.contact_email.trim() || null,
-          business_description: contactData.business_description?.trim() || null
+          phone: contactData.phone.trim() || null,
+          email: contactData.email.trim() || null,
         })
         .eq('id', adminId);
 
@@ -132,7 +120,6 @@ const BusinessContactInfo = () => {
 
   return (
     <div className="space-y-6">
-      {/* Business Contact Info Card */}
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
@@ -151,25 +138,6 @@ const BusinessContactInfo = () => {
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
-          {/* Business Name */}
-          <div className="space-y-2">
-            <Label htmlFor="business_name">Business Name *</Label>
-            <div className="relative">
-              <Building2 className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-              <Input
-                id="business_name"
-                placeholder="e.g., Yobrazlyan WiFi Solutions"
-                value={contactData.business_name}
-                onChange={(e) => setContactData({ ...contactData, business_name: e.target.value })}
-                className="pl-10"
-              />
-            </div>
-            <p className="text-xs text-muted-foreground">
-              This will be displayed as the ISP name in the client portal
-            </p>
-          </div>
-
-          {/* Contact Phone */}
           <div className="space-y-2">
             <Label htmlFor="contact_phone">Contact Phone</Label>
             <div className="relative">
@@ -177,8 +145,8 @@ const BusinessContactInfo = () => {
               <Input
                 id="contact_phone"
                 placeholder="e.g., +254 700 000 000"
-                value={contactData.contact_phone}
-                onChange={(e) => setContactData({ ...contactData, contact_phone: e.target.value })}
+                value={contactData.phone}
+                onChange={(e) => setContactData({ ...contactData, phone: e.target.value })}
                 className="pl-10"
               />
             </div>
@@ -187,7 +155,6 @@ const BusinessContactInfo = () => {
             </p>
           </div>
 
-          {/* Contact Email */}
           <div className="space-y-2">
             <Label htmlFor="contact_email">Contact Email</Label>
             <div className="relative">
@@ -195,9 +162,9 @@ const BusinessContactInfo = () => {
               <Input
                 id="contact_email"
                 type="email"
-                placeholder="e.g., support@yobrazlyan.com"
-                value={contactData.contact_email}
-                onChange={(e) => setContactData({ ...contactData, contact_email: e.target.value })}
+                placeholder="e.g., support@yourisp.com"
+                value={contactData.email}
+                onChange={(e) => setContactData({ ...contactData, email: e.target.value })}
                 className="pl-10"
               />
             </div>
@@ -206,13 +173,12 @@ const BusinessContactInfo = () => {
             </p>
           </div>
 
-          {/* Save Button */}
           <div className="flex items-center gap-2 pt-4">
             <Button onClick={handleSave} disabled={isSaving}>
               <Save className="h-4 w-4 mr-2" />
               {isSaving ? 'Saving...' : 'Save Contact Info'}
             </Button>
-            {contactData.business_name && (
+            {(contactData.phone || contactData.email) && (
               <Badge variant="secondary" className="bg-green-100 text-green-700">
                 <Info className="h-3 w-3 mr-1" />
                 Visible to clients
@@ -222,7 +188,6 @@ const BusinessContactInfo = () => {
         </CardContent>
       </Card>
 
-      {/* Preview Card */}
       <Card>
         <CardHeader>
           <CardTitle className="text-sm">How it appears to clients</CardTitle>
@@ -232,31 +197,31 @@ const BusinessContactInfo = () => {
             <div className="flex items-center gap-2">
               <Building2 className="h-5 w-5 text-primary" />
               <h3 className="font-semibold">
-                {contactData.business_name || 'Your Business Name'}
+                {contactData.business_name || user?.username || 'Your Business'}
               </h3>
             </div>
-            
-            {contactData.contact_phone && (
+
+            {contactData.phone && (
               <div className="flex items-center gap-2 text-sm">
                 <Phone className="h-4 w-4 text-muted-foreground" />
-                <span>{contactData.contact_phone}</span>
+                <span>{contactData.phone}</span>
               </div>
             )}
-            
-            {contactData.contact_email && (
+
+            {contactData.email && (
               <div className="flex items-center gap-2 text-sm">
                 <Mail className="h-4 w-4 text-muted-foreground" />
-                <span>{contactData.contact_email}</span>
+                <span>{contactData.email}</span>
               </div>
             )}
-            
-            {!contactData.business_name && !contactData.contact_phone && !contactData.contact_email && (
+
+            {!contactData.phone && !contactData.email && (
               <p className="text-sm text-muted-foreground italic">
                 No contact information set. Add your business details above.
               </p>
             )}
           </div>
-          
+
           <Alert className="mt-4">
             <Info className="h-4 w-4" />
             <AlertDescription className="text-xs">

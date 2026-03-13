@@ -21,13 +21,9 @@ interface WiFiUser {
   username: string;
   password: string;
   phone_number?: string;
-  portal_token?: string;
   package_id?: string;
   package_expires_at?: string;
-  bandwidth_used_mb: number;
   is_active: boolean;
-  last_login?: string;
-  user_type: string;
   created_at: string;
   package?: {
     name: string;
@@ -74,7 +70,6 @@ const WiFiUserManager = () => {
     username: '',
     password: '',
     phone_number: '',
-    user_type: '',
     is_active: true
   });
 
@@ -117,13 +112,9 @@ const WiFiUserManager = () => {
         username: user.username,
         password: user.password,
         phone_number: user.phone_number || '',
-        portal_token: user.portal_token || '',
         package_id: user.current_package_id,
         package_expires_at: user.package_expires_at,
-        bandwidth_used_mb: user.bandwidth_used_mb || 0,
         is_active: user.is_active,
-        last_login: user.last_login,
-        user_type: user.user_type,
         created_at: user.created_at,
         package: user.package && !user.package.error ? {
           name: user.package.name,
@@ -174,7 +165,6 @@ const WiFiUserManager = () => {
       username: '',
       password: '',
       phone_number: '',
-      user_type: '',
       is_active: true
     });
     setEditingUser(null);
@@ -207,7 +197,6 @@ const WiFiUserManager = () => {
       username: user.username,
       password: user.password,
       phone_number: user.phone_number || '',
-      user_type: user.user_type,
       is_active: user.is_active
     });
     setEditingUser(user);
@@ -217,8 +206,8 @@ const WiFiUserManager = () => {
 
   const handleSave = async () => {
     // Validate required fields
-    if (!formData.username.trim() || !formData.password.trim() || !formData.user_type) {
-      toast.error("Username, password, and user type are required");
+    if (!formData.username.trim() || !formData.password.trim()) {
+      toast.error("Username and password are required");
       return;
     }
 
@@ -258,9 +247,8 @@ const WiFiUserManager = () => {
 
       const userData = {
         username: sanitizeInput(formData.username),
-        password: formData.password, // This will be hashed by the database trigger
+        password: formData.password,
         phone_number: formData.phone_number ? sanitizeInput(formData.phone_number) : null,
-        user_type: formData.user_type,
         is_active: formData.is_active,
         admin_id: userId
       };
@@ -366,24 +354,15 @@ const WiFiUserManager = () => {
   };
 
   const handleCopyPortalLink = (user: WiFiUser) => {
-    if (!user.portal_token) {
-      toast.error("Portal link not available - user needs a portal token");
-      return;
-    }
-
-    const portalLink = `${window.location.origin}/client/${user.portal_token}`;
-    navigator.clipboard.writeText(portalLink);
-    toast.success("Portal link copied to clipboard!");
+    const portalLoginLink = `${window.location.origin}/client-login`;
+    const loginInstructions = `Client Portal\nURL: ${portalLoginLink}\nUsername: ${user.username}\nPassword: ${user.password}`;
+    navigator.clipboard.writeText(loginInstructions);
+    toast.success("Portal login link copied to clipboard!");
   };
 
   const handleOpenPortal = (user: WiFiUser) => {
-    if (!user.portal_token) {
-      toast.error("Portal link not available - user needs a portal token");
-      return;
-    }
-
-    const portalLink = `${window.location.origin}/client/${user.portal_token}`;
-    window.open(portalLink, '_blank');
+    const portalLoginLink = `${window.location.origin}/client-login`;
+    window.open(portalLoginLink, '_blank');
   };
 
   const handleCopyPppoeCredentials = (user: WiFiUser) => {
@@ -419,13 +398,11 @@ const WiFiUserManager = () => {
 
     try {
       if (selectedUser.is_active) {
-        // DEACTIVATE user
+        // DEACTIVATE user — update is_active in DB
         const { error: deactError } = await supabase
-          .rpc('deactivate_wifi_user_in_router', {
-            p_username: selectedUser.username,
-            p_user_type: selectedUser.user_type,
-            p_admin_id: getAdminIdFromUser(user)
-          });
+          .from('wifi_users')
+          .update({ is_active: false, updated_at: new Date().toISOString() })
+          .eq('id', selectedUser.id);
 
         if (deactError) {
           console.error('Error deactivating user:', deactError);
@@ -442,26 +419,23 @@ const WiFiUserManager = () => {
           return;
         }
 
-        // Calculate expiry time for display
-        const now = new Date();
-        const expiryTime = new Date(now);
+        // Calculate expiry time
+        const expiryTime = new Date();
         if (activationDurationType === 'hours') {
           expiryTime.setHours(expiryTime.getHours() + duration);
         } else if (activationDurationType === 'days') {
           expiryTime.setDate(expiryTime.getDate() + duration);
         }
 
-        const durationInHours = activationDurationType === 'hours' ? duration : duration * 24;
-
-        // Activate user in router and database
-        const { data: actData, error: actError } = await supabase
-          .rpc('activate_wifi_user_in_router', {
-            p_username: selectedUser.username,
-            p_password: selectedUser.password,
-            p_user_type: selectedUser.user_type,
-            p_duration_hours: durationInHours,
-            p_admin_id: getAdminIdFromUser(user)
-          });
+        // Activate user in DB
+        const { error: actError } = await supabase
+          .from('wifi_users')
+          .update({
+            is_active: true,
+            package_expires_at: expiryTime.toISOString(),
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', selectedUser.id);
 
         if (actError) {
           console.error('Error activating user:', actError);
@@ -469,12 +443,7 @@ const WiFiUserManager = () => {
           return;
         }
 
-        // Check if router integration worked
-        if (actData && !(actData as any).success) {
-          toast.warning("User activated in database but router sync failed");
-        } else {
-          toast.success(`User activated for ${duration} ${activationDurationType}! Expires: ${expiryTime.toLocaleString()}`);
-        }
+        toast.success(`User activated for ${duration} ${activationDurationType}! Expires: ${expiryTime.toLocaleString()}`);
       }
 
       setShowActivateDialog(false);
@@ -504,7 +473,6 @@ const WiFiUserManager = () => {
 Your WiFi account is ready:
 Username: ${user.username}
 Password: ${user.password}
-Type: ${user.user_type.toUpperCase()}
 
 Client Portal Login: ${portalLoginLink}
 Login with the credentials above to manage your account.
@@ -668,7 +636,7 @@ Pay via Till/Paybill: [Payment Details]`;
                         {user.phone_number || <span className="text-muted-foreground">-</span>}
                       </TableCell>
                       <TableCell>
-                        <Badge variant="outline">{user.user_type.toUpperCase()}</Badge>
+                        <Badge variant="outline">WiFi User</Badge>
                       </TableCell>
                       <TableCell>
                         {user.package ? (
@@ -830,28 +798,6 @@ Pay via Till/Paybill: [Payment Details]`;
                 onChange={(e) => setFormData({ ...formData, phone_number: e.target.value })}
               />
               <p className="text-xs text-muted-foreground">Optional: for SMS notifications and portal access</p>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="user-type">User Type *</Label>
-              <Select 
-                value={formData.user_type} 
-                onValueChange={(value) => setFormData({ ...formData, user_type: value })}
-              >
-                <SelectTrigger className="bg-background">
-                  <SelectValue placeholder="-- Select User Type --" />
-                </SelectTrigger>
-                <SelectContent className="bg-background border border-border shadow-lg z-50">
-                  <SelectItem value="hotspot">Hotspot</SelectItem>
-                  <SelectItem value="pppoe">PPPoE</SelectItem>
-                  <SelectItem value="static">Static</SelectItem>
-                </SelectContent>
-              </Select>
-              <p className="text-xs text-muted-foreground">
-                {formData.user_type === 'hotspot' && 'Auth via hotspot login portal. Requires username & password.'}
-                {formData.user_type === 'pppoe' && 'Auth via Mikrotik PPPoE interface. Requires username, password & bandwidth.'}
-                {formData.user_type === 'static' && 'Auth via static IP MAC binding. Requires username, password & static IP.'}
-              </p>
             </div>
 
             <div className="flex items-center space-x-2">
@@ -1016,7 +962,7 @@ Pay via Till/Paybill: [Payment Details]`;
             {/* User Info */}
             <div className="p-3 bg-muted rounded-md">
               <p className="text-sm font-medium">User: {selectedUser?.username}</p>
-              <p className="text-xs text-muted-foreground">Type: {selectedUser?.user_type?.toUpperCase()}</p>
+              <p className="text-xs text-muted-foreground">Type: WiFi User</p>
               {selectedUser?.is_active && selectedUser?.package_expires_at && (
                 <p className="text-xs text-muted-foreground mt-1">
                   Current expiry: {new Date(selectedUser.package_expires_at).toLocaleString()}

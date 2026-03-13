@@ -28,13 +28,9 @@ interface WiFiUser {
   username: string;
   password: string;
   phone_number?: string;
-  portal_token?: string;
   package_id?: string;
   package_expires_at?: string;
-  bandwidth_used_mb: number;
   is_active: boolean;
-  last_login?: string;
-  user_type: string;
   created_at: string;
   package?: {
     name: string;
@@ -150,30 +146,15 @@ const WiFiUserAccountsList = ({ users, onRefresh, onEdit, onDelete }: WiFiUserAc
     return new Date(user.package_expires_at) > new Date();
   };
 
-  const getPortalLink = (user: WiFiUser) => {
-    if (!user.portal_token) return null;
-    return `${window.location.origin}/client/${user.portal_token}`;
-  };
-
   const copyPortalLink = (user: WiFiUser) => {
-    const link = getPortalLink(user);
-    if (!link) {
-      toast.error("No portal link available for this user");
-      return;
-    }
-    
-    navigator.clipboard.writeText(link);
-    toast.success("Portal link copied to clipboard!");
+    const portalLink = `${window.location.origin}/client-login`;
+    const loginInstructions = `Client Portal\nURL: ${portalLink}\nUsername: ${user.username}\nPassword: ${user.password}`;
+    navigator.clipboard.writeText(loginInstructions);
+    toast.success("Portal login link copied to clipboard!");
   };
 
   const openPortalLink = (user: WiFiUser) => {
-    const link = getPortalLink(user);
-    if (!link) {
-      toast.error("No portal link available for this user");
-      return;
-    }
-    
-    window.open(link, '_blank');
+    window.open(`${window.location.origin}/client-login`, '_blank');
   };
 
   const handleEditInternal = (user: WiFiUser) => {
@@ -199,7 +180,7 @@ const WiFiUserAccountsList = ({ users, onRefresh, onEdit, onDelete }: WiFiUserAc
           username: editFormData.username,
           password: editFormData.password,
           phone_number: editFormData.phone_number,
-          package_id: editFormData.package_id || null,
+          current_package_id: editFormData.package_id || null,
           is_active: editFormData.is_active
         })
         .eq('id', editingUser.id);
@@ -230,12 +211,6 @@ const WiFiUserAccountsList = ({ users, onRefresh, onEdit, onDelete }: WiFiUserAc
   const sendPortalSMS = async (user: WiFiUser) => {
     if (!user.phone_number) {
       toast.error("User has no phone number");
-      return;
-    }
-
-    const portalLink = getPortalLink(user);
-    if (!portalLink) {
-      toast.error("No portal link available");
       return;
     }
 
@@ -413,32 +388,28 @@ const WiFiUserAccountsList = ({ users, onRefresh, onEdit, onDelete }: WiFiUserAc
                       </TableCell>
                       <TableCell>{getStatusBadge(user)}</TableCell>
                       <TableCell>
-                        {user.portal_token ? (
-                          <div className="flex items-center gap-1">
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => copyPortalLink(user)}
-                              title="Copy portal link"
-                            >
-                              <Copy className="h-3 w-3" />
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => openPortalLink(user)}
-                              title="Open portal link"
-                            >
-                              <ExternalLink className="h-3 w-3" />
-                            </Button>
-                          </div>
-                        ) : (
-                          <span className="text-muted-foreground text-sm">No link</span>
-                        )}
+                        <div className="flex items-center gap-1">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => copyPortalLink(user)}
+                            title="Copy portal login link"
+                          >
+                            <Copy className="h-3 w-3" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => openPortalLink(user)}
+                            title="Open portal login"
+                          >
+                            <ExternalLink className="h-3 w-3" />
+                          </Button>
+                        </div>
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-1">
-                          {user.phone_number && user.portal_token && (
+                          {user.phone_number && (
                             <Button
                               size="sm"
                               variant="ghost"
@@ -511,28 +482,26 @@ const WiFiUserAccountsList = ({ users, onRefresh, onEdit, onDelete }: WiFiUserAc
                       </div>
 
                       <div className="flex flex-wrap gap-2 pt-2 border-t">
-                        {user.portal_token && (
-                          <>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => copyPortalLink(user)}
-                              className="text-xs"
-                            >
-                              <Copy className="h-3 w-3 mr-1" />
-                              Copy Link
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => openPortalLink(user)}
-                              className="text-xs"
-                            >
-                              <ExternalLink className="h-3 w-3 mr-1" />
-                              Open
-                            </Button>
-                          </>
-                        )}
+                        <>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => copyPortalLink(user)}
+                            className="text-xs"
+                          >
+                            <Copy className="h-3 w-3 mr-1" />
+                            Copy Link
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => openPortalLink(user)}
+                            className="text-xs"
+                          >
+                            <ExternalLink className="h-3 w-3 mr-1" />
+                            Open
+                          </Button>
+                        </>
                         <Button
                           size="sm"
                           variant="outline"

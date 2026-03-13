@@ -6,29 +6,28 @@ import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { Trash2, RotateCcw, Search, Trash, FileX } from "lucide-react";
+import { Trash2, Search, FileX, RefreshCw } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 
-interface DeletedPayment {
+interface Payment {
   id: string;
   admin_id: string;
   amount: number;
   user_phone: string;
   package_name: string;
-  payment_method: string;
   status: string;
   created_at: string;
-  deleted_at: string;
+  updated_at: string;
   transaction_id?: string;
   mpesa_receipt_number?: string;
 }
 
 const RecycleBin = () => {
   const { user } = useAuth();
-  const [deletedPayments, setDeletedPayments] = useState<DeletedPayment[]>([]);
-  const [filteredPayments, setFilteredPayments] = useState<DeletedPayment[]>([]);
+  const [payments, setPayments] = useState<Payment[]>([]);
+  const [filteredPayments, setFilteredPayments] = useState<Payment[]>([]);
   const [selectedPayments, setSelectedPayments] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
@@ -36,69 +35,70 @@ const RecycleBin = () => {
 
   useEffect(() => {
     if (user?.adminId) {
-      loadDeletedPayments();
+      loadFailedPayments();
     }
   }, [user?.adminId]);
 
   useEffect(() => {
     filterPayments();
-  }, [deletedPayments, searchQuery, statusFilter]);
+  }, [payments, searchQuery, statusFilter]);
 
-  const loadDeletedPayments = async () => {
+  const loadFailedPayments = async () => {
+    setIsLoading(true);
     try {
       const { data, error } = await supabase
         .from('payments')
-        .select('*')
+        .select('id, admin_id, amount, user_phone, package_name, status, created_at, updated_at, transaction_id, mpesa_receipt_number')
         .eq('admin_id', user?.adminId)
-        .eq('is_deleted', true)
-        .order('deleted_at', { ascending: false });
+        .in('status', ['failed', 'cancelled', 'pending'])
+        .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setDeletedPayments(data || []);
+      setPayments(data || []);
     } catch (error) {
-      toast.error('Failed to load deleted transactions');
+      console.error('Error loading payments:', error);
+      toast.error('Failed to load transactions');
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const filterPayments = () => {
-    let filtered = [...deletedPayments];
+    let filtered = [...payments];
 
-    // Search filter
     if (searchQuery) {
-      filtered = filtered.filter(payment =>
-        payment.user_phone.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        payment.package_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        payment.transaction_id?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        payment.mpesa_receipt_number?.toLowerCase().includes(searchQuery.toLowerCase())
+      const q = searchQuery.toLowerCase();
+      filtered = filtered.filter(p =>
+        p.user_phone?.toLowerCase().includes(q) ||
+        p.package_name?.toLowerCase().includes(q) ||
+        p.transaction_id?.toLowerCase().includes(q) ||
+        p.mpesa_receipt_number?.toLowerCase().includes(q)
       );
     }
 
-    // Status filter
     if (statusFilter !== 'all') {
-      filtered = filtered.filter(payment => payment.status === statusFilter);
+      filtered = filtered.filter(p => p.status === statusFilter);
     }
 
     setFilteredPayments(filtered);
   };
 
-  const restorePayments = async (paymentIds: string[]) => {
+  const markAsCompleted = async (paymentIds: string[]) => {
     setIsLoading(true);
     try {
       const { error } = await supabase
         .from('payments')
-        .update({
-          is_deleted: false,
-          deleted_at: null
-        })
+        .update({ status: 'completed', updated_at: new Date().toISOString() })
         .in('id', paymentIds);
 
       if (error) throw error;
-      
-      toast.success(`${paymentIds.length} transaction(s) restored successfully`);
+
+      toast.success(`${paymentIds.length} transaction(s) marked as completed`);
       setSelectedPayments([]);
-      loadDeletedPayments();
+      loadFailedPayments();
     } catch (error) {
-      toast.error('Failed to restore transactions');
+      console.error('Error updating payments:', error);
+      toast.error('Failed to update transactions');
     } finally {
       setIsLoading(false);
     }
@@ -113,34 +113,12 @@ const RecycleBin = () => {
         .in('id', paymentIds);
 
       if (error) throw error;
-      
+
       toast.success(`${paymentIds.length} transaction(s) permanently deleted`);
       setSelectedPayments([]);
-      loadDeletedPayments();
+      loadFailedPayments();
     } catch (error) {
-      toast.error('Failed to permanently delete transactions');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const bulkDeleteTransactions = async () => {
-    setIsLoading(true);
-    try {
-      const { error } = await supabase
-        .from('payments')
-        .update({
-          is_deleted: true,
-          deleted_at: new Date().toISOString()
-        })
-        .eq('admin_id', user?.adminId)
-        .eq('is_deleted', false);
-
-      if (error) throw error;
-      
-      toast.success('All transactions moved to recycle bin');
-      loadDeletedPayments();
-    } catch (error) {
+      console.error('Error deleting payments:', error);
       toast.error('Failed to delete transactions');
     } finally {
       setIsLoading(false);
@@ -163,16 +141,13 @@ const RecycleBin = () => {
     );
   };
 
-  const getStatusColor = (status: string) => {
+  const getStatusVariant = (status: string): "default" | "secondary" | "destructive" | "outline" => {
     switch (status) {
-      case 'completed':
-        return 'default';
-      case 'pending':
-        return 'secondary';
-      case 'failed':
-        return 'destructive';
-      default:
-        return 'secondary';
+      case 'completed': return 'default';
+      case 'pending': return 'secondary';
+      case 'failed': return 'destructive';
+      case 'cancelled': return 'outline';
+      default: return 'secondary';
     }
   };
 
@@ -180,16 +155,16 @@ const RecycleBin = () => {
     <div className="space-y-6">
       <div className="flex items-center space-x-2">
         <Trash2 className="h-6 w-6 text-primary" />
-        <h1 className="text-2xl font-bold">Transaction Recycle Bin</h1>
+        <h1 className="text-2xl font-bold">Failed &amp; Pending Transactions</h1>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>Deleted Transactions</CardTitle>
+          <CardTitle>Unresolved Transactions</CardTitle>
           <CardDescription>
-            Manage and restore deleted payment transactions
+            Review and manage failed, cancelled, or pending payment transactions
           </CardDescription>
-          
+
           <div className="flex flex-col sm:flex-row gap-4 pt-4">
             <div className="flex-1 relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -200,41 +175,23 @@ const RecycleBin = () => {
                 className="pl-10"
               />
             </div>
-            
+
             <Select value={statusFilter} onValueChange={setStatusFilter}>
               <SelectTrigger className="w-full sm:w-40">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Status</SelectItem>
-                <SelectItem value="completed">Completed</SelectItem>
                 <SelectItem value="pending">Pending</SelectItem>
                 <SelectItem value="failed">Failed</SelectItem>
+                <SelectItem value="cancelled">Cancelled</SelectItem>
               </SelectContent>
             </Select>
 
-            <AlertDialog>
-              <AlertDialogTrigger asChild>
-                <Button variant="destructive" disabled={isLoading}>
-                  <Trash className="h-4 w-4 mr-2" />
-                  Bulk Delete
-                </Button>
-              </AlertDialogTrigger>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>Bulk Delete Transactions</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    This will move ALL active transactions to the recycle bin. They can be restored later.
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>Cancel</AlertDialogCancel>
-                  <AlertDialogAction onClick={bulkDeleteTransactions}>
-                    Move to Recycle Bin
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
+            <Button variant="outline" onClick={loadFailedPayments} disabled={isLoading}>
+              <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
+              Refresh
+            </Button>
           </div>
         </CardHeader>
 
@@ -242,9 +199,9 @@ const RecycleBin = () => {
           {filteredPayments.length === 0 ? (
             <div className="text-center py-8">
               <FileX className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-              <h3 className="text-lg font-medium">No deleted transactions</h3>
+              <h3 className="text-lg font-medium">No unresolved transactions</h3>
               <p className="text-muted-foreground">
-                Deleted transactions will appear here for recovery or permanent deletion.
+                Failed, cancelled, and pending transactions will appear here.
               </p>
             </div>
           ) : (
@@ -253,7 +210,7 @@ const RecycleBin = () => {
                 <div className="flex items-center space-x-2">
                   <input
                     type="checkbox"
-                    checked={selectedPayments.length === filteredPayments.length}
+                    checked={selectedPayments.length === filteredPayments.length && filteredPayments.length > 0}
                     onChange={toggleSelectAll}
                     className="rounded"
                   />
@@ -267,11 +224,11 @@ const RecycleBin = () => {
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => restorePayments(selectedPayments)}
+                      onClick={() => markAsCompleted(selectedPayments)}
                       disabled={isLoading}
                     >
-                      <RotateCcw className="h-4 w-4 mr-2" />
-                      Restore ({selectedPayments.length})
+                      <RefreshCw className="h-4 w-4 mr-2" />
+                      Mark Completed ({selectedPayments.length})
                     </Button>
 
                     <AlertDialog>
@@ -290,7 +247,7 @@ const RecycleBin = () => {
                         </AlertDialogHeader>
                         <AlertDialogFooter>
                           <AlertDialogCancel>Cancel</AlertDialogCancel>
-                          <AlertDialogAction 
+                          <AlertDialogAction
                             onClick={() => permanentlyDelete(selectedPayments)}
                             className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                           >
@@ -309,7 +266,7 @@ const RecycleBin = () => {
                     <TableHead className="w-12">
                       <input
                         type="checkbox"
-                        checked={selectedPayments.length === filteredPayments.length}
+                        checked={selectedPayments.length === filteredPayments.length && filteredPayments.length > 0}
                         onChange={toggleSelectAll}
                         className="rounded"
                       />
@@ -319,7 +276,7 @@ const RecycleBin = () => {
                     <TableHead>Package</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>Transaction ID</TableHead>
-                    <TableHead>Deleted Date</TableHead>
+                    <TableHead>Date</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -335,12 +292,12 @@ const RecycleBin = () => {
                         />
                       </TableCell>
                       <TableCell className="font-medium">
-                        KSh {payment.amount.toLocaleString()}
+                        KSh {Number(payment.amount).toLocaleString()}
                       </TableCell>
-                      <TableCell>{payment.user_phone}</TableCell>
-                      <TableCell>{payment.package_name}</TableCell>
+                      <TableCell>{payment.user_phone || '-'}</TableCell>
+                      <TableCell>{payment.package_name || '-'}</TableCell>
                       <TableCell>
-                        <Badge variant={getStatusColor(payment.status)}>
+                        <Badge variant={getStatusVariant(payment.status)}>
                           {payment.status}
                         </Badge>
                       </TableCell>
@@ -348,19 +305,20 @@ const RecycleBin = () => {
                         {payment.transaction_id || payment.mpesa_receipt_number || '-'}
                       </TableCell>
                       <TableCell className="text-sm">
-                        {new Date(payment.deleted_at).toLocaleDateString()}
+                        {new Date(payment.created_at).toLocaleDateString()}
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end space-x-2">
                           <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => restorePayments([payment.id])}
+                            onClick={() => markAsCompleted([payment.id])}
                             disabled={isLoading}
+                            title="Mark as completed"
                           >
-                            <RotateCcw className="h-4 w-4" />
+                            <RefreshCw className="h-4 w-4" />
                           </Button>
-                          
+
                           <AlertDialog>
                             <AlertDialogTrigger asChild>
                               <Button variant="ghost" size="sm" disabled={isLoading}>
@@ -376,7 +334,7 @@ const RecycleBin = () => {
                               </AlertDialogHeader>
                               <AlertDialogFooter>
                                 <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                <AlertDialogAction 
+                                <AlertDialogAction
                                   onClick={() => permanentlyDelete([payment.id])}
                                   className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                                 >

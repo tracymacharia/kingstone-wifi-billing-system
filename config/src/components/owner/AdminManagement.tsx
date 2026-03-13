@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Copy, Edit, Trash2, RotateCcw, Clock, Calendar, AlertCircle, X, Users, Key, Share2, Play, ChevronDown, ChevronUp, Router, DollarSign } from "lucide-react";
+import { Plus, Copy, Edit, Trash2, RotateCcw, Clock, Calendar, AlertCircle, X, Users, Key, Share2, Play, ChevronDown, ChevronUp, Router, DollarSign, Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -65,6 +65,7 @@ const AdminManagement = ({ admins, onAdminAdd, onAdminUpdate, onAdminDelete, onA
   const [newAdminBusinessName, setNewAdminBusinessName] = useState("");
   const [newAdminUsername, setNewAdminUsername] = useState("");
   const [newAdminPassword, setNewAdminPassword] = useState("");
+  const [showNewAdminPassword, setShowNewAdminPassword] = useState(false);
   const [newAdminSubscriptionType, setNewAdminSubscriptionType] = useState<
     "hotspot" | "pppoe" | "static" | "ppoe_static" | "hotspot_pppoe" | "hotspot_static"
   >("hotspot");
@@ -1296,6 +1297,29 @@ const AdminManagement = ({ admins, onAdminAdd, onAdminUpdate, onAdminDelete, onA
                 onChange={(e) => setNewAdminPhone(e.target.value)}
                 placeholder="+254700000000"
               />
+            </div>
+            <div className="md:col-span-2">
+              <Label htmlFor="adminPassword">
+                Password <span className="text-muted-foreground text-xs font-normal">(leave blank to use default: Kingstone123)</span>
+              </Label>
+              <div className="relative">
+                <Input
+                  id="adminPassword"
+                  type={showNewAdminPassword ? "text" : "password"}
+                  value={newAdminPassword}
+                  onChange={(e) => setNewAdminPassword(e.target.value)}
+                  placeholder="Enter temporary password for this admin"
+                  className="pr-10"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowNewAdminPassword(!showNewAdminPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  tabIndex={-1}
+                >
+                  {showNewAdminPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
             </div>
             <div className="md:col-span-1">
               <Label htmlFor="adminSubscriptionType">Subscription Type</Label>

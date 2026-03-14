@@ -1,0 +1,8 @@
+uploads = []
+generated = []
+
+[[outputs]]
+id = "x55dZ8mreYwkip1XSDp2X"
+uri = "file://documents/USER_TRAINING_MANUAL.md"
+type = "text"
+title = "Kingstone WiFi Billing Platform — User Training Manual"

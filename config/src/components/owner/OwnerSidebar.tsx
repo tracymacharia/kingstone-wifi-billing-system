@@ -33,7 +33,6 @@ interface OwnerSidebarProps {
 const menuItems = [
   { id: "dashboard", title: "Dashboard", icon: LayoutDashboard, tab: null },
   { id: "admins", title: "Admin Management", icon: Users, tab: "admins" },
-  { id: "mikrotiks", title: "Mikrotik Management", icon: Router, tab: "mikrotiks" },
   { id: "subscriptions", title: "Subscriptions", icon: CreditCard, tab: "subscriptions" },
   { id: "payment-settings", title: "Payment Settings", icon: DollarSign, tab: "payment-settings" },
   { id: "notification-templates", title: "Notification Templates", icon: Mail, tab: "notification-templates" },

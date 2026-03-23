@@ -63,14 +63,11 @@ const FilteredUsersList = ({ filter, onBack, selectedUsers, onSelectionChange }:
       const { data: wifiUsers, error: wifiError } = await supabase
         .from('wifi_users')
         .select(`
-          id,
-          username,
-          is_active,
-          package_expires_at,
-          package:current_package_id (
+          id, username, is_active, package_expires_at, package_id, created_at, phone_number,
+          package:package_id (
             name,
-            package_type,
-            price
+            duration_type,
+            duration_value
           )
         `)
         .eq('admin_id', adminId);

@@ -22,8 +22,8 @@ const contactSchema = z.object({
     "Email must be a valid Gmail address (@gmail.com)"
   ),
   phoneNumber: z.string().regex(
-    /^(\+254|0)[17]\d{8}$/,
-    "Phone number must be a valid Kenyan format (e.g., 0712345678 or +254712345678)"
+    /^(0[17]\d{8}|\+254[17]\d{8}|254[17]\d{8})$/,
+    "Phone number must be a valid Kenyan format (e.g., 0712345678, 0123456789, +254712345678, or 254712345678)"
   ),
 });
 

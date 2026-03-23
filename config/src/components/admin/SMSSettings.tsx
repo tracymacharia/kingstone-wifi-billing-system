@@ -33,6 +33,7 @@ const SMSSettings = ({ businessName }: SMSSettingsProps) => {
   const [apiProvider, setApiProvider] = useState("twilio");
   const [apiKey, setApiKey] = useState("");
   const [username, setUsername] = useState("");
+  const [apiKeyVisible, setApiKeyVisible] = useState(false);
   const [messageTemplate, setMessageTemplate] = useState(
     `Your Wi-Fi package will expire on {expiry_date}. Please renew to continue service.`
   );
@@ -50,27 +51,52 @@ const SMSSettings = ({ businessName }: SMSSettingsProps) => {
 
   const loadSMSSettings = async () => {
     try {
-      const adminId = getAdminIdFromUser(user);
-      if (!adminId) return;
+      const sessionToken = sessionStorage.getItem('kingstone_session_token');
+      
+      // Try RPC first
+      const { data, error } = await supabase.rpc('get_admin_sms_settings', {
+        p_session_token: sessionToken
+      });
 
-      const { data, error } = await supabase
-        .from('sms_settings')
-        .select('*')
-        .eq('admin_id', adminId)
-        .single();
+      if (error) {
+        console.error('Error loading SMS settings via RPC:', error);
+        
+        // Handle missing function - fallback to direct query
+        if (error.code === '42883' || error.message.includes('does not exist')) {
+          const adminId = getAdminIdFromUser(user);
+          if (!adminId) return;
 
-      if (error && error.code !== 'PGRST116') {
-        if ((error as any).code === '42P01') return;
-        console.error('Error loading SMS settings:', error);
+          const { data: directData, error: directError } = await supabase
+            .from('sms_settings')
+            .select('*')
+            .eq('admin_id', adminId)
+            .single();
+
+          if (directError && directError.code !== 'PGRST116') {
+            if ((directError as any).code === '42P01') return;
+            console.error('Fallback query failed:', directError);
+            return;
+          }
+
+          if (directData) {
+            setSmsEnabled(directData.enabled);
+            setSenderNumber(directData.sender_number || '');
+            setApiProvider(directData.provider || 'twilio');
+            setUsername(directData.username || '');
+            setMessageTemplate(directData.message_template || messageTemplate);
+          }
+          return;
+        }
         return;
       }
 
-      if (data) {
-        setSmsEnabled(data.enabled);
-        setSenderNumber(data.sender_number || '');
-        setApiProvider(data.provider);
-        setUsername(data.username || '');
-        setMessageTemplate(data.message_template);
+      if (data && data.length > 0) {
+        const settings = data[0];
+        setSmsEnabled(settings.enabled);
+        setSenderNumber(settings.sender_number || '');
+        setApiProvider(settings.provider || 'twilio');
+        setUsername(settings.username || '');
+        setMessageTemplate(settings.message_template || messageTemplate);
       }
     } catch (error) {
       console.error('Error loading SMS settings:', error);
@@ -113,38 +139,67 @@ const SMSSettings = ({ businessName }: SMSSettingsProps) => {
   const handleSaveSettings = async () => {
     setSaving(true);
     try {
-      const adminId = getAdminIdFromUser(user);
-      if (!adminId) {
-        toast.error("User not authenticated");
-        return;
-      }
+      const sessionToken = sessionStorage.getItem('kingstone_session_token');
 
-      const settingsData = {
-        admin_id: adminId,
-        enabled: smsEnabled,
-        provider: apiProvider,
-        sender_number: senderNumber,
-        username: username,
-        message_template: messageTemplate,
-      };
-
-      const { error } = await supabase
-        .from('sms_settings')
-        .upsert(settingsData, {
-          onConflict: 'admin_id'
-        });
+      // Try RPC first
+      const { error } = await supabase.rpc('save_admin_sms_settings', {
+        p_enabled: smsEnabled,
+        p_provider: apiProvider,
+        p_sender_number: senderNumber,
+        p_username: username,
+        p_message_template: messageTemplate
+      });
 
       if (error) {
-        if ((error as any).code === '42P01') {
-          toast.error("SMS settings table not set up yet. Please run the database setup SQL first.");
+        console.error('Error saving SMS settings via RPC:', error);
+        
+        // Handle missing function - fallback to direct query
+        if (error.code === '42883' || error.message.includes('does not exist')) {
+          const adminId = getAdminIdFromUser(user);
+          if (!adminId) {
+            toast.error("User not authenticated");
+            setSaving(false);
+            return;
+          }
+
+          const { error: upsertError } = await supabase
+            .from('sms_settings')
+            .upsert({
+              admin_id: adminId,
+              enabled: smsEnabled,
+              provider: apiProvider,
+              sender_number: senderNumber,
+              username: username,
+              message_template: messageTemplate
+            }, {
+              onConflict: 'admin_id'
+            });
+
+          if (upsertError) {
+            if ((upsertError as any).code === '42P01') {
+              toast.error("SMS settings table not set up yet. Please run database/PAYMENT_AND_SMS_SETUP.sql in Supabase SQL Editor.");
+              setSaving(false);
+              return;
+            }
+            console.error('Fallback upsert failed:', upsertError);
+            toast.error("Failed to save SMS settings");
+            setSaving(false);
+            return;
+          }
+
+          toast.success("SMS settings updated successfully!");
+          setSaving(false);
+          loadSMSSettings();
           return;
         }
-        console.error('Error saving SMS settings:', error);
-        toast.error("Failed to save SMS settings");
+        
+        toast.error("Failed to save SMS settings: " + error.message);
+        setSaving(false);
         return;
       }
 
       toast.success("SMS settings updated successfully!");
+      loadSMSSettings();
     } catch (error) {
       console.error('Error saving SMS settings:', error);
       toast.error("Failed to save SMS settings");

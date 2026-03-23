@@ -11,7 +11,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Plus, Trash2, Eye, Wifi, Zap, Clock, Calendar, CalendarDays, CreditCard, Smartphone, Shield, Router, CheckCircle, MessageSquare, Key, UserCheck, RefreshCw, Ticket, Download, X } from "lucide-react";
+import { Plus, Trash2, Eye, Wifi, Zap, Clock, Calendar, CalendarDays, CreditCard, Smartphone, Shield, Router, CheckCircle, MessageSquare, Key, UserCheck, RefreshCw, Download, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
@@ -22,7 +22,6 @@ interface WiFiSettingsData {
   hotspot_title: string;
   enable_trial: boolean;
   trial_minutes: number;
-  enable_vouchers: boolean;
   description: string;
   theme_color: string;
   faq_json: any[];
@@ -47,7 +46,6 @@ const WiFiSettings = () => {
     hotspot_title: 'WiFi Access Portal',
     enable_trial: true,
     trial_minutes: 3,
-    enable_vouchers: false,
     description: 'Welcome to our WiFi service',
     theme_color: '#ef4444',
     faq_json: [],
@@ -58,6 +56,8 @@ const WiFiSettings = () => {
   const [hotspotPackages, setHotspotPackages] = useState<HotspotPackage[]>([]);
   const [newFaq, setNewFaq] = useState({ question: '', answer: '' });
   const [isLoading, setIsLoading] = useState(false);
+  const [previewPhone, setPreviewPhone] = useState('254712345678');
+  const [previewVoucher, setPreviewVoucher] = useState('VOUCHER123');
   const previewRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -71,7 +71,12 @@ const WiFiSettings = () => {
   const loadSettings = async () => {
     try {
       const adminId = getAdminIdFromUser(user);
-      if (!adminId) return;
+      if (!adminId) {
+        console.log('No admin ID found for loading settings');
+        return;
+      }
+
+      console.log('Loading WiFi settings for admin:', adminId);
 
       const { data, error } = await supabase
         .from('wifi_settings')
@@ -80,17 +85,24 @@ const WiFiSettings = () => {
         .maybeSingle();
 
       if (error && error.code !== 'PGRST116') {
+        console.error('Error loading WiFi settings:', error);
         if ((error as any).code === '42P01') {
+          console.log('WiFi settings table does not exist');
           return;
         }
         throw error;
       }
+
+      console.log('Loaded WiFi settings:', data);
 
       if (data) {
         setSettings({
           ...data,
           faq_json: Array.isArray(data.faq_json) ? data.faq_json : []
         });
+        console.log('Settings applied to state');
+      } else {
+        console.log('No existing settings found, using defaults');
       }
     } catch (error) {
       console.error('Failed to load WiFi settings:', error);
@@ -189,24 +201,90 @@ const WiFiSettings = () => {
         return;
       }
 
-      const { error } = await supabase
+      console.log('Saving WiFi settings for admin:', adminId);
+      console.log('Settings to save:', settings);
+
+      // First, check if settings exist
+      const { data: existing, error: fetchError } = await supabase
         .from('wifi_settings')
-        .upsert({
-          admin_id: adminId,
-          ...settings
-        });
+        .select('id')
+        .eq('admin_id', adminId)
+        .maybeSingle();
+
+      if (fetchError) {
+        console.error('Error checking existing settings:', fetchError);
+        if ((fetchError as any).code === '42P01') {
+          toast.error('WiFi settings table does not exist. Please contact support to set up the database.');
+          return;
+        }
+      }
+
+      console.log('Existing settings:', existing);
+
+      let result;
+      let error;
+      
+      if (existing) {
+        // Update existing
+        console.log('Updating existing settings...');
+        result = await supabase
+          .from('wifi_settings')
+          .update({
+            hotspot_title: settings.hotspot_title,
+            enable_trial: settings.enable_trial,
+            trial_minutes: settings.trial_minutes,
+            description: settings.description,
+            theme_color: settings.theme_color,
+            faq_json: settings.faq_json,
+            contact_phone: settings.contact_phone,
+            contact_email: settings.contact_email,
+            updated_at: new Date().toISOString()
+          })
+          .eq('admin_id', adminId)
+          .select()
+          .single();
+        error = result.error;
+      } else {
+        // Insert new
+        console.log('Inserting new settings...');
+        result = await supabase
+          .from('wifi_settings')
+          .insert({
+            admin_id: adminId,
+            hotspot_title: settings.hotspot_title,
+            enable_trial: settings.enable_trial,
+            trial_minutes: settings.trial_minutes,
+            description: settings.description,
+            theme_color: settings.theme_color,
+            faq_json: settings.faq_json,
+            contact_phone: settings.contact_phone,
+            contact_email: settings.contact_email
+          })
+          .select()
+          .single();
+        error = result.error;
+      }
+
+      console.log('Save result:', result);
+      console.log('Save error:', error);
 
       if (error) {
+        console.error('Save error details:', error);
         if ((error as any).code === '42P01') {
-          toast.error('WiFi settings table not set up yet. Please run the database setup SQL first.');
+          toast.error('WiFi settings table does not exist. Please run the database setup SQL.');
           return;
         }
         throw error;
       }
+      
       toast.success('WiFi settings saved successfully');
+      
+      // Reload settings to ensure UI reflects the saved data
+      console.log('Reloading settings...');
+      await loadSettings();
     } catch (error) {
       console.error('Failed to save WiFi settings:', error);
-      toast.error('Failed to save WiFi settings');
+      toast.error(`Failed to save WiFi settings: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setIsLoading(false);
     }
@@ -327,19 +405,6 @@ const WiFiSettings = () => {
             </div>
           )}
 
-          <div className="flex items-center justify-between">
-            <div className="space-y-0.5">
-              <Label>Enable Vouchers</Label>
-              <p className="text-sm text-muted-foreground">
-                Allow voucher-based authentication
-              </p>
-            </div>
-            <Switch
-              checked={settings.enable_vouchers}
-              onCheckedChange={(checked) => setSettings(prev => ({ ...prev, enable_vouchers: checked }))}
-            />
-          </div>
-
           <Separator />
 
           <div className="space-y-4">
@@ -402,551 +467,104 @@ const WiFiSettings = () => {
                   </Button>
                 </DialogHeader>
 
-                {/* Preview Container - Exact copy of PaymentPortal */}
-                <div ref={previewRef} className="min-h-screen bg-gradient-to-br from-primary/10 via-secondary/5 to-accent/10">
-                  <div className="container mx-auto max-w-7xl px-4 py-8">
+                {/* Preview Container - Simple Customer Payment Page */}
+                <div ref={previewRef} className="min-h-screen flex items-center justify-center p-4" style={{ background: `linear-gradient(135deg, ${settings.theme_color}15 0%, #f3f4f6 100%)` }}>
+                  <div className="w-full max-w-md">
                     {/* Header */}
-                    <div className="text-center mb-8">
+                    <div className="text-center mb-6">
                       <div className="flex justify-center mb-4">
-                        <div className="w-16 h-16 bg-primary rounded-full flex items-center justify-center shadow-lg">
-                          <Wifi className="w-8 h-8 text-white" />
+                        <div className="w-20 h-20 rounded-full flex items-center justify-center shadow-lg" style={{ backgroundColor: settings.theme_color }}>
+                          <Wifi className="w-10 h-10 text-white" />
                         </div>
                       </div>
-                      <h1 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent mb-2">
+                      <h1 className="text-2xl font-bold mb-2" style={{ color: settings.theme_color }}>
                         {settings.hotspot_title || 'Kingstone WiFi'}
                       </h1>
-                      <p className="text-base sm:text-lg text-muted-foreground">
-                        {settings.description || 'Choose your internet package or reconnect'}
+                      <p className="text-sm text-muted-foreground">
+                        {settings.description || 'Select a package and connect'}
                       </p>
-
-                      {/* Connection Info Mockup */}
-                      <div className="mt-6 flex justify-center">
-                        <Card className="w-full max-w-md shadow-md">
-                          <CardContent className="pt-4">
-                            <div className="flex flex-wrap items-center justify-center gap-2 text-xs sm:text-sm text-muted-foreground">
-                              <Router className="w-4 h-4" />
-                              <span>Device: AA:BB:CC:DD:EE:FF</span>
-                              <span className="hidden sm:inline">•</span>
-                              <span>IP: 192.168.88.100</span>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      </div>
                     </div>
 
-                    <div className="space-y-6">
-                      {/* Free Trial Section */}
-                      {settings.enable_trial && (
-                        <Card className="border-purple-200 bg-purple-50/50 shadow-md">
-                          <CardHeader>
-                            <CardTitle className="flex items-center gap-2 text-purple-700 text-base sm:text-xl">
-                              <Zap className="w-4 h-4 sm:w-5 sm:h-5" />
-                              Try Before You Pay - Free Trial Available!
-                            </CardTitle>
-                            <CardDescription className="text-purple-600 text-xs sm:text-sm">
-                              Get instant access with our free trial - no payment required
-                            </CardDescription>
-                          </CardHeader>
-                          <CardContent className="space-y-4">
-                            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 bg-white rounded-lg border border-purple-100">
-                              <div className="space-y-2">
-                                <div className="flex items-center gap-2">
-                                  <CheckCircle className="w-4 h-4 text-green-600" />
-                                  <span className="font-medium text-sm sm:text-base">Free {settings.trial_minutes}-minute trial</span>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                  <CheckCircle className="w-4 h-4 text-green-600" />
-                                  <span className="text-xs sm:text-sm text-muted-foreground">No credit card required</span>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                  <CheckCircle className="w-4 h-4 text-green-600" />
-                                  <span className="text-xs sm:text-sm text-muted-foreground">Instant activation</span>
-                                </div>
-                              </div>
-                              <Button
-                                className="w-full sm:w-auto bg-purple-600 hover:bg-purple-700 text-white"
-                                size="lg"
-                                disabled
-                              >
-                                <Zap className="mr-2 h-4 w-4" />
-                                Start Free Trial
-                              </Button>
-                            </div>
-                            <Alert className="bg-blue-50 border-blue-200">
-                              <Shield className="h-4 w-4 text-blue-600" />
-                              <AlertDescription className="text-blue-700 text-xs sm:text-sm">
-                                One free trial per device. After trial expires, you can purchase a package to continue.
-                              </AlertDescription>
-                            </Alert>
-                          </CardContent>
-                        </Card>
-                      )}
-
-                      {/* Package Selection Section */}
-                      <Card>
-                        <CardHeader>
-                          <CardTitle className="flex items-center text-base sm:text-xl">
-                            <Zap className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
-                            Choose Your Internet Package
-                          </CardTitle>
-                          <CardDescription className="text-xs sm:text-sm">
-                            Select the perfect internet package for your needs
-                          </CardDescription>
-                        </CardHeader>
-                        <CardContent className="space-y-6">
-                          <RadioGroup value="pkg001">
-                            {/* Hourly Packages */}
-                            <div className="space-y-3">
-                              <h3 className="font-semibold text-lg flex items-center gap-2">
-                                <Clock className="w-4 h-4" />
-                                Hourly Packages
-                              </h3>
-                              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                                {getPackagesByType('minutes').concat(getPackagesByType('hours')).map((pkg) => (
-                                  <div
-                                    key={pkg.id}
-                                    className="relative border rounded-lg p-4 cursor-pointer transition-all hover:border-primary/50"
-                                  >
-                                    <RadioGroupItem
-                                      value={pkg.id}
-                                      id={pkg.id}
-                                      className="absolute top-4 right-4"
-                                    />
-                                    {pkg.name.includes('Basic') && (
-                                      <Badge className="absolute -top-2 left-4 bg-secondary text-secondary-foreground">
-                                        Most Popular
-                                      </Badge>
-                                    )}
-                                    <div className="space-y-2">
-                                      <h3 className="font-semibold text-lg">{pkg.name}</h3>
-                                      <div className="flex items-center text-sm text-muted-foreground">
-                                        <Clock className="w-4 h-4 mr-1" />
-                                        {formatDuration(pkg.duration_value, pkg.duration_type)}
-                                      </div>
-                                      <div className="flex items-center text-sm text-muted-foreground">
-                                        <Zap className="w-4 h-4 mr-1" />
-                                        {pkg.download_speed_mbps} Mbps
-                                      </div>
-                                      <div className="text-2xl font-bold text-primary">
-                                        KES {pkg.price.toLocaleString()}
-                                      </div>
-                                      <div className="flex space-x-2">
-                                        <Badge variant="outline" className="text-xs capitalize">
-                                          {pkg.duration_type}
-                                        </Badge>
-                                        <Badge variant="outline" className="text-xs">
-                                          HOTSPOT
-                                        </Badge>
-                                      </div>
-                                    </div>
-                                  </div>
-                                ))}
-                              </div>
-                            </div>
-
-                            {/* Daily Packages */}
-                            <Separator />
-                            <div className="space-y-3">
-                              <h3 className="font-semibold text-lg flex items-center gap-2">
-                                <Calendar className="w-4 h-4" />
-                                Daily Packages
-                              </h3>
-                              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                                {getPackagesByType('days').map((pkg) => (
-                                  <div
-                                    key={pkg.id}
-                                    className="relative border rounded-lg p-4 cursor-pointer transition-all hover:border-primary/50"
-                                  >
-                                    <RadioGroupItem
-                                      value={pkg.id}
-                                      id={pkg.id}
-                                      className="absolute top-4 right-4"
-                                    />
-                                    <div className="space-y-2">
-                                      <h3 className="font-semibold text-lg">{pkg.name}</h3>
-                                      <div className="flex items-center text-sm text-muted-foreground">
-                                        <Calendar className="w-4 h-4 mr-1" />
-                                        {formatDuration(pkg.duration_value, pkg.duration_type)}
-                                      </div>
-                                      <div className="flex items-center text-sm text-muted-foreground">
-                                        <Zap className="w-4 h-4 mr-1" />
-                                        {pkg.download_speed_mbps} Mbps
-                                      </div>
-                                      <div className="text-2xl font-bold text-primary">
-                                        KES {pkg.price.toLocaleString()}
-                                      </div>
-                                      <div className="flex space-x-2">
-                                        <Badge variant="outline" className="text-xs capitalize">
-                                          {pkg.duration_type}
-                                        </Badge>
-                                        <Badge variant="outline" className="text-xs">
-                                          HOTSPOT
-                                        </Badge>
-                                      </div>
-                                    </div>
-                                  </div>
-                                ))}
-                              </div>
-                            </div>
-
-                            {/* Monthly Packages */}
-                            <Separator />
-                            <div className="space-y-3">
-                              <h3 className="font-semibold text-lg flex items-center gap-2">
-                                <CalendarDays className="w-4 h-4" />
-                                Monthly Packages
-                              </h3>
-                              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                                {getPackagesByType('months').map((pkg) => (
-                                  <div
-                                    key={pkg.id}
-                                    className="relative border rounded-lg p-4 cursor-pointer transition-all hover:border-primary/50"
-                                  >
-                                    <RadioGroupItem
-                                      value={pkg.id}
-                                      id={pkg.id}
-                                      className="absolute top-4 right-4"
-                                    />
-                                    <div className="space-y-2">
-                                      <h3 className="font-semibold text-lg">{pkg.name}</h3>
-                                      <div className="flex items-center text-sm text-muted-foreground">
-                                        <CalendarDays className="w-4 h-4 mr-1" />
-                                        {formatDuration(pkg.duration_value, pkg.duration_type)}
-                                      </div>
-                                      <div className="flex items-center text-sm text-muted-foreground">
-                                        <Zap className="w-4 h-4 mr-1" />
-                                        {pkg.download_speed_mbps} Mbps
-                                      </div>
-                                      <div className="text-2xl font-bold text-primary">
-                                        KES {pkg.price.toLocaleString()}
-                                      </div>
-                                      <div className="flex space-x-2">
-                                        <Badge variant="outline" className="text-xs capitalize">
-                                          {pkg.duration_type}
-                                        </Badge>
-                                        <Badge variant="outline" className="text-xs">
-                                          HOTSPOT
-                                        </Badge>
-                                      </div>
-                                    </div>
-                                  </div>
-                                ))}
-                              </div>
-                            </div>
-                          </RadioGroup>
-                        </CardContent>
-                      </Card>
-
-                      {/* Payment Dialog Preview - Shows popup style */}
-                      <div className="relative">
-                        <div className="absolute inset-0 bg-black/50 rounded-lg flex items-center justify-center z-10" style={{position: 'sticky', top: '20px'}}>
-                          <Card className="w-full max-w-md shadow-2xl border-2 border-primary">
-                            <CardHeader className="pb-3">
-                              <div className="flex items-center justify-between">
-                                <CardTitle className="flex items-center gap-2 text-lg">
-                                  <CreditCard className="w-5 h-5" />
-                                  Complete Your Payment
-                                </CardTitle>
-                                <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
-                                  <X className="h-4 w-4" />
-                                </Button>
-                              </div>
-                              <CardDescription className="text-sm">
-                                Enter your phone number to pay via M-PESA
-                              </CardDescription>
-                            </CardHeader>
-                            <CardContent className="space-y-4">
-                              {hotspotPackages.length > 0 && (
-                                <div className="p-4 bg-muted rounded-lg">
-                                  <h3 className="font-medium mb-2 text-sm">Selected Package</h3>
-                                  <div className="space-y-1 text-xs">
-                                    <div className="flex justify-between">
-                                      <span>Package:</span>
-                                      <span className="font-medium">{hotspotPackages[0].name}</span>
-                                    </div>
-                                    <div className="flex justify-between">
-                                      <span>Duration:</span>
-                                      <span>{formatDuration(hotspotPackages[0].duration_value, hotspotPackages[0].duration_type)}</span>
-                                    </div>
-                                    <div className="flex justify-between">
-                                      <span>Speed:</span>
-                                      <span>{hotspotPackages[0].download_speed_mbps} Mbps</span>
-                                    </div>
-                                  </div>
-                                  <Separator className="my-3" />
-                                  <div className="flex justify-between font-bold text-base">
-                                    <span>Total:</span>
-                                    <span className="text-primary">KES {hotspotPackages[0].price.toLocaleString()}</span>
-                                  </div>
-                                </div>
-                              )}
-
-                              <div className="space-y-2">
-                                <Label htmlFor="phone-preview-dialog" className="text-xs">Phone Number</Label>
-                                <div className="relative">
-                                  <Smartphone className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                                  <Input
-                                    id="phone-preview-dialog"
-                                    type="tel"
-                                    placeholder="254712345678"
-                                    className="pl-10"
-                                    defaultValue="254712345678"
-                                    readOnly
-                                  />
-                                </div>
-                                <p className="text-xs text-muted-foreground">
-                                  Enter your M-PESA phone number
-                                </p>
-                              </div>
-
-                              <Alert>
-                                <Shield className="h-4 w-4" />
-                                <AlertDescription className="text-xs">
-                                  Secure payment via M-PESA. You will receive a prompt on your phone.
-                                </AlertDescription>
-                              </Alert>
-
-                              <Button
-                                className="w-full"
-                                size="lg"
-                                disabled
-                              >
-                                <CreditCard className="mr-2 h-4 w-4" />
-                                Pay KES {hotspotPackages.length > 0 ? hotspotPackages[0].price.toLocaleString() : '0'}
-                              </Button>
-                            </CardContent>
-                          </Card>
+                    {/* Simple Payment Card */}
+                    <Card className="shadow-xl border-0">
+                      <CardHeader className="pb-4">
+                        <CardTitle className="text-lg font-semibold">Choose Package & Pay</CardTitle>
+                        <CardDescription className="text-xs">Enter payment details to connect</CardDescription>
+                      </CardHeader>
+                      <CardContent className="space-y-4">
+                        {/* Package Selection */}
+                        <div className="space-y-2">
+                          <Label>Internet Package</Label>
+                          <select className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2">
+                            <option value="">-- Select Package --</option>
+                            <option value="1hr">1 Hour - KES 20</option>
+                            <option value="3hrs">3 Hours - KES 50</option>
+                            <option value="6hrs">6 Hours - KES 100</option>
+                            <option value="1day">1 Day - KES 300</option>
+                            <option value="7days">7 Days - KES 1,000</option>
+                            <option value="1month">1 Month - KES 2,000</option>
+                            <option value="6months">6 Months - KES 8,000</option>
+                          </select>
                         </div>
-                        <div className="h-96"></div>
-                      </div>
 
-                      {/* Voucher Activation Section */}
-                      <Card>
-                        <CardHeader>
-                          <CardTitle className="flex items-center gap-2 text-base sm:text-xl">
-                            <Ticket className="w-4 h-4 sm:w-5 sm:h-5" />
-                            Activate Voucher
-                          </CardTitle>
-                          <CardDescription className="text-xs sm:text-sm">
-                            Enter your voucher code and phone number to activate internet access
-                          </CardDescription>
-                        </CardHeader>
-                        <CardContent className="space-y-4">
-                          <div className="space-y-2">
-                            <Label htmlFor="voucher-preview" className="text-xs sm:text-sm">Voucher Code</Label>
-                            <div className="relative">
-                              <Ticket className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                              <Input
-                                id="voucher-preview"
-                                type="text"
-                                placeholder="Enter voucher code"
-                                className="pl-10 uppercase tracking-wider text-sm sm:text-base"
-                                defaultValue="VOUCHER123"
-                                readOnly
-                              />
-                            </div>
-                            <p className="text-xs text-muted-foreground">
-                              Enter the voucher code from your voucher card
-                            </p>
+                        {/* Phone Number */}
+                        <div className="space-y-2">
+                          <Label>M-Pesa Phone Number</Label>
+                          <div className="relative">
+                            <Smartphone className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                            <Input
+                              type="tel"
+                              placeholder="254712345678"
+                              className="pl-10"
+                              value={previewPhone}
+                              onChange={(e) => setPreviewPhone(e.target.value)}
+                            />
                           </div>
-
-                          <div className="space-y-2">
-                            <Label htmlFor="voucher-phone-preview" className="text-xs sm:text-sm">Phone Number</Label>
-                            <div className="relative">
-                              <Smartphone className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                              <Input
-                                id="voucher-phone-preview"
-                                type="tel"
-                                placeholder="254712345678"
-                                className="pl-10 text-sm sm:text-base"
-                                defaultValue="254712345678"
-                                readOnly
-                              />
-                            </div>
-                            <p className="text-xs text-muted-foreground">
-                              Phone number will be recorded for admin tracking
-                            </p>
-                          </div>
-
-                          <Alert className="bg-blue-50 border-blue-200">
-                            <Shield className="h-4 w-4 text-blue-600" />
-                            <AlertDescription className="text-xs sm:text-sm text-blue-700">
-                              Your phone number will be recorded for administrative purposes and future reference.
-                            </AlertDescription>
-                          </Alert>
-
-                          <Button
-                            className="w-full text-sm sm:text-base"
-                            size="lg"
-                            disabled
-                          >
-                            <Ticket className="mr-2 h-4 w-4" />
-                            Activate Voucher
-                          </Button>
-                        </CardContent>
-                      </Card>
-
-                      {/* M-Pesa Reconnection Section */}
-                      <Card className="border-green-200 bg-green-50/50">
-                        <CardHeader>
-                          <CardTitle className="flex items-center gap-2 text-base sm:text-xl text-green-700">
-                            <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5" />
-                            Automatic Reconnection (M-Pesa Payment)
-                          </CardTitle>
-                          <CardDescription className="text-xs sm:text-sm text-green-600">
-                            Paid via M-Pesa but not connected? Paste your message and get connected instantly
-                          </CardDescription>
-                        </CardHeader>
-                        <CardContent className="space-y-4">
-                          <Alert className="bg-blue-50 border-blue-200">
-                            <MessageSquare className="h-4 w-4 text-blue-600" />
-                            <AlertDescription className="text-xs sm:text-sm text-blue-700">
-                              <strong>Example M-Pesa Message:</strong><br/>
-                              "Confirmed KSh50 sent to Kingstone WiFi. Transaction code QGH009L8K3. New balance KSh100. Time: 12/2/26 2:30 PM"
-                            </AlertDescription>
-                          </Alert>
-
-                          <div className="space-y-2">
-                            <Label htmlFor="mpesa-preview" className="text-xs sm:text-sm">M-Pesa Confirmation Message</Label>
-                            <div className="relative">
-                              <MessageSquare className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                              <textarea
-                                id="mpesa-preview"
-                                rows={4}
-                                placeholder="Paste your M-Pesa confirmation message here..."
-                                className="w-full pl-10 pr-3 py-2 border rounded-md text-sm sm:text-base"
-                                defaultValue="Confirmed KSh50 sent to Kingstone WiFi. Transaction code QGH009L8K3. New balance KSh100."
-                                readOnly
-                              />
-                            </div>
-                            <p className="text-xs text-muted-foreground">
-                              Include the transaction code (e.g., QGH009L8K3)
-                            </p>
-                          </div>
-
-                          <div className="space-y-2">
-                            <Label htmlFor="reconnect-phone-preview" className="text-xs sm:text-sm">Phone Number Used for Payment</Label>
-                            <div className="relative">
-                              <Smartphone className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                              <Input
-                                id="reconnect-phone-preview"
-                                type="tel"
-                                placeholder="254712345678"
-                                className="pl-10 text-sm sm:text-base"
-                                defaultValue="254712345678"
-                                readOnly
-                              />
-                            </div>
-                            <p className="text-xs text-muted-foreground">
-                              This will be your username for login
-                            </p>
-                          </div>
-
-                          <Button
-                            className="w-full bg-green-600 hover:bg-green-700 text-sm sm:text-base"
-                            size="lg"
-                            disabled
-                          >
-                            <CheckCircle className="mr-2 h-4 w-4" />
-                            Connect Now
-                          </Button>
-                        </CardContent>
-                      </Card>
-
-                      {/* Voucher Reconnection Section */}
-                      <Card className="border-blue-200 bg-blue-50/50">
-                        <CardHeader>
-                          <CardTitle className="flex items-center gap-2 text-base sm:text-xl text-blue-700">
-                            <Key className="w-4 h-4 sm:w-5 sm:h-5" />
-                            Lost Connection? Reconnect with Voucher
-                          </CardTitle>
-                          <CardDescription className="text-xs sm:text-sm text-blue-600">
-                            If you used a voucher before and lost connection, reconnect instantly
-                          </CardDescription>
-                        </CardHeader>
-                        <CardContent className="space-y-4">
-                          <Alert className="bg-green-50 border-green-200">
-                            <UserCheck className="h-4 w-4 text-green-600" />
-                            <AlertDescription className="text-xs sm:text-sm text-green-700">
-                              <strong>Quick Reconnection:</strong><br/>
-                              Use your original voucher code or phone number to reconnect. 
-                              Your remaining time will be restored automatically.
-                            </AlertDescription>
-                          </Alert>
-
-                          <div className="space-y-3">
-                            <Label className="text-xs sm:text-sm">Reconnect Method</Label>
-                            <div className="grid grid-cols-2 gap-3">
-                              <Button
-                                type="button"
-                                variant="default"
-                                className="flex items-center justify-center gap-2 text-xs sm:text-sm"
-                              >
-                                <Ticket className="w-3 h-3 sm:w-4 sm:h-4" />
-                                <span className="hidden xs:inline">Voucher Code</span>
-                                <span className="xs:hidden">Voucher</span>
-                              </Button>
-                              <Button
-                                type="button"
-                                variant="outline"
-                                className="flex items-center justify-center gap-2 text-xs sm:text-sm"
-                              >
-                                <Smartphone className="w-3 h-3 sm:w-4 sm:h-4" />
-                                <span className="hidden xs:inline">Phone Number</span>
-                                <span className="xs:hidden">Phone</span>
-                              </Button>
-                            </div>
-                          </div>
-
-                          <div className="space-y-2">
-                            <Label htmlFor="reconnect-voucher-preview" className="text-xs sm:text-sm">Voucher Code</Label>
-                            <div className="relative">
-                              <Ticket className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                              <Input
-                                id="reconnect-voucher-preview"
-                                type="text"
-                                placeholder="Enter your voucher code"
-                                className="pl-10 uppercase tracking-wider text-sm sm:text-base"
-                                defaultValue="VOUCHER123"
-                                readOnly
-                              />
-                            </div>
-                            <p className="text-xs text-muted-foreground">
-                              Enter the same voucher code you used before
-                            </p>
-                          </div>
-
-                          <Alert className="bg-blue-50 border-blue-200">
-                            <CheckCircle className="h-4 w-4 text-blue-600" />
-                            <AlertDescription className="text-xs sm:text-sm text-blue-700">
-                              <strong>How it works:</strong><br/>
-                              We'll look up your voucher session and restore your connection with remaining time.
-                            </AlertDescription>
-                          </Alert>
-
-                          <Button
-                            className="w-full bg-blue-600 hover:bg-blue-700 text-sm sm:text-base"
-                            size="lg"
-                            disabled
-                          >
-                            <RefreshCw className="mr-2 h-4 w-4" />
-                            Reconnect Now
-                          </Button>
-                        </CardContent>
-                      </Card>
-
-                      {/* Footer */}
-                      <div className="text-center py-6">
-                        <p className="text-xs sm:text-sm text-muted-foreground">
-                          Powered by{" "}
-                          <span className="font-semibold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-                            Kingstone wifi billing system
-                          </span>
-                        </p>
-                        <div className="mt-4 text-xs text-muted-foreground">
-                          Contact: {settings.contact_phone || 'Not set'} | {settings.contact_email || 'Not set'}
                         </div>
-                      </div>
+
+                        {/* PIN Input */}
+                        <div className="space-y-2">
+                          <Label>M-Pesa PIN</Label>
+                          <div className="relative">
+                            <Key className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                            <Input
+                              type="password"
+                              placeholder="Enter PIN"
+                              className="pl-10"
+                              maxLength={4}
+                            />
+                          </div>
+                        </div>
+
+                        {/* Pay Button */}
+                        <Button
+                          className="w-full text-lg font-semibold py-6"
+                          size="lg"
+                          style={{ backgroundColor: settings.theme_color }}
+                        >
+                          <CreditCard className="mr-2 h-5 w-5" />
+                          Pay & Connect
+                        </Button>
+                      </CardContent>
+                    </Card>
+
+                    {/* Success Message */}
+                    <Card className="mt-4 border-green-200 bg-green-50">
+                      <CardContent className="pt-4">
+                        <div className="flex items-center gap-3">
+                          <CheckCircle className="w-8 h-8 text-green-600" />
+                          <div>
+                            <p className="font-semibold text-green-700 text-sm">Payment Successful!</p>
+                            <p className="text-xs text-green-600">Connected to internet</p>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    {/* Footer */}
+                    <div className="text-center mt-6 text-xs text-muted-foreground">
+                      <p>Contact: {settings.contact_phone || 'Not set'}</p>
+                      <p className="mt-1">Kingstone WiFi</p>
                     </div>
                   </div>
                 </div>

@@ -111,10 +111,10 @@ export const AdminCharts = ({ visibilitySettings, onToggleVisibility }: AdminCha
   const loadPackageUsage = async (adminId: string) => {
     const { data } = await supabase
       .from('wifi_users')
-      .select('current_package_id, packages:current_package_id(name)')
+      .select('package_id, packages:package_id(name)')
       .eq('admin_id', adminId)
       .eq('is_active', true)
-      .not('current_package_id', 'is', null);
+      .not('package_id', 'is', null);
 
     const counts: Record<string, number> = {};
     (data || []).forEach((u: any) => {

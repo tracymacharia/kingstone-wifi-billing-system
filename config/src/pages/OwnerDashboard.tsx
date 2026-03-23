@@ -8,7 +8,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import {
   Users,
-  Router,
   Settings,
   LogOut,
   DollarSign,
@@ -16,14 +15,10 @@ import {
   CreditCard,
   Copy
 } from "lucide-react";
-import { useDashboardVisibility } from "@/hooks/useDashboardVisibility";
-import { DashboardSettings } from "@/components/ui/dashboard-settings";
-import { VisibilityCard } from "@/components/ui/visibility-card";
 import { OwnerSidebar } from "@/components/owner/OwnerSidebar";
 import { OwnerCharts } from "@/components/owner/OwnerCharts";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import AdminManagement from "@/components/owner/AdminManagement";
-import MikrotikManagement from "@/components/owner/MikrotikManagement";
 import SystemAnalytics from "@/components/owner/SystemAnalytics";
 import PasswordManager from "@/components/owner/PasswordManager";
 import SubscriptionManagement from "@/components/owner/SubscriptionManagement";
@@ -52,33 +47,10 @@ interface Admin {
   trial_activated_at?: string;
 }
 
-interface Mikrotik {
-  id: string;
-  name: string;
-  routerId: string;
-  ipAddress: string;
-  apiPort: number;
-  username: string;
-  password: string;
-  adminId: string;
-  status: 'online' | 'offline';
-  mpesaType: 'till' | 'paybill';
-  mpesaNumber: string;
-  location?: string;
-}
-
 const OwnerDashboard = () => {
   const { user, logout, isLoading: authIsLoading } = useAuth();
   const navigate = useNavigate();
-  const {
-    settings: visibilitySettings,
-    toggleVisibility,
-    resetToDefaults,
-    hideAll,
-    showAll,
-  } = useDashboardVisibility(user?.id || 'owner');
   const [admins, setAdmins] = useState<Admin[]>([]);
-  const [mikrotiks, setMikrotiks] = useState<Mikrotik[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<string | null>(null);
   const [filter, setFilter] = useState<string | null>(null);
@@ -345,31 +317,6 @@ const OwnerDashboard = () => {
         })));
       }
 
-      // Load Mikrotiks using RPC (bypasses RLS)
-      const { data: mikrotiksData, error: mikrotiksError } = await supabase.rpc('get_owner_mikrotiks', {
-        p_session_token: sessionToken
-      });
-
-      if (mikrotiksError) {
-        console.error('Error loading Mikrotik devices:', mikrotiksError);
-        toast.error('Failed to load Mikrotik devices: ' + mikrotiksError.message);
-      } else if (mikrotiksData) {
-        setMikrotiks(mikrotiksData.map(mk => ({
-          id: mk.id,
-          name: mk.name,
-          routerId: mk.router_id,
-          ipAddress: mk.ip_address,
-          apiPort: mk.api_port,
-          username: mk.username,
-          password: mk.password_encrypted,
-          adminId: mk.admin_id,
-          status: mk.status as 'online' | 'offline',
-          mpesaType: mk.mpesa_type as 'till' | 'paybill',
-          mpesaNumber: mk.mpesa_number,
-          location: mk.location || undefined
-        })));
-      }
-
     } catch (error: any) {
       console.error('Error loading owner data:', error);
       toast.error('Failed to load dashboard data: ' + (error.message || 'Unknown error'));
@@ -529,152 +476,6 @@ const OwnerDashboard = () => {
     } catch (error: any) {
       console.error('Error resetting admin:', error);
       toast.error('Failed to reset admin: ' + (error.message || 'Unknown error'));
-    }
-  };
-
-  const handleMikrotikAdd = async (newMikrotik: Omit<Mikrotik, 'id'>) => {
-    try {
-      // Get session token
-      const sessionToken = sessionStorage.getItem('kingstone_session_token');
-      
-      if (!sessionToken) {
-        toast.error('Session expired. Please log in again.');
-        return;
-      }
-
-      // Use RPC to create Mikrotik
-      const { data, error } = await supabase.rpc('owner_create_mikrotik_for_admin', {
-        p_session_token: sessionToken,
-        p_admin_id: newMikrotik.adminId,
-        p_name: newMikrotik.name,
-        p_router_id: newMikrotik.routerId,
-        p_ip_address: newMikrotik.ipAddress || null,
-        p_api_port: newMikrotik.apiPort,
-        p_username: newMikrotik.username,
-        p_password: newMikrotik.password,
-        p_mpesa_number: newMikrotik.mpesaNumber || null
-      });
-
-      if (error) {
-        console.error('Error creating Mikrotik via RPC:', error);
-        toast.error('Failed to create Mikrotik: ' + error.message);
-        return;
-      }
-
-      if (!data?.success) {
-        toast.error(data?.error || 'Failed to create Mikrotik');
-        return;
-      }
-
-      const mikrotik = { ...newMikrotik, id: data.mikrotik_id };
-      setMikrotiks([...mikrotiks, mikrotik]);
-      toast.success('Mikrotik created successfully');
-
-      // Refresh the data to ensure consistency
-      await loadOwnerData();
-    } catch (error: any) {
-      console.error('Error creating Mikrotik:', error);
-      toast.error('Failed to create Mikrotik: ' + (error.message || 'Unknown error'));
-    }
-  };
-
-  const handleMikrotikUpdate = async (updatedMikrotik: Mikrotik) => {
-    try {
-      // Get session token
-      const sessionToken = sessionStorage.getItem('kingstone_session_token');
-      
-      if (!sessionToken) {
-        toast.error('Session expired. Please log in again.');
-        return;
-      }
-
-      // Get owner ID - try state first, then localStorage
-      let currentOwnerId = ownerId;
-      if (!currentOwnerId) {
-        currentOwnerId = localStorage.getItem('ownerId');
-      }
-
-      if (!currentOwnerId) {
-        toast.error('Owner ID not found. Please log in again.');
-        return;
-      }
-
-      // Update Mikrotik directly (RPC not available for updates yet)
-      const { error } = await supabase
-        .from('mikrotiks')
-        .update({
-          name: updatedMikrotik.name,
-          router_id: updatedMikrotik.routerId,
-          ip_address: updatedMikrotik.ipAddress,
-          api_port: updatedMikrotik.apiPort,
-          username: updatedMikrotik.username,
-          password_encrypted: updatedMikrotik.password,
-          admin_id: updatedMikrotik.adminId,
-          owner_id: currentOwnerId || undefined,
-          status: updatedMikrotik.status,
-          mpesa_type: updatedMikrotik.mpesaType,
-          mpesa_number: updatedMikrotik.mpesaNumber,
-          location: updatedMikrotik.location || null,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', updatedMikrotik.id);
-
-      if (error) {
-        console.error('Error updating Mikrotik:', error);
-        toast.error('Failed to update Mikrotik: ' + error.message);
-        return;
-      }
-
-      setMikrotiks(mikrotiks.map(mikrotik => mikrotik.id === updatedMikrotik.id ? updatedMikrotik : mikrotik));
-      toast.success('Mikrotik updated successfully');
-
-      // Refresh the data to ensure consistency
-      await loadOwnerData();
-    } catch (error: any) {
-      console.error('Error updating Mikrotik:', error);
-      toast.error('Failed to update Mikrotik: ' + (error.message || 'Unknown error'));
-    }
-  };
-
-  const handleMikrotikDelete = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this Mikrotik?')) {
-      return;
-    }
-
-    try {
-      // Get session token
-      const sessionToken = sessionStorage.getItem('kingstone_session_token');
-      
-      if (!sessionToken) {
-        toast.error('Session expired. Please log in again.');
-        return;
-      }
-
-      // Use RPC to delete Mikrotik
-      const { data, error } = await supabase.rpc('admin_delete_mikrotik', {
-        p_session_token: sessionToken,
-        p_mikrotik_id: id
-      });
-
-      if (error) {
-        console.error('Error deleting Mikrotik via RPC:', error);
-        toast.error('Failed to delete Mikrotik: ' + error.message);
-        return;
-      }
-
-      if (!data?.success) {
-        toast.error(data?.error || 'Failed to delete Mikrotik');
-        return;
-      }
-
-      setMikrotiks(mikrotiks.filter(mikrotik => mikrotik.id !== id));
-      toast.success('Mikrotik deleted successfully');
-
-      // Refresh the data to ensure consistency
-      await loadOwnerData();
-    } catch (error: any) {
-      console.error('Error deleting Mikrotik:', error);
-      toast.error('Failed to delete Mikrotik: ' + (error.message || 'Unknown error'));
     }
   };
 
@@ -889,8 +690,8 @@ const OwnerDashboard = () => {
             </Card>
           </div>
 
-          {/* Stats Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          {/* Stats Cards - 3 columns instead of 4 */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
             <Card
               className="glass-card border-0 shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer hover:scale-[1.02]"
               onClick={() => navigateToTab('admins', 'all')}
@@ -908,29 +709,6 @@ const OwnerDashboard = () => {
                 <div className="mt-4">
                   <div className="flex items-center text-sm text-green-600">
                     <span>+2.5%</span>
-                    <span className="ml-1">from last week</span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card
-              className="glass-card border-0 shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer hover:scale-[1.02]"
-              onClick={() => navigateToTab('mikrotiks', 'all')}
-            >
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground">Mikrotik Devices</p>
-                    <h3 className="text-2xl font-bold">{mikrotiks.length}</h3>
-                  </div>
-                  <div className="p-3 rounded-full bg-secondary/10 text-secondary">
-                    <Router className="h-6 w-6" />
-                  </div>
-                </div>
-                <div className="mt-4">
-                  <div className="flex items-center text-sm text-green-600">
-                    <span>+5.2%</span>
                     <span className="ml-1">from last week</span>
                   </div>
                 </div>
@@ -1001,8 +779,6 @@ const OwnerDashboard = () => {
                 </CardHeader>
                 <CardContent>
                   <OwnerCharts
-                    visibilitySettings={visibilitySettings}
-                    onToggleVisibility={toggleVisibility}
                     ownerId={ownerId}
                   />
                 </CardContent>
@@ -1093,19 +869,6 @@ const OwnerDashboard = () => {
             numericOwnerId={numericOwnerId}
           />
         );
-      case 'mikrotiks':
-        return (
-          <MikrotikManagement
-            admins={admins}
-            mikrotiks={mikrotiks}
-            onMikrotikAdd={handleMikrotikAdd}
-            onMikrotikUpdate={handleMikrotikUpdate}
-            onMikrotikDelete={handleMikrotikDelete}
-            onLoadData={loadOwnerData}
-            filter={filter}
-            onClearFilter={() => navigateToTab('mikrotiks')}
-          />
-        );
       case 'subscriptions':
         return <SubscriptionManagement admins={admins} ownerId={ownerId} />;
       case 'payment-settings':
@@ -1113,7 +876,7 @@ const OwnerDashboard = () => {
       case 'notification-templates':
         return <NotificationTemplateManager />;
       case 'analytics':
-        return <SystemAnalytics admins={admins} mikrotiks={mikrotiks} />;
+        return <SystemAnalytics admins={admins} />;
       case 'password-management':
         return <PasswordManager />;
       case 'audit-logs':
@@ -1166,15 +929,6 @@ const OwnerDashboard = () => {
                   </div>
                 </div>
                 <div className="flex items-center space-x-2 w-full xxs:w-auto justify-between xxs:justify-end">
-                  <div className="flex items-center space-x-2">
-                    <DashboardSettings
-                      settings={visibilitySettings}
-                      onToggle={toggleVisibility}
-                      onResetDefaults={resetToDefaults}
-                      onHideAll={hideAll}
-                      onShowAll={showAll}
-                    />
-                  </div>
                   <Button
                     variant="outline"
                     size="sm"

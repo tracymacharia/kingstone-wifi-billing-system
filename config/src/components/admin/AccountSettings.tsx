@@ -86,14 +86,20 @@ const AccountSettings = ({ adminData, onUpdateProfile, onChangePassword }: Accou
       return;
     }
 
-    const success = await onChangePassword(oldPassword, newPassword);
-    if (success) {
-      setOldPassword("");
-      setNewPassword("");
-      setConfirmPassword("");
-      toast.success("Password changed successfully!");
-    } else {
-      toast.error("Current password is incorrect");
+    try {
+      const success = await onChangePassword(oldPassword, newPassword);
+      if (success) {
+        setOldPassword("");
+        setNewPassword("");
+        setConfirmPassword("");
+        toast.success("Password changed successfully!");
+      } else {
+        toast.error("Failed to change password. Please try again.");
+      }
+    } catch (error: any) {
+      // Show specific error message from the server
+      const errorMessage = error.message || "Failed to change password";
+      toast.error(errorMessage);
     }
   };
 

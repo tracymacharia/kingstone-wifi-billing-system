@@ -48,7 +48,7 @@ const UserStatsCards = ({ onCardClick }: UserStatsCardsProps) => {
       // Get WiFi users stats
       const { data: wifiUsers, error: wifiError } = await supabase
         .from('wifi_users')
-        .select('id, is_active, package_expires_at, current_package_id')
+        .select('id, is_active, package_expires_at, package_id')
         .eq('admin_id', adminId);
 
       if (wifiError) {
@@ -74,7 +74,7 @@ const UserStatsCards = ({ onCardClick }: UserStatsCardsProps) => {
 
       // Process WiFi users
       wifiUsers?.forEach(user => {
-        if (user.is_active && user.current_package_id) {
+        if (user.is_active && user.package_id) {
           if (user.package_expires_at && new Date(user.package_expires_at) > now) {
             totalActive++;
           } else {

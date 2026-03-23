@@ -11,6 +11,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { isValidKenyanPhone } from "@/lib/validators";
 
 interface Admin {
   id: string;
@@ -307,8 +308,8 @@ const AdminManagement = ({ admins, onAdminAdd, onAdminUpdate, onAdminDelete, onA
       return;
     }
 
-    if (newAdminPhone && !/^(\+254|0)[17]\d{8}$/.test(newAdminPhone)) {
-      toast.error("Please enter a valid Kenyan phone number");
+    if (newAdminPhone && !isValidKenyanPhone(newAdminPhone)) {
+      toast.error("Please enter a valid Kenyan phone number (e.g., 0712345678, 0123456789, +254712345678, or 254712345678)");
       return;
     }
 
@@ -659,8 +660,8 @@ const AdminManagement = ({ admins, onAdminAdd, onAdminUpdate, onAdminDelete, onA
       return;
     }
 
-    if (editForm.phone && !/^(\+254|0)[17]\d{8}$/.test(editForm.phone)) {
-      toast.error("Please enter a valid Kenyan phone number");
+    if (editForm.phone && !isValidKenyanPhone(editForm.phone)) {
+      toast.error("Please enter a valid Kenyan phone number (e.g., 0712345678, 0123456789, +254712345678, or 254712345678)");
       return;
     }
 

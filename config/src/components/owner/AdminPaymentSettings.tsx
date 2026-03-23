@@ -47,32 +47,41 @@ export const AdminPaymentSettings = () => {
 
   const loadSettings = async () => {
     try {
-      // Get the current owner's ID from localStorage (owners table ID, not system_credentials ID)
-      // This is set by OwnerDashboard.tsx from the owner profile
-      const ownerId = localStorage.getItem('ownerId');
+      // Try RPC first (bypasses RLS)
+      const sessionToken = sessionStorage.getItem('kingstone_session_token');
       
-      if (!ownerId) {
-        console.warn('No owner ID found in localStorage, cannot load payment settings');
-        setSettings([]);
-        return;
-      }
-
-      
-      const { data, error } = await supabase
-        .from('owner_payment_settings')
-        .select('*')
-        .eq('owner_id', ownerId)
-        .order('created_at', { ascending: false });
+      const { data, error } = await supabase.rpc('get_owner_payment_settings', {
+        p_session_token: sessionToken
+      });
 
       if (error) {
-        console.error('Error loading payment settings:', error);
-        // Handle auth/RLS errors (401, 406, 403), missing table (404), or missing column (42703)
-        if (error.status === 401 || error.status === 406 || error.status === 403 ||
-            error.code === '42P01' || error.code === '42703') {
-          setSettings([]);
+        console.error('Error loading payment settings via RPC:', error);
+        // Handle missing function gracefully
+        if (error.code === '42883' || error.message.includes('does not exist')) {
+          // Fallback to direct query
+          const ownerId = localStorage.getItem('ownerId');
+          if (!ownerId) {
+            setSettings([]);
+            return;
+          }
+          const { data: directData, error: directError } = await supabase
+            .from('owner_payment_settings')
+            .select('*')
+            .eq('owner_id', ownerId)
+            .order('created_at', { ascending: false });
+          
+          if (directError) {
+            console.error('Fallback query failed:', directError);
+            setSettings([]);
+            return;
+          }
+          setSettings((directData || []).map(setting => ({
+            ...setting,
+            method: setting.method as 'paybill' | 'till'
+          })));
           return;
         }
-        toast.error('Failed to load payment settings');
+        setSettings([]);
         return;
       }
 
@@ -120,85 +129,80 @@ export const AdminPaymentSettings = () => {
   const handleSave = async () => {
     setLoading(true);
     try {
-      // Get the current owner's ID from localStorage (owners table ID, not system_credentials ID)
-      const ownerId = localStorage.getItem('ownerId');
-      
-      if (!ownerId) {
-        toast.error('Owner ID not found. Please log in again.');
-        setLoading(false);
-        return;
-      }
-
+      const sessionToken = sessionStorage.getItem('kingstone_session_token');
 
       const saveData = {
-        method: formData.method,
-        description: formData.description,
-        is_active: formData.is_active,
-        owner_id: ownerId,
-        ...(formData.method === 'paybill'
-          ? {
-              paybill_number: formData.paybill_number,
-              account_number: formData.account_number,
-              till_number: null
-            }
-          : {
-              till_number: formData.till_number,
-              paybill_number: null,
-              account_number: null
-            }
-        )
+        p_method: formData.method,
+        p_paybill_number: formData.method === 'paybill' ? formData.paybill_number : null,
+        p_account_number: formData.method === 'paybill' ? formData.account_number : null,
+        p_till_number: formData.method === 'till' ? formData.till_number : null,
+        p_description: formData.description,
+        p_is_active: formData.is_active,
+        p_id: editingId || null
       };
 
+      // Try RPC first
+      const { data: result, error } = await supabase.rpc('save_owner_payment_settings', saveData);
 
-      let result;
-
-      if (editingId) {
-        // Update existing setting
-        result = await supabase
-          .from('owner_payment_settings')
-          .update(saveData)
-          .eq('id', editingId)
-          .select(); // Get the updated record back
-      } else {
-        // Insert new setting
-        result = await supabase
-          .from('owner_payment_settings')
-          .insert([saveData])
-          .select(); // Get the inserted record back
-      }
-
-
-      if (result.error) {
-        console.error('Error saving payment setting:', result.error);
-        console.error('Error details:', JSON.stringify(result.error, null, 2));
-
-        // Handle auth/RLS errors (401, 406, 403, 42501) or missing column (42703)
-        if (result.error.status === 401 || result.error.status === 406 ||
-            result.error.status === 403 || result.error.code === '42501' ||
-            result.error.code === '42703') {
-          // Save locally only
-          const localSetting = {
-            id: editingId || `local-${Date.now()}`,
-            ...saveData,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString()
-          };
-          if (!editingId) {
-            setSettings(prev => [...prev, localSetting]);
-          } else {
-            setSettings(prev => prev.map(s => s.id === editingId ? localSetting : s));
+      if (error) {
+        console.error('Error saving payment setting via RPC:', error);
+        
+        // Handle missing function - fallback to direct query
+        if (error.code === '42883' || error.message.includes('does not exist')) {
+          const ownerId = localStorage.getItem('ownerId');
+          if (!ownerId) {
+            toast.error('Owner ID not found. Please log in again.');
+            setLoading(false);
+            return;
           }
+
+          if (editingId) {
+            // Update existing
+            const { error: updateError } = await supabase
+              .from('owner_payment_settings')
+              .update({
+                method: formData.method,
+                paybill_number: formData.method === 'paybill' ? formData.paybill_number : null,
+                account_number: formData.method === 'paybill' ? formData.account_number : null,
+                till_number: formData.method === 'till' ? formData.till_number : null,
+                description: formData.description,
+                is_active: formData.is_active,
+                updated_at: new Date().toISOString()
+              })
+              .eq('id', editingId);
+
+            if (updateError) throw updateError;
+          } else {
+            // Insert new
+            const { error: insertError } = await supabase
+              .from('owner_payment_settings')
+              .insert([{
+                owner_id: ownerId,
+                method: formData.method,
+                paybill_number: formData.method === 'paybill' ? formData.paybill_number : null,
+                account_number: formData.method === 'paybill' ? formData.account_number : null,
+                till_number: formData.method === 'till' ? formData.till_number : null,
+                description: formData.description,
+                is_active: formData.is_active
+              }]);
+
+            if (insertError) throw insertError;
+          }
+          
           toast.success(editingId ? 'Payment setting updated!' : 'Payment setting created!');
           resetForm();
+          loadSettings();
+          setLoading(false);
           return;
         }
-        toast.error('Failed to save payment setting: ' + result.error.message);
+        
+        toast.error('Failed to save payment setting: ' + error.message);
+        setLoading(false);
         return;
       }
 
       toast.success(editingId ? 'Payment setting updated!' : 'Payment setting created!');
       resetForm();
-      // Reload to get the saved data with proper ID
       loadSettings();
     } catch (error) {
       console.error('Error saving payment setting:', error);
@@ -215,20 +219,34 @@ export const AdminPaymentSettings = () => {
     setSettings(prev => prev.filter(s => s.id !== id));
 
     try {
-      const { error } = await supabase
-        .from('owner_payment_settings')
-        .delete()
-        .eq('id', id);
+      const sessionToken = sessionStorage.getItem('kingstone_session_token');
+      
+      // Try RPC first
+      const { data, error } = await supabase.rpc('delete_owner_payment_settings', {
+        p_id: id
+      });
 
       if (error) {
-        console.error('Error deleting payment setting:', error);
-        // Handle auth/RLS errors (401, 406, 403, 42501) or missing column (42703)
-        if (error.status === 401 || error.status === 406 || 
-            error.status === 403 || error.code === '42501' || 
-            error.code === '42703') {
+        console.error('Error deleting payment setting via RPC:', error);
+        
+        // Handle missing function - fallback to direct query
+        if (error.code === '42883' || error.message.includes('does not exist')) {
+          const { error: directError } = await supabase
+            .from('owner_payment_settings')
+            .delete()
+            .eq('id', id);
+
+          if (directError) throw directError;
+          
           toast.success('Payment setting deleted!');
           return;
         }
+        
+        toast.error('Failed to delete payment setting: ' + error.message);
+        return;
+      }
+
+      if (!data) {
         toast.error('Failed to delete payment setting');
         return;
       }
@@ -251,21 +269,36 @@ export const AdminPaymentSettings = () => {
     );
 
     try {
-      const { error } = await supabase
-        .from('owner_payment_settings')
-        .update({ is_active: newIsActive })
-        .eq('id', id);
+      const sessionToken = sessionStorage.getItem('kingstone_session_token');
+      
+      // Try RPC first
+      const { error } = await supabase.rpc('save_owner_payment_settings', {
+        p_method: null,
+        p_paybill_number: null,
+        p_account_number: null,
+        p_till_number: null,
+        p_description: null,
+        p_is_active: newIsActive,
+        p_id: id
+      });
 
       if (error) {
-        console.error('Error updating payment setting status:', error);
-        // Handle auth/RLS errors (401, 406, 403, 42501) or missing column (42703)
-        if (error.status === 401 || error.status === 406 || 
-            error.status === 403 || error.code === '42501' || 
-            error.code === '42703') {
+        console.error('Error updating payment setting status via RPC:', error);
+        
+        // Handle missing function - fallback to direct query
+        if (error.code === '42883' || error.message.includes('does not exist')) {
+          const { error: directError } = await supabase
+            .from('owner_payment_settings')
+            .update({ is_active: newIsActive, updated_at: new Date().toISOString() })
+            .eq('id', id);
+
+          if (directError) throw directError;
+          
           toast.success(`Payment setting ${newIsActive ? 'activated' : 'deactivated'}!`);
           return;
         }
-        toast.warning('Status updated locally. Database sync failed.');
+        
+        toast.warning('Status update failed. Please refresh.');
         return;
       }
 

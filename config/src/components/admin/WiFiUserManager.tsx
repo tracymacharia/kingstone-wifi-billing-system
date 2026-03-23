@@ -15,33 +15,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { getAdminIdFromUser } from "@/hooks/useAdminId";
 import { validateUsername, validatePassword, validatePhoneNumber, sanitizeInput } from "@/lib/validators";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-
-interface WiFiUser {
-  id: string;
-  username: string;
-  password: string;
-  phone_number?: string;
-  package_id?: string;
-  package_expires_at?: string;
-  is_active: boolean;
-  created_at: string;
-  package?: {
-    name: string;
-    package_type: string;
-    bandwidth_limit_mb?: number;
-    price: number;
-  };
-}
-
-interface PackageOption {
-  id: string;
-  name: string;
-  package_type: string;
-  duration_type: string;
-  duration_value: number;
-  price: number;
-  is_active?: boolean;
-}
+import { WiFiUser, Package as PackageOption } from "@/types/models";
 
 const WiFiUserManager = () => {
   const location = useLocation();
@@ -92,7 +66,7 @@ const WiFiUserManager = () => {
         .from('wifi_users')
         .select(`
           *,
-          package:current_package_id (
+          package:package_id (
             name,
             package_type,
             bandwidth_limit_mb,
@@ -112,7 +86,7 @@ const WiFiUserManager = () => {
         username: user.username,
         password: user.password,
         phone_number: user.phone_number || '',
-        package_id: user.current_package_id,
+        package_id: user.package_id,
         package_expires_at: user.package_expires_at,
         is_active: user.is_active,
         created_at: user.created_at,
@@ -331,7 +305,7 @@ const WiFiUserManager = () => {
       const { error } = await supabase
         .from('wifi_users')
         .update({
-          current_package_id: selectedPackageId || null,
+          package_id: selectedPackageId || null,
           package_expires_at: selectedPackageId ? new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString() : null
         })
         .eq('id', selectedUser.id);

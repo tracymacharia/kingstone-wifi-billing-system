@@ -161,7 +161,7 @@ const AdminMikrotikManager = () => {
       return;
     }
 
-    if (!confirm(`Are you sure you want to delete "${mikrotik.name}"? This will also delete all associated vouchers, packages, and users. This action cannot be undone.`)) {
+    if (!confirm(`Are you sure you want to delete "${mikrotik.name}"? This will also delete all associated packages and users. This action cannot be undone.`)) {
       return;
     }
 

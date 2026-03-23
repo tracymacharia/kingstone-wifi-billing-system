@@ -3,7 +3,6 @@ import {
   BarChart3,
   Router,
   Package,
-  Ticket,
   UserCheck,
   CreditCard,
   Users,
@@ -46,7 +45,6 @@ interface AdminSidebarProps {
 const menuItems = [
   { id: "dashboard", title: "Dashboard", icon: LayoutDashboard, tab: null },
   { id: "packages", title: "Enhanced Packages", icon: Package, tab: "packages" },
-  { id: "vouchers", title: "Vouchers", icon: Ticket, tab: "vouchers" },
   { id: "reconnections", title: "Reconnections", icon: RefreshCw, tab: "reconnections" },
   {
     id: "wifi-users",
@@ -62,7 +60,7 @@ const menuItems = [
   { id: "business-contact", title: "Business Contact", icon: Users, tab: "business-contact" },
   { id: "payments", title: "Payments", icon: CreditCard, tab: "payments" },
   { id: "users", title: "Connected Users", icon: Users, tab: "users" },
-  { id: "mikrotiks", title: "Mikrotiks", icon: Router, tab: "mikrotiks", route: "/admin/mikrotiks/list" },
+  { id: "mikrotiks", title: "Mikrotik Management", icon: Router, tab: "mikrotiks" },
   { id: "recycle-bin", title: "Recycle Bin", icon: Trash2, tab: "recycle-bin" },
   { id: "sms", title: "SMS", icon: MessageSquare, tab: "sms" },
   { id: "subscription", title: "Subscription", icon: TrendingUp, tab: "subscription" },
@@ -143,22 +141,33 @@ export const AdminSidebar = ({ onLogout, businessName }: AdminSidebarProps) => {
                 <SidebarMenuItem key={item.id}>
                   {item.submenu ? (
                     <>
-                      <SidebarMenuButton
-                        onClick={() => toggleSubmenu(item.id)}
-                        className={isActive(item.tab) ? "bg-accent text-accent-foreground" : ""}
-                      >
-                        <item.icon className="mr-2 h-4 w-4" />
+                      <div className="flex items-center">
+                        <SidebarMenuButton
+                          onClick={() => {
+                            handleNavigation(item.tab, item.submenu[0].subtab);
+                            toggleSubmenu(item.id);
+                          }}
+                          className={isActive(item.tab) ? "bg-accent text-accent-foreground" : ""}
+                        >
+                          <item.icon className="mr-2 h-4 w-4" />
+                          {!isCollapsed && <span>{item.title}</span>}
+                        </SidebarMenuButton>
                         {!isCollapsed && (
-                          <>
-                            <span>{item.title}</span>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              toggleSubmenu(item.id);
+                            }}
+                            className="ml-auto p-1 hover:bg-accent rounded"
+                          >
                             {expandedMenu === item.id ? (
-                              <ChevronDown className="ml-auto h-4 w-4" />
+                              <ChevronDown className="h-4 w-4" />
                             ) : (
-                              <ChevronRight className="ml-auto h-4 w-4" />
+                              <ChevronRight className="h-4 w-4" />
                             )}
-                          </>
+                          </button>
                         )}
-                      </SidebarMenuButton>
+                      </div>
                       {expandedMenu === item.id && !isCollapsed && (
                         <SidebarMenuSub>
                           {item.submenu.map((subItem) => (

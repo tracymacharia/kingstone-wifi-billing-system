@@ -22,32 +22,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { getAdminIdFromUser } from "@/hooks/useAdminId";
-
-interface WiFiUser {
-  id: string;
-  username: string;
-  password: string;
-  phone_number?: string;
-  package_id?: string;
-  package_expires_at?: string;
-  is_active: boolean;
-  created_at: string;
-  package?: {
-    name: string;
-    package_type: string;
-    bandwidth_limit_mb?: number;
-    price: number;
-  };
-}
-
-interface PackageOption {
-  id: string;
-  name: string;
-  package_type: string;
-  duration_type: string;
-  duration_value: number;
-  price: number;
-}
+import { WiFiUser, Package as PackageOption } from "@/types/models";
 
 interface WiFiUserAccountsListProps {
   users: WiFiUser[];
@@ -180,7 +155,7 @@ const WiFiUserAccountsList = ({ users, onRefresh, onEdit, onDelete }: WiFiUserAc
           username: editFormData.username,
           password: editFormData.password,
           phone_number: editFormData.phone_number,
-          current_package_id: editFormData.package_id || null,
+          package_id: editFormData.package_id || null,
           is_active: editFormData.is_active
         })
         .eq('id', editingUser.id);

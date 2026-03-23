@@ -20,8 +20,8 @@ const adminRegisterSchema = z.object({
   fullName: z.string().min(2, "Full name must be at least 2 characters"),
   email: z.string().email("Invalid email"),
   phone: z.string().regex(
-    /^(\+254|0)[17]\d{8}$/,
-    "Phone number must be a valid Kenyan format (e.g., 0712345678 or +254712345678)"
+    /^(0[17]\d{8}|\+254[17]\d{8}|254[17]\d{8})$/,
+    "Phone number must be a valid Kenyan format (e.g., 0712345678, 0123456789, +254712345678, or 254712345678)"
   ),
   businessName: z.string().min(2, "Business name must be at least 2 characters"),
   username: z.string().min(3, "Username must be at least 3 characters"),

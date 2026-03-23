@@ -185,7 +185,7 @@ const AdminMikrotikList = () => {
   };
 
   const handleDelete = async (mikrotik: Mikrotik) => {
-    if (!confirm(`Are you sure you want to delete "${mikrotik.router_name || mikrotik.name || 'Unnamed Router'}"? This will also delete all associated vouchers, packages, and users. This action cannot be undone.`)) {
+    if (!confirm(`Are you sure you want to delete "${mikrotik.router_name || mikrotik.name || 'Unnamed Router'}"? This will also delete all associated packages and users. This action cannot be undone.`)) {
       return;
     }
 

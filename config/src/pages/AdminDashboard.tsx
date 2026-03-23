@@ -18,20 +18,19 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { useDashboardVisibility } from "@/hooks/useDashboardVisibility";
-import { DashboardSettings } from "@/components/ui/dashboard-settings";
 import { VisibilityCard } from "@/components/ui/visibility-card";
 import { AdminSidebar } from "@/components/admin/AdminSidebar";
 import { AdminCharts } from "@/components/admin/AdminCharts";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import AccountSettings from "@/components/admin/AccountSettings";
 import AssignedMikrotiks from "@/components/admin/AssignedMikrotiks";
+import MikrotikManagement from "@/components/admin/MikrotikManagement";
 import SMSSettings from "@/components/admin/SMSSettings";
 import SubscriptionStatus from "@/components/admin/SubscriptionStatus";
 import GraphDashboard from "@/components/admin/GraphDashboard";
 import RealTimeMonitor from "@/components/admin/RealTimeMonitor";
 import PaymentHistory from "@/components/admin/PaymentHistory";
 import EnhancedPackageManager from "@/components/admin/EnhancedPackageManager";
-import VoucherManager from "@/components/admin/VoucherManager";
 import ReconnectionManager from "@/components/admin/ReconnectionManager";
 import WiFiUserManager from "@/components/admin/WiFiUserManager";
 import BroadbandUserManager from "@/components/admin/BroadbandUserManager";
@@ -46,26 +45,7 @@ import { formatKESSimple } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { getAdminIdFromUser } from "@/hooks/useAdminId";
 import SystemAuditLogs from "@/components/shared/SystemAuditLogs";
-
-interface Package {
-  id: string;
-  name: string;
-  duration: string;
-  price: number;
-  bandwidth: string;
-  type: 'hotspot' | 'pppoe' | 'static';
-  packageType: 'hourly' | 'daily' | 'monthly';
-  status: 'active' | 'inactive';
-}
-
-interface Payment {
-  id: string;
-  amount: number;
-  phone: string;
-  package: string;
-  timestamp: string;
-  status: 'completed' | 'pending' | 'failed';
-}
+import { Package, Payment, Mikrotik } from "@/types/models";
 
 interface ConnectedUser {
   id: string;
@@ -75,19 +55,6 @@ interface ConnectedUser {
   connectedAt: string;
   dataUsed: string;
   timeRemaining: string;
-}
-
-interface Mikrotik {
-  id: string;
-  name: string;
-  routerId: string;
-  ipAddress: string;
-  status: 'online' | 'offline';
-  mpesaType: 'till' | 'paybill';
-  mpesaNumber: string;
-  location?: string;
-  totalEarnings?: number;
-  activeUsers?: number;
 }
 
 interface AdminData {
@@ -181,62 +148,64 @@ const AdminDashboard = () => {
         setPackages(packagesData.map(pkg => ({
           id: pkg.id,
           name: pkg.name,
-          duration: `${pkg.duration_value} ${pkg.duration_type}`,
+          package_type: pkg.package_type,
+          duration_type: pkg.duration_type,
+          duration_value: pkg.duration_value,
           price: pkg.price,
-          bandwidth: `${pkg.download_speed_mbps} Mbps`,
+          is_active: pkg.is_active,
+          admin_id: pkg.admin_id,
+          created_at: pkg.created_at,
+          duration: `${pkg.duration_value} ${pkg.duration_type}`,
+          bandwidth: `${pkg.bandwidth_limit_mb || 0} MB`,
           type: pkg.package_type as 'hotspot' | 'pppoe' | 'static',
           packageType: pkg.duration_type === 'hours' ? 'hourly' : pkg.duration_type === 'days' ? 'daily' : 'monthly' as 'hourly' | 'daily' | 'monthly',
           status: pkg.is_active ? 'active' : 'inactive' as 'active' | 'inactive'
-        })));
+        } as any)));
       }
 
-      // Load payments
+      // Load payments (last 20)
       const { data: paymentsData, error: paymentsError } = await supabase
         .from('payments')
-        .select('*')
+        .select('id, admin_id, amount, user_phone, created_at, status')
         .eq('admin_id', adminId)
         .order('created_at', { ascending: false })
         .limit(20);
 
       if (paymentsError) {
         console.error('Error loading payments:', paymentsError);
-        toast.error('Failed to load payments');
       } else if (paymentsData) {
-        setPayments(paymentsData.map(payment => ({
-          id: payment.id,
-          amount: payment.amount,
-          phone: payment.user_phone,
-          package: payment.package_name,
-          timestamp: new Date(payment.created_at).toLocaleString(),
-          status: payment.status as 'completed' | 'pending' | 'failed'
+        setPayments(paymentsData.map(p => ({
+          id: p.id,
+          admin_id: p.admin_id,
+          amount: p.amount,
+          phone: p.user_phone || '',
+          created_at: p.created_at,
+          status: p.status as 'completed' | 'pending' | 'failed'
         })));
       }
 
-      // Load active wifi users as connected users
+      // Load active wifi users
       const { data: connectedData, error: connectedError } = await supabase
         .from('wifi_users')
-        .select('id, username, phone_number, package_expires_at, created_at, package:current_package_id(name)')
+        .select('id, username, package:package_id(name), package_expires_at')
         .eq('admin_id', adminId)
         .eq('is_active', true)
-        .order('created_at', { ascending: false });
+        .limit(50);
 
       if (connectedError) {
-        console.error('Error loading active users:', connectedError);
+        console.error('Error loading users:', connectedError);
       } else if (connectedData) {
         setConnectedUsers(connectedData.map((u: any) => ({
           id: u.id,
           username: u.username,
-          package: (u.package as any)?.name || 'Unknown',
-          ipAddress: u.phone_number || 'N/A',
-          connectedAt: new Date(u.created_at).toLocaleString(),
-          dataUsed: 'N/A',
+          package: (u.package as any)?.name || 'Basic',
           timeRemaining: u.package_expires_at
-            ? `${Math.max(0, Math.floor((new Date(u.package_expires_at).getTime() - Date.now()) / 60000))} min`
-            : 'Unlimited'
+            ? getTimeRemaining(u.package_expires_at)
+            : 'Active'
         })));
       }
 
-      // Load assigned Mikrotiks
+      // Load assigned Mikrotiks with full details for management
       // Note: Using direct query - ensure RLS policy allows admin access
       const { data: mikrotiksData, error: mikrotiksError } = await supabase
         .from('mikrotiks')
@@ -253,6 +222,10 @@ const AdminDashboard = () => {
           name: mk.name,
           routerId: mk.router_id,
           ipAddress: mk.ip_address,
+          apiPort: mk.api_port || 8728,
+          username: mk.username,
+          password: mk.password_encrypted,
+          adminId: mk.admin_id,
           status: mk.status as 'online' | 'offline',
           mpesaType: mk.mpesa_type as 'till' | 'paybill',
           mpesaNumber: mk.mpesa_number,
@@ -263,11 +236,15 @@ const AdminDashboard = () => {
       }
 
       // Load admin business name from admins table
-      const { data: adminRecord } = await supabase
+      const { data: adminRecord, error: adminError } = await supabase
         .from('admins')
         .select('business_name, email')
         .eq('id', adminId)
-        .single();
+        .maybeSingle();
+
+      if (adminError) {
+        console.error('Error loading admin data:', adminError);
+      }
 
       setAdminData({
         email: adminRecord?.email || user.email,
@@ -341,7 +318,127 @@ const AdminDashboard = () => {
   };
 
   const handleManageMikrotik = (mikrotikId: string) => {
-    toast.info(`Managing Mikrotik: ${mikrotikId}`);
+    // This is now handled by the MikrotikManagement component
+  };
+
+  const handleMikrotikAdd = async (newMikrotik: Omit<Mikrotik, 'id'>) => {
+    try {
+      const adminId = getAdminIdFromUser(user);
+      if (!adminId) {
+        toast.error('No admin ID available');
+        return;
+      }
+
+      // Create Mikrotik directly
+      const { data, error } = await supabase
+        .from('mikrotiks')
+        .insert({
+          name: newMikrotik.name,
+          router_id: newMikrotik.routerId,
+          ip_address: newMikrotik.ipAddress || null,
+          api_port: newMikrotik.apiPort,
+          username: newMikrotik.username,
+          password_encrypted: newMikrotik.password,
+          admin_id: adminId,
+          status: newMikrotik.status,
+          mpesa_type: newMikrotik.mpesaType,
+          mpesa_number: newMikrotik.mpesaNumber || null,
+          location: newMikrotik.location || null,
+          owner_id: null,
+          total_earnings: 0,
+          active_users: 0
+        })
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Error creating Mikrotik:', error);
+        toast.error('Failed to create Mikrotik: ' + error.message);
+        return;
+      }
+
+      const mikrotik = { ...newMikrotik, id: data.id };
+      setAssignedMikrotiks([...assignedMikrotiks, mikrotik]);
+      toast.success('Mikrotik router added successfully!');
+
+      // Refresh the data to ensure consistency
+      await loadDashboardData();
+    } catch (error: any) {
+      console.error('Error creating Mikrotik:', error);
+      toast.error('Failed to create Mikrotik: ' + (error.message || 'Unknown error'));
+    }
+  };
+
+  const handleMikrotikUpdate = async (updatedMikrotik: Mikrotik) => {
+    try {
+      // Update Mikrotik directly
+      const { error } = await supabase
+        .from('mikrotiks')
+        .update({
+          name: updatedMikrotik.name,
+          router_id: updatedMikrotik.routerId,
+          ip_address: updatedMikrotik.ipAddress,
+          api_port: updatedMikrotik.apiPort,
+          username: updatedMikrotik.username,
+          password_encrypted: updatedMikrotik.password,
+          status: updatedMikrotik.status,
+          mpesa_type: updatedMikrotik.mpesaType,
+          mpesa_number: updatedMikrotik.mpesaNumber,
+          location: updatedMikrotik.location || null,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', updatedMikrotik.id);
+
+      if (error) {
+        console.error('Error updating Mikrotik:', error);
+        toast.error('Failed to update Mikrotik: ' + error.message);
+        return;
+      }
+
+      setAssignedMikrotiks(assignedMikrotiks.map(mikrotik => mikrotik.id === updatedMikrotik.id ? updatedMikrotik : mikrotik));
+      toast.success('Mikrotik updated successfully!');
+
+      // Refresh the data to ensure consistency
+      await loadDashboardData();
+    } catch (error: any) {
+      console.error('Error updating Mikrotik:', error);
+      toast.error('Failed to update Mikrotik: ' + (error.message || 'Unknown error'));
+    }
+  };
+
+  const handleMikrotikDelete = async (id: string) => {
+    if (!confirm('Are you sure you want to delete this Mikrotik? This will remove the router configuration.')) {
+      return;
+    }
+
+    try {
+      // Use RPC to delete Mikrotik
+      const sessionToken = sessionStorage.getItem('kingstone_session_token');
+      const { data, error } = await supabase.rpc('admin_delete_mikrotik', {
+        p_session_token: sessionToken,
+        p_mikrotik_id: id
+      });
+
+      if (error) {
+        console.error('Error deleting Mikrotik via RPC:', error);
+        toast.error('Failed to delete Mikrotik: ' + error.message);
+        return;
+      }
+
+      if (!data?.success) {
+        toast.error(data?.error || 'Failed to delete Mikrotik');
+        return;
+      }
+
+      setAssignedMikrotiks(assignedMikrotiks.filter(mikrotik => mikrotik.id !== id));
+      toast.success('Mikrotik deleted successfully');
+
+      // Refresh the data to ensure consistency
+      await loadDashboardData();
+    } catch (error: any) {
+      console.error('Error deleting Mikrotik:', error);
+      toast.error('Failed to delete Mikrotik: ' + (error.message || 'Unknown error'));
+    }
   };
 
   const getStatusColor = (status: string) => {
@@ -357,6 +454,23 @@ const AdminDashboard = () => {
       default:
         return 'secondary';
     }
+  };
+
+  const getTimeRemaining = (expiresAt: string) => {
+    const end = new Date(expiresAt).getTime();
+    const now = Date.now();
+    const diff = end - now;
+    
+    if (diff <= 0) return 'Expired';
+    
+    const hours = Math.floor(diff / (1000 * 60 * 60));
+    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+    
+    if (hours > 24) {
+      const days = Math.floor(hours / 24);
+      return `${days}d left`;
+    }
+    return `${hours}h ${minutes}m left`;
   };
 
   const totalRevenue = payments.filter(p => p.status === 'completed').reduce((sum, p) => sum + p.amount, 0);
@@ -455,8 +569,6 @@ const AdminDashboard = () => {
       switch (activeTab) {
         case 'packages':
           return <EnhancedPackageManager />;
-        case 'vouchers':
-          return <VoucherManager />;
         case 'reconnections':
           return <ReconnectionManager />;
         case 'wifi-users':
@@ -471,34 +583,35 @@ const AdminDashboard = () => {
           return (
             <Card>
               <CardHeader>
-                <CardTitle>Payment History</CardTitle>
-                <CardDescription>Recent MPESA transactions and payments</CardDescription>
+                <CardTitle>Payments</CardTitle>
+                <CardDescription>Recent payment transactions</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
-                  {payments.map((payment) => (
-                    <div key={payment.id} className="flex items-center justify-between p-4 border rounded-lg">
-                      <div className="flex-1">
+                {payments.length === 0 ? (
+                  <p className="text-center text-muted-foreground py-8">No payments yet</p>
+                ) : (
+                  <div className="space-y-2">
+                    {payments.map((payment) => (
+                      <div key={payment.id} className="flex items-center justify-between p-3 border rounded-lg">
                         <div className="flex items-center space-x-3">
-                          <div>
-                            <h3 className="font-medium">{formatKESSimple(payment.amount)}</h3>
-                            <p className="text-sm text-muted-foreground">
-                              {payment.phone} • {payment.package}
-                            </p>
+                          <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ backgroundColor: payment.status === 'completed' ? '#dcfce7' : '#fef3c7' }}>
+                            <CreditCard className={`w-5 h-5 ${payment.status === 'completed' ? 'text-green-600' : 'text-yellow-600'}`} />
                           </div>
-                          <Badge variant={getStatusColor(payment.status)}>
+                          <div>
+                            <p className="font-medium">KES {payment.amount.toLocaleString()}</p>
+                            <p className="text-xs text-muted-foreground">{payment.phone}</p>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <Badge variant={payment.status === 'completed' ? 'default' : 'secondary'} className="text-xs">
                             {payment.status}
                           </Badge>
+                          <p className="text-xs text-muted-foreground mt-1">{new Date(payment.created_at).toLocaleDateString()}</p>
                         </div>
                       </div>
-                      <div className="text-right">
-                        <div className="text-sm text-muted-foreground">
-                          {payment.timestamp}
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                )}
               </CardContent>
             </Card>
           );
@@ -507,60 +620,88 @@ const AdminDashboard = () => {
             <Card>
               <CardHeader>
                 <CardTitle>Connected Users</CardTitle>
-                <CardDescription>Currently active Wi-Fi sessions</CardDescription>
+                <CardDescription>Currently active users</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
-                  {connectedUsers.map((user) => (
-                    <div key={user.id} className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 border rounded-lg gap-3">
-                      <div className="flex-1">
-                        <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-3 gap-2 sm:gap-0">
+                {connectedUsers.length === 0 ? (
+                  <p className="text-center text-muted-foreground py-8">No active users</p>
+                ) : (
+                  <div className="space-y-2">
+                    {connectedUsers.map((user) => (
+                      <div key={user.id} className="flex items-center justify-between p-3 border rounded-lg">
+                        <div className="flex items-center space-x-3">
+                          <div className="w-10 h-10 rounded-full flex items-center justify-center bg-green-100">
+                            <Activity className="w-5 h-5 text-green-600" />
+                          </div>
                           <div>
-                            <h3 className="font-medium">{user.username}</h3>
-                            <p className="text-sm text-muted-foreground">
-                              {user.ipAddress} • {user.package}
-                            </p>
-                          </div>
-                          <Badge variant="default" className="w-fit">
-                            <Activity className="w-3 h-3 mr-1" />
-                            Online
-                          </Badge>
-                        </div>
-                      </div>
-                      <div className="text-right w-full sm:w-auto">
-                        <div className="text-sm">
-                          <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-4 gap-1 sm:gap-0">
-                            <div>
-                              <span className="text-muted-foreground">Data: </span>
-                              <span className="font-medium">{user.dataUsed}</span>
-                            </div>
-                            <div>
-                              <span className="text-muted-foreground">Time: </span>
-                              <span className="font-medium">{user.timeRemaining}</span>
-                            </div>
-                          </div>
-                          <div className="text-xs text-muted-foreground mt-1">
-                            Connected: {user.connectedAt}
+                            <p className="font-medium">{user.username}</p>
+                            <p className="text-xs text-muted-foreground">{user.package}</p>
                           </div>
                         </div>
+                        <div className="text-right">
+                          <Badge variant="default" className="text-xs">Active</Badge>
+                          <p className="text-xs text-muted-foreground mt-1">{user.timeRemaining}</p>
+                        </div>
                       </div>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                )}
               </CardContent>
             </Card>
           );
         case 'mikrotiks':
           return (
-            <AssignedMikrotiks
+            <MikrotikManagement
+              admins={[]}
               mikrotiks={assignedMikrotiks}
-              onManageMikrotik={handleManageMikrotik}
+              onMikrotikAdd={handleMikrotikAdd}
+              onMikrotikUpdate={handleMikrotikUpdate}
+              onMikrotikDelete={handleMikrotikDelete}
+              onLoadData={loadDashboardData}
+              filter={null}
+              onClearFilter={() => {}}
             />
           );
         case 'sms':
           return <SMSSettings businessName={adminData.businessName} />;
         case 'subscription':
-          return <SubscriptionStatus businessName={adminData.businessName} />;
+          return (
+            <Card>
+              <CardHeader>
+                <CardTitle>Subscription</CardTitle>
+                <CardDescription>Your subscription status and billing</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <Card>
+                      <CardHeader className="pb-3">
+                        <CardTitle className="text-sm font-medium text-muted-foreground">Status</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="flex items-center gap-2">
+                          <div className="w-3 h-3 rounded-full bg-green-500"></div>
+                          <span className="text-2xl font-bold">Active</span>
+                        </div>
+                      </CardContent>
+                    </Card>
+                    <Card>
+                      <CardHeader className="pb-3">
+                        <CardTitle className="text-sm font-medium text-muted-foreground">Plan</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <span className="text-2xl font-bold">Trial</span>
+                      </CardContent>
+                    </Card>
+                  </div>
+                  <div className="text-sm text-muted-foreground">
+                    <p>Your subscription is managed by the system owner.</p>
+                    <p className="mt-2">Contact: {adminData?.email || 'support@kingstone.com'}</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          );
         case 'password-management':
           return <AdminPasswordManager />;
         case 'business-contact':
@@ -772,13 +913,6 @@ const AdminDashboard = () => {
                     </p>
                   </div>
                 </div>
-                <DashboardSettings
-                  settings={visibilitySettings}
-                  onToggle={toggleVisibility}
-                  onResetDefaults={resetToDefaults}
-                  onHideAll={hideAll}
-                  onShowAll={showAll}
-                />
               </div>
             </header>
 

@@ -13,10 +13,10 @@ interface Mikrotik {
 
 interface SystemAnalyticsProps {
   admins: Admin[];
-  mikrotiks: Mikrotik[];
+  mikrotiks?: Mikrotik[];
 }
 
-const SystemAnalytics = ({ admins, mikrotiks }: SystemAnalyticsProps) => {
+const SystemAnalytics = ({ admins, mikrotiks = [] }: SystemAnalyticsProps) => {
   return (
     <Card>
       <CardHeader>

@@ -45,7 +45,7 @@ const BulkActions = ({ selectedUsers, onSelectionChange, onRefresh }: BulkAction
           break;
         case 'inactive':
           // Delete users without active packages or inactive status
-          query = query.or('is_active.eq.false,current_package_id.is.null');
+          query = query.or('is_active.eq.false,package_id.is.null');
           break;
         case 'selected':
           if (selectedUsers.length === 0) {
@@ -95,7 +95,7 @@ const BulkActions = ({ selectedUsers, onSelectionChange, onRefresh }: BulkAction
       // Get selected users with their packages
       const { data: users, error: fetchError } = await supabase
         .from('wifi_users')
-        .select('id, current_package_id')
+        .select('id, package_id')
         .eq('admin_id', adminId)
         .in('id', selectedUsers);
 
@@ -106,7 +106,7 @@ const BulkActions = ({ selectedUsers, onSelectionChange, onRefresh }: BulkAction
       }
 
       // Update packages for selected users
-      const packageIds = [...new Set(users?.map(u => u.current_package_id).filter(Boolean))];
+      const packageIds = [...new Set(users?.map(u => u.package_id).filter(Boolean))];
 
       if (packageIds.length > 0) {
         const updateData: any = {};

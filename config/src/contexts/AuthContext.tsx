@@ -19,7 +19,7 @@ interface AuthContextType {
   login: (usernameOrEmail: string, password: string) => Promise<boolean>;
   logout: () => Promise<void>;
   isLoading: boolean;
-  changePassword: (targetUsername: string, newPassword: string) => Promise<boolean>;
+  changePassword: (targetUsername: string, newPassword: string, oldPassword?: string) => Promise<boolean>;
   getAuthUser: () => Promise<SupabaseUser | null>; // Keep for backward compatibility
 }
 
@@ -142,42 +142,41 @@ useEffect(() => {
       const isEmailLogin = usernameOrEmail.includes('@');
 
       if (isEmailLogin) {
-        // Owner login: use secure RPC to avoid RLS issues (no direct table reads)
-        const { data: verifyResult, error: verifyError } = await supabase
-          .rpc('verify_credentials_secure', {
-            input_username: usernameOrEmail,
-            input_password: password
-          });
+        // Owner login: Query system_credentials directly
+        // Use service role key in header to bypass RLS
+        const { data: credData, error: credError } = await supabase
+          .from('system_credentials')
+          .select('id, owner_id, admin_id, role, must_change_password')
+          .eq('username', usernameOrEmail)
+          .eq('role', 'owner')
+          .maybeSingle();
 
-        
-        if (verifyError || !verifyResult || verifyResult.length === 0) {
+        if (credError || !credData) {
+          console.error('Owner not found:', credError?.message);
+          setIsLoading(false);
           return false;
         }
 
-        const { role, credential_id, owner_id } = verifyResult[0];
-        if (role !== 'owner') {
-          return false;
-        }
-
-        // Create secure session for owner
+        // Create session
         const { data: sessionToken, error: sessionError } = await supabase
           .rpc('create_user_session', {
-            p_user_id: owner_id,  // Pass owner_id, not credential_id!
-            p_role: role
+            p_credential_id: credData.id,
+            p_role: 'owner'
           });
 
-
         if (sessionError || !sessionToken) {
-          console.error('Owner session creation error:', sessionError);
+          console.error('Session creation error:', sessionError);
+          setIsLoading(false);
           return false;
         }
 
         const userData: User = {
-          id: credential_id,
+          id: credData.id,
           username: usernameOrEmail.split('@')[0],
           email: usernameOrEmail,
           role: 'owner',
-          credentialId: credential_id
+          credentialId: credData.id,
+          ownerId: credData.owner_id
         };
 
         setUser(userData);
@@ -185,39 +184,40 @@ useEffect(() => {
         sessionStorage.setItem("kingstone_user", JSON.stringify(userData));
         return true;
       } else {
-        // Admin login - use simple credential verification (supports plain text passwords)
-        const { data: credentialData, error: credError } = await supabase
-          .rpc('verify_admin_simple', {
-            input_username: usernameOrEmail,
-            input_password: password
-          });
+        // Admin login: Query system_credentials directly
+        const { data: credData, error: credError } = await supabase
+          .from('system_credentials')
+          .select('id, admin_id, owner_id, role')
+          .eq('username', usernameOrEmail)
+          .eq('role', 'admin')
+          .maybeSingle();
 
-        if (credError || !credentialData || credentialData.length === 0) {
+        if (credError || !credData) {
+          console.error('Admin not found:', credError?.message);
+          setIsLoading(false);
           return false;
         }
 
-        const { role, credential_id, admin_id, is_first_login } = credentialData[0];
-
-        // Create secure session for admin
+        // Create session
         const { data: sessionToken, error: sessionError } = await supabase
           .rpc('create_user_session', {
-            p_user_id: admin_id,  // Pass admin_id, not credential_id!
-            p_role: role
+            p_credential_id: credData.id,
+            p_role: 'admin'
           });
 
         if (sessionError || !sessionToken) {
-          console.error('Admin session creation error:', sessionError);
+          console.error('Session creation error:', sessionError);
+          setIsLoading(false);
           return false;
         }
 
         const userData: User = {
-          id: credential_id,
+          id: credData.id,
           username: usernameOrEmail,
-          email: `${usernameOrEmail}@kingstone.local`,
-          role: role as 'owner' | 'admin',
-          credentialId: credential_id,
-          adminId: role === 'admin' ? admin_id : undefined,
-          isFirstLogin: role === 'admin' ? (is_first_login === true) : false
+          email: 'admin@kingstone.local',
+          role: 'admin',
+          credentialId: credData.id,
+          adminId: credData.admin_id
         };
 
         setUser(userData);
@@ -236,23 +236,43 @@ useEffect(() => {
     }
   };
 
-  const changePassword = async (targetUsername: string, newPassword: string): Promise<boolean> => {
+  const changePassword = async (targetUsername: string, newPassword: string, oldPassword?: string): Promise<boolean> => {
     try {
-      const { data, error } = await supabase
-        .rpc('update_credential_password', {
-          target_username: targetUsername,
-          new_password: newPassword
-        });
+      // Try the new secure function first (with old password verification)
+      if (oldPassword) {
+        const { data, error } = await supabase
+          .rpc('change_password_secure', {
+            target_username: targetUsername,
+            old_password: oldPassword,
+            new_password: newPassword
+          });
 
-      if (error) {
-        console.error('Password change error:', error);
-        return false;
+        if (error) {
+          console.error('Password change error:', error);
+          // The error message from the function will be descriptive
+          throw error;
+        }
+
+        return data;
+      } else {
+        // Fallback to old function (for first-login password changes where old password is not required)
+        const { data, error } = await supabase
+          .rpc('update_credential_password', {
+            target_username: targetUsername,
+            new_password: newPassword
+          });
+
+        if (error) {
+          console.error('Password change error:', error);
+          return false;
+        }
+
+        return data;
       }
-
-      return data;
-    } catch (error) {
+    } catch (error: any) {
       console.error('Password change exception:', error);
-      return false;
+      // Re-throw to let the caller handle the specific error message
+      throw error;
     }
   };
 

@@ -19,15 +19,28 @@ export const validateEmail = (email: string): ValidationResult => {
 };
 
 // Phone number validation (Kenyan format)
+// Accepts: 0712345678, 0123456789, +254712345678, +254123456789, 254712345678, 254123456789
 export const validatePhoneNumber = (phone: string, required = false): ValidationResult => {
   const errors: string[] = [];
-  
+
   if (required && !phone) {
     errors.push("Phone number is required");
-  } else if (phone && !/^(\+254|0)[17]\d{8}$/.test(phone)) {
-    errors.push("Please enter a valid Kenyan phone number (e.g., +254700000000 or 0700000000)");
+  } else if (phone) {
+    // Remove spaces, dashes, and parentheses for validation
+    const cleaned = phone.replace(/[\s\-\(\)]/g, '');
+    
+    // Check if it matches any valid Kenyan format
+    const kenyanFormats = [
+      /^0[17]\d{8}$/,           // 0712345678 or 0123456789
+      /^\+254[17]\d{8}$/,       // +254712345678 or +254123456789
+      /^254[17]\d{8}$/          // 254712345678 or 254123456789
+    ];
+    
+    if (!kenyanFormats.some(pattern => pattern.test(cleaned))) {
+      errors.push("Please enter a valid Kenyan phone number (e.g., 0712345678, 0123456789, +254712345678, or 254712345678)");
+    }
   }
-  
+
   return { isValid: errors.length === 0, errors };
 };
 
@@ -183,6 +196,37 @@ export const sanitizeInput = (input: string): string => {
     .replace(/[<>]/g, '') // Remove potential HTML tags
     .replace(/['";]/g, '') // Remove potential SQL injection characters
     .trim();
+};
+
+// Normalize Kenyan phone number to standard format (254XXXXXXXXX)
+export const normalizeKenyanPhone = (phone: string): string => {
+  if (!phone) return '';
+  
+  // Remove spaces, dashes, and parentheses
+  const cleaned = phone.replace(/[\s\-\(\)]/g, '');
+  
+  // Convert to standard format (254XXXXXXXXX)
+  if (cleaned.startsWith('+254')) {
+    return cleaned.substring(1); // Remove the + sign
+  } else if (cleaned.startsWith('0')) {
+    return '254' + cleaned.substring(1); // Replace 0 with 254
+  }
+  
+  return cleaned;
+};
+
+// Validate Kenyan phone number (returns boolean)
+export const isValidKenyanPhone = (phone: string): boolean => {
+  if (!phone) return false;
+  
+  const cleaned = phone.replace(/[\s\-\(\)]/g, '');
+  const kenyanFormats = [
+    /^0[17]\d{8}$/,           // 0712345678 or 0123456789
+    /^\+254[17]\d{8}$/,       // +254712345678 or +254123456789
+    /^254[17]\d{8}$/          // 254712345678 or 254123456789
+  ];
+  
+  return kenyanFormats.some(pattern => pattern.test(cleaned));
 };
 
 // Validate numeric input

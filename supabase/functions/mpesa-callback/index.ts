@@ -87,17 +87,6 @@ serve(async (req) => {
         throw new Error("Failed to update payment status");
       }
 
-      // If payment is for a voucher, activate it
-      if (payment.voucher_id) {
-        await supabase
-          .from("vouchers")
-          .update({
-            status: "used",
-            used_at: new Date().toISOString(),
-          })
-          .eq("id", payment.voucher_id);
-      }
-
       console.log(`Payment completed: ${payment.id}, Receipt: ${mpesaReceiptNumber}`);
     } else {
       // Payment failed or cancelled

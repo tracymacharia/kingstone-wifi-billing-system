@@ -469,7 +469,6 @@ export const ProvisioningCommands = ({ mikrotik }: ProvisioningCommandsProps) =>
                               <li>• Router appears online</li>
                               <li>• Connected to billing system</li>
                               <li>• Ready for user authentication</li>
-                              <li>• Vouchers can be activated</li>
                               <li>• Payments processed automatically</li>
                             </ul>
                           </div>

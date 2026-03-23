@@ -21,8 +21,8 @@ interface PackageData {
   id?: string;
   admin_id?: string;
   name: string;
-  package_type: 'limited' | 'unlimited' | 'hotspot' | 'pppoe' | 'static';
-  duration_type: 'minutes' | 'hours' | 'days' | 'months';
+  package_type: 'hotspot' | 'pppoe' | 'static';
+  duration_type: 'hours' | 'days' | 'weeks' | 'months';
   duration_value: number;
   price: number;
   bandwidth_limit_mb?: number;
@@ -128,14 +128,31 @@ const EnhancedPackageManager = () => {
         return;
       }
 
+      const packageData: any = {
+        name: sanitizeInput(formData.name),
+        package_type: formData.package_type,
+        duration_type: formData.duration_type,
+        duration_value: formData.duration_value,
+        price: formData.price,
+        upload_speed_mbps: formData.upload_speed_mbps,
+        download_speed_mbps: formData.download_speed_mbps,
+        description: formData.description ? sanitizeInput(formData.description) : null,
+        is_active: formData.is_active
+      };
+
+      // Only include bandwidth_limit_mb if it's a positive number
+      if (formData.bandwidth_limit_mb && formData.bandwidth_limit_mb > 0) {
+        packageData.bandwidth_limit_mb = formData.bandwidth_limit_mb;
+      }
+
       // Validate package data
       const validation = validatePackage({
-        name: formData.name,
-        price: formData.price,
-        duration_value: formData.duration_value,
-        download_speed_mbps: formData.download_speed_mbps,
-        upload_speed_mbps: formData.upload_speed_mbps,
-        bandwidth_limit_mb: formData.bandwidth_limit_mb
+        name: packageData.name,
+        price: packageData.price,
+        duration_value: packageData.duration_value,
+        download_speed_mbps: packageData.download_speed_mbps,
+        upload_speed_mbps: packageData.upload_speed_mbps,
+        bandwidth_limit_mb: packageData.bandwidth_limit_mb
       });
 
       if (!validation.isValid) {
@@ -143,42 +160,19 @@ const EnhancedPackageManager = () => {
         return;
       }
 
-      // Validate user ID format
-      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-      if (!uuidRegex.test(userId)) {
-        console.error('PackageManager HandleSave - Invalid UUID format:', userId);
-        toast.error("Invalid admin ID format");
-        return;
-      }
-
-      const packageData = {
-        name: sanitizeInput(formData.name),
-        package_type: formData.package_type,
-        duration_type: formData.duration_type,
-        duration_value: formData.duration_value,
-        price: formData.price,
-        admin_id: userId,
-        // Only include bandwidth fields for limited packages
-        bandwidth_limit_mb: formData.package_type === 'limited' ? formData.bandwidth_limit_mb : null,
-        upload_speed_mbps: formData.upload_speed_mbps,
-        download_speed_mbps: formData.download_speed_mbps,
-        description: formData.description ? sanitizeInput(formData.description) : null,
-        is_active: formData.is_active
-      };
-
-
       let error;
       let result;
 
       if (editingPackage) {
-        // Update existing package
+        // Update existing package - don't include admin_id in update
         result = await supabase
           .from('packages')
           .update(packageData)
           .eq('id', editingPackage.id);
         error = result.error;
       } else {
-        // Create new package
+        // Create new package - include admin_id
+        packageData.admin_id = userId;
         result = await supabase
           .from('packages')
           .insert([packageData]);
@@ -232,7 +226,6 @@ const EnhancedPackageManager = () => {
       case 'hotspot': return <Wifi className="h-4 w-4" />;
       case 'pppoe': return <Zap className="h-4 w-4" />;
       case 'static': return <Database className="h-4 w-4" />;
-      case 'limited': return <Database className="h-4 w-4" />;
       default: return <Wifi className="h-4 w-4" />;
     }
   };
@@ -273,13 +266,13 @@ const EnhancedPackageManager = () => {
 
       <Tabs defaultValue="hours" className="w-full">
         <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="minutes">Minutes</TabsTrigger>
           <TabsTrigger value="hours">Hours</TabsTrigger>
           <TabsTrigger value="days">Days</TabsTrigger>
+          <TabsTrigger value="weeks">Weeks</TabsTrigger>
           <TabsTrigger value="months">Months</TabsTrigger>
         </TabsList>
 
-        {(['minutes', 'hours', 'days', 'months'] as const).map((durationType) => (
+        {(['hours', 'days', 'weeks', 'months'] as const).map((durationType) => (
           <TabsContent key={durationType} value={durationType} className="space-y-4">
             {groupedPackages[durationType]?.length > 0 ? (
               <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">

@@ -21,7 +21,6 @@ import {
   Shield,
   Calendar,
   CalendarDays,
-  Ticket,
   QrCode,
   MessageSquare,
   AlertCircle,
@@ -60,12 +59,8 @@ const PaymentPortal = () => {
   const [phoneNumber, setPhoneNumber] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
   const [paymentComplete, setPaymentComplete] = useState(false);
-  const [voucherCode, setVoucherCode] = useState("");
-  const [isActivatingVoucher, setIsActivatingVoucher] = useState(false);
   const [mpesaMessage, setMpesaMessage] = useState("");
   const [isSubmittingMessage, setIsSubmittingMessage] = useState(false);
-  const [reconnectMethod, setReconnectMethod] = useState<'voucher' | 'phone'>('voucher');
-  const [reconnectVoucherCode, setReconnectVoucherCode] = useState("");
   const [reconnectPhone, setReconnectPhone] = useState("");
   const [isReconnecting, setIsReconnecting] = useState(false);
   const [trialTaken, setTrialTaken] = useState(false);
@@ -477,58 +472,6 @@ const PaymentPortal = () => {
     }
   };
 
-  const handleVoucherActivation = async () => {
-    if (!voucherCode || !phoneNumber) {
-      toast.error("Please enter both voucher code and phone number");
-      return;
-    }
-
-    if (!/^254\d{9}$/.test(phoneNumber)) {
-      toast.error("Please enter a valid Kenyan phone number (254xxxxxxxxx)");
-      return;
-    }
-
-    setIsActivatingVoucher(true);
-
-    try {
-      const { data, error } = await supabase.functions.invoke('activate-voucher', {
-        body: {
-          voucherCode: voucherCode.trim(),
-          phoneNumber: phoneNumber,
-          macAddress: clientInfo.mac !== 'Unknown' ? clientInfo.mac : undefined,
-          ipAddress: clientInfo.ip !== 'Unknown' ? clientInfo.ip : undefined,
-          routerId: clientInfo.routerId
-        }
-      });
-
-      if (error) {
-        console.error('Voucher activation error:', error);
-        toast.error(error.message || "Voucher activation failed. Please try again.");
-        return;
-      }
-
-      if (data.success) {
-        setPaymentComplete(true);
-        toast.success("Voucher activated successfully! Internet access granted.");
-
-        // Redirect back to original URL or show success
-        if (clientInfo.linkOrig) {
-          setTimeout(() => {
-            window.location.href = clientInfo.linkOrig;
-          }, 3000);
-        }
-      } else {
-        toast.error(data.error || "Voucher activation failed. Please try again.");
-      }
-
-    } catch (error) {
-      console.error('Voucher activation error:', error);
-      toast.error("Voucher activation failed. Please try again.");
-    } finally {
-      setIsActivatingVoucher(false);
-    }
-  };
-
   const handleMpesaMessageSubmission = async () => {
     if (!mpesaMessage || !phoneNumber) {
       toast.error("Please enter both M-Pesa message and phone number");
@@ -596,18 +539,13 @@ const PaymentPortal = () => {
     }
   };
 
-  const handleVoucherReconnection = async () => {
-    if (reconnectMethod === 'voucher' && !reconnectVoucherCode) {
-      toast.error("Please enter your voucher code");
-      return;
-    }
-
-    if (reconnectMethod === 'phone' && !reconnectPhone) {
+  const handlePhoneReconnection = async () => {
+    if (!reconnectPhone) {
       toast.error("Please enter your phone number");
       return;
     }
 
-    if (reconnectMethod === 'phone' && !/^254\d{9}$/.test(reconnectPhone)) {
+    if (!/^254\d{9}$/.test(reconnectPhone)) {
       toast.error("Please enter a valid Kenyan phone number (254xxxxxxxxx)");
       return;
     }
@@ -615,11 +553,9 @@ const PaymentPortal = () => {
     setIsReconnecting(true);
 
     try {
-      const { data, error } = await supabase.functions.invoke('reconnect-voucher', {
+      const { data, error } = await supabase.functions.invoke('reconnect-user', {
         body: {
-          method: reconnectMethod,
-          voucherCode: reconnectMethod === 'voucher' ? reconnectVoucherCode.trim() : undefined,
-          phoneNumber: reconnectMethod === 'phone' ? reconnectPhone : undefined,
+          phoneNumber: reconnectPhone,
           macAddress: clientInfo.mac !== 'Unknown' ? clientInfo.mac : undefined,
           ipAddress: clientInfo.ip !== 'Unknown' ? clientInfo.ip : undefined,
           routerId: clientInfo.routerId
@@ -627,21 +563,20 @@ const PaymentPortal = () => {
       });
 
       if (error) {
-        console.error('Voucher reconnection error:', error);
+        console.error('Phone reconnection error:', error);
         toast.error(error.message || "Reconnection failed. Please try again.");
         return;
       }
 
       if (data.success) {
         toast.success("Reconnection successful! You are now connected.");
-        
-        const { username, password, voucherCode: usedVoucher } = data.data || {};
+
+        const { username, password } = data.data || {};
         toast.success(`✅ Connected! Username: ${username}, Password: ${password}`);
-        
+
         // Clear form
-        setReconnectVoucherCode("");
         setReconnectPhone("");
-        
+
         setTimeout(() => {
           setPaymentComplete(true);
         }, 3000);
@@ -650,7 +585,7 @@ const PaymentPortal = () => {
       }
 
     } catch (error) {
-      console.error('Voucher reconnection error:', error);
+      console.error('Phone reconnection error:', error);
       toast.error("Reconnection failed. Please check your credentials and try again.");
     } finally {
       setIsReconnecting(false);
@@ -1158,84 +1093,6 @@ const PaymentPortal = () => {
             </DialogContent>
           </Dialog>
 
-          {/* Voucher Activation Section */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-base sm:text-xl">
-                <Ticket className="w-4 h-4 sm:w-5 sm:h-5" />
-                Activate Voucher
-              </CardTitle>
-              <CardDescription className="text-xs sm:text-sm">
-                Enter your voucher code and phone number to activate internet access
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="voucher-code" className="text-xs sm:text-sm">Voucher Code</Label>
-                <div className="relative">
-                  <Ticket className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    id="voucher-code"
-                    type="text"
-                    placeholder="Enter voucher code"
-                    value={voucherCode}
-                    onChange={(e) => setVoucherCode(e.target.value.toUpperCase())}
-                    className="pl-10 uppercase tracking-wider text-sm sm:text-base"
-                    disabled={isActivatingVoucher}
-                  />
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  Enter the voucher code from your voucher card
-                </p>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="voucher-phone" className="text-xs sm:text-sm">Phone Number</Label>
-                <div className="relative">
-                  <Smartphone className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    id="voucher-phone"
-                    type="tel"
-                    placeholder="254712345678"
-                    value={phoneNumber}
-                    onChange={(e) => setPhoneNumber(e.target.value)}
-                    className="pl-10 text-sm sm:text-base"
-                    disabled={isActivatingVoucher}
-                  />
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  Phone number will be recorded for admin tracking
-                </p>
-              </div>
-
-              <Alert className="bg-blue-50 border-blue-200">
-                <QrCode className="h-4 w-4 text-blue-600" />
-                <AlertDescription className="text-xs sm:text-sm text-blue-700">
-                  Your phone number will be recorded for administrative purposes and future reference.
-                </AlertDescription>
-              </Alert>
-
-              <Button
-                onClick={handleVoucherActivation}
-                className="w-full text-sm sm:text-base"
-                size="lg"
-                disabled={!voucherCode || !phoneNumber || isActivatingVoucher}
-              >
-                {isActivatingVoucher ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Activating Voucher...
-                  </>
-                ) : (
-                  <>
-                    <Ticket className="mr-2 h-4 w-4" />
-                    Activate Voucher
-                  </>
-                )}
-              </Button>
-            </CardContent>
-          </Card>
-
           {/* M-Pesa Reconnection Section */}
           <Card className="border-green-200 bg-green-50/50">
             <CardHeader>
@@ -1324,15 +1181,15 @@ const PaymentPortal = () => {
             </CardContent>
           </Card>
 
-          {/* Voucher Reconnection Section */}
+          {/* Phone Reconnection Section */}
           <Card className="border-blue-200 bg-blue-50/50">
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-base sm:text-xl text-blue-700">
                 <Key className="w-4 h-4 sm:w-5 sm:h-5" />
-                Lost Connection? Reconnect with Voucher
+                Lost Connection? Reconnect with Phone Number
               </CardTitle>
               <CardDescription className="text-xs sm:text-sm text-blue-600">
-                If you used a voucher before and lost connection, reconnect instantly
+                If you used a phone number before and lost connection, reconnect instantly
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -1340,94 +1197,43 @@ const PaymentPortal = () => {
                 <UserCheck className="h-4 w-4 text-green-600" />
                 <AlertDescription className="text-xs sm:text-sm text-green-700">
                   <strong>Quick Reconnection:</strong><br/>
-                  Use your original voucher code or phone number to reconnect. 
+                  Use your phone number to reconnect.
                   Your remaining time will be restored automatically.
                 </AlertDescription>
               </Alert>
 
-              <div className="space-y-3">
-                <Label className="text-xs sm:text-sm">Reconnect Method</Label>
-                <div className="grid grid-cols-2 gap-3">
-                  <Button
-                    type="button"
-                    variant={reconnectMethod === 'voucher' ? 'default' : 'outline'}
-                    onClick={() => setReconnectMethod('voucher')}
-                    className="flex items-center justify-center gap-2 text-xs sm:text-sm"
-                  >
-                    <Ticket className="w-3 h-3 sm:w-4 sm:h-4" />
-                    <span className="hidden xs:inline">Voucher Code</span>
-                    <span className="xs:hidden">Voucher</span>
-                  </Button>
-                  <Button
-                    type="button"
-                    variant={reconnectMethod === 'phone' ? 'default' : 'outline'}
-                    onClick={() => setReconnectMethod('phone')}
-                    className="flex items-center justify-center gap-2 text-xs sm:text-sm"
-                  >
-                    <Smartphone className="w-3 h-3 sm:w-4 sm:h-4" />
-                    <span className="hidden xs:inline">Phone Number</span>
-                    <span className="xs:hidden">Phone</span>
-                  </Button>
+              <div className="space-y-2">
+                <Label htmlFor="reconnect-phone" className="text-xs sm:text-sm">Phone Number</Label>
+                <div className="relative">
+                  <Smartphone className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    id="reconnect-phone"
+                    type="tel"
+                    placeholder="254712345678"
+                    value={reconnectPhone}
+                    onChange={(e) => setReconnectPhone(e.target.value)}
+                    className="pl-10 text-sm sm:text-base"
+                    disabled={isReconnecting}
+                  />
                 </div>
+                <p className="text-xs text-muted-foreground">
+                  Phone number used when paying
+                </p>
               </div>
-
-              {reconnectMethod === 'voucher' ? (
-                <div className="space-y-2">
-                  <Label htmlFor="reconnect-voucher-code" className="text-xs sm:text-sm">Voucher Code</Label>
-                  <div className="relative">
-                    <Ticket className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      id="reconnect-voucher-code"
-                      type="text"
-                      placeholder="Enter your voucher code"
-                      value={reconnectVoucherCode}
-                      onChange={(e) => setReconnectVoucherCode(e.target.value.toUpperCase())}
-                      className="pl-10 uppercase tracking-wider text-sm sm:text-base"
-                      disabled={isReconnecting}
-                    />
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    Enter the same voucher code you used before
-                  </p>
-                </div>
-              ) : (
-                <div className="space-y-2">
-                  <Label htmlFor="reconnect-voucher-phone" className="text-xs sm:text-sm">Phone Number</Label>
-                  <div className="relative">
-                    <Smartphone className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      id="reconnect-voucher-phone"
-                      type="tel"
-                      placeholder="254712345678"
-                      value={reconnectPhone}
-                      onChange={(e) => setReconnectPhone(e.target.value)}
-                      className="pl-10 text-sm sm:text-base"
-                      disabled={isReconnecting}
-                    />
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    Phone number used when activating voucher
-                  </p>
-                </div>
-              )}
 
               <Alert className="bg-blue-50 border-blue-200">
                 <CheckCircle className="h-4 w-4 text-blue-600" />
                 <AlertDescription className="text-xs sm:text-sm text-blue-700">
                   <strong>How it works:</strong><br/>
-                  We'll look up your voucher session and restore your connection with remaining time.
+                  We'll look up your session and restore your connection with remaining time.
                 </AlertDescription>
               </Alert>
 
               <Button
-                onClick={handleVoucherReconnection}
+                onClick={handlePhoneReconnection}
                 className="w-full bg-blue-600 hover:bg-blue-700 text-sm sm:text-base"
                 size="lg"
-                disabled={
-                  (reconnectMethod === 'voucher' && !reconnectVoucherCode) ||
-                  (reconnectMethod === 'phone' && !reconnectPhone) ||
-                  isReconnecting
-                }
+                disabled={!reconnectPhone || isReconnecting}
               >
                 {isReconnecting ? (
                   <>

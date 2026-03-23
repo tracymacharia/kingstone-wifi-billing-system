@@ -6,8 +6,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { formatKES } from "@/lib/utils";
 
 interface OwnerChartsProps {
-  visibilitySettings: DashboardVisibilitySettings;
-  onToggleVisibility: (key: keyof DashboardVisibilitySettings) => void;
+  visibilitySettings?: DashboardVisibilitySettings;
+  onToggleVisibility?: (key: keyof DashboardVisibilitySettings) => void;
   ownerId?: string | null;
 }
 
@@ -32,6 +32,17 @@ export const OwnerCharts = ({ visibilitySettings, onToggleVisibility, ownerId }:
   const [revenueData, setRevenueData] = useState<MonthData[]>([]);
   const [adminStatusData, setAdminStatusData] = useState<AdminStatusMonth[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Default visibility settings if not provided
+  const defaultVisibility = {
+    subscriptionGraph: true,
+    mikrotikStatusGraph: true,
+    revenueGraph: true,
+    adminActivityGraph: true,
+  };
+
+  const safeVisibility = visibilitySettings || defaultVisibility;
+  const safeToggle = onToggleVisibility || (() => {});
 
   useEffect(() => {
     loadChartData();
@@ -184,8 +195,8 @@ export const OwnerCharts = ({ visibilitySettings, onToggleVisibility, ownerId }:
       <VisibilityCard
         title="New Admins Registered (Monthly)"
         value=""
-        isVisible={visibilitySettings.subscriptionGraph}
-        onToggleVisibility={() => onToggleVisibility('subscriptionGraph')}
+        isVisible={safeVisibility.subscriptionGraph}
+        onToggleVisibility={() => safeToggle('subscriptionGraph')}
         className="md:col-span-1"
       >
         <ResponsiveContainer width="100%" height={300}>
@@ -202,8 +213,8 @@ export const OwnerCharts = ({ visibilitySettings, onToggleVisibility, ownerId }:
       <VisibilityCard
         title="Mikrotik Routers Added (Monthly)"
         value=""
-        isVisible={visibilitySettings.mikrotikStatusGraph}
-        onToggleVisibility={() => onToggleVisibility('mikrotikStatusGraph')}
+        isVisible={safeVisibility.mikrotikStatusGraph}
+        onToggleVisibility={() => safeToggle('mikrotikStatusGraph')}
         className="md:col-span-1"
       >
         <ResponsiveContainer width="100%" height={300}>
@@ -226,8 +237,8 @@ export const OwnerCharts = ({ visibilitySettings, onToggleVisibility, ownerId }:
       <VisibilityCard
         title="Platform Revenue (Monthly)"
         value=""
-        isVisible={visibilitySettings.revenueGraph}
-        onToggleVisibility={() => onToggleVisibility('revenueGraph')}
+        isVisible={safeVisibility.revenueGraph}
+        onToggleVisibility={() => safeToggle('revenueGraph')}
         className="md:col-span-1"
       >
         <ResponsiveContainer width="100%" height={300}>
@@ -250,8 +261,8 @@ export const OwnerCharts = ({ visibilitySettings, onToggleVisibility, ownerId }:
       <VisibilityCard
         title="Admin Activity This Period"
         value=""
-        isVisible={visibilitySettings.adminActivityGraph ?? true}
-        onToggleVisibility={() => onToggleVisibility('adminActivityGraph' as keyof DashboardVisibilitySettings)}
+        isVisible={safeVisibility.adminActivityGraph ?? true}
+        onToggleVisibility={() => safeToggle('adminActivityGraph' as keyof DashboardVisibilitySettings)}
         className="md:col-span-1"
       >
         <ResponsiveContainer width="100%" height={300}>

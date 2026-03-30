@@ -6,11 +6,6 @@ import { Toaster } from "./components/ui/sonner";
 import Index from "./pages/Index";
 import AuthPage from "./pages/AuthPage";
 import Login from "./pages/Login";
-import OwnerLogin from "./pages/OwnerLogin";
-import OwnerRegister from "./pages/OwnerRegister";
-import OwnerPasswordReset from "./pages/OwnerPasswordReset";
-import OwnerPasswordResetConfirm from "./pages/OwnerPasswordResetConfirm";
-import OwnerDashboard from "./pages/OwnerDashboard";
 import AdminLogin from "./pages/AdminLogin";
 import AdminDashboard from "./pages/AdminDashboard";
 import AdminRegister from "./pages/AdminRegister";
@@ -39,11 +34,6 @@ const App = () => (
           <Route path="/" element={<Index />} />
           <Route path="/auth" element={<AuthPage />} />
           <Route path="/login" element={<Login />} />
-          <Route path="/owner" element={<OwnerLogin />} />
-          <Route path="/owner/register" element={<OwnerRegister />} />
-          <Route path="/owner/reset-password" element={<OwnerPasswordReset />} />
-          <Route path="/owner/reset-password-confirm" element={<OwnerPasswordResetConfirm />} />
-          <Route path="/owner/dashboard" element={<OwnerDashboard />} />
           <Route path="/admin" element={<AdminLogin />} />
           <Route path="/admin-login" element={<AdminLogin />} />
           <Route path="/admins/:adminId" element={<AdminLogin />} />

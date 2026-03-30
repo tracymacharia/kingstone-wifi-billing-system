@@ -63,7 +63,6 @@ const menuItems = [
   { id: "mikrotiks", title: "Mikrotik Management", icon: Router, tab: "mikrotiks" },
   { id: "recycle-bin", title: "Recycle Bin", icon: Trash2, tab: "recycle-bin" },
   { id: "sms", title: "SMS", icon: MessageSquare, tab: "sms" },
-  { id: "subscription", title: "Subscription", icon: TrendingUp, tab: "subscription" },
   { id: "audit-logs", title: "Activity Logs", icon: Activity, tab: "audit-logs" },
   { id: "password-management", title: "Password Manager", icon: Key, tab: "password-management" },
   { id: "settings", title: "Account Settings", icon: Settings, tab: "settings" },

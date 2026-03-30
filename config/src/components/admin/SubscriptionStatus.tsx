@@ -42,12 +42,11 @@ const SubscriptionStatus = ({ businessName }: SubscriptionStatusProps) => {
   const [stkAmount, setStkAmount] = useState('');
   const [initiatingStk, setInitiatingStk] = useState(false);
 
-  const fetchPaymentSettings = async (ownerId: string) => {
+  const fetchPaymentSettings = async () => {
     try {
       const { data, error } = await supabase
         .from('owner_payment_settings')
         .select('*')
-        .eq('owner_id', ownerId)
         .eq('is_active', true)
         .order('created_at', { ascending: false });
 
@@ -64,19 +63,10 @@ const SubscriptionStatus = ({ businessName }: SubscriptionStatusProps) => {
   };
 
   useEffect(() => {
-    let channel: ReturnType<typeof supabase.channel> | null = null;
-    const adminUsername = user?.username;
-    
+    const adminId = getAdminIdFromUser(user);
+
     const fetchAdminData = async () => {
       try {
-        if (!adminUsername) {
-          console.error('No admin username available');
-          setLoading(false);
-          return;
-        }
-
-
-        const adminId = getAdminIdFromUser(user);
         if (!adminId) {
           console.error('No admin ID available');
           setLoading(false);
@@ -85,7 +75,7 @@ const SubscriptionStatus = ({ businessName }: SubscriptionStatusProps) => {
 
         const { data: adminRecord, error: adminError } = await supabase
           .from('admins')
-          .select('id, owner_id, username, phone, email')
+          .select('id, username, phone, email, business_name, subscription_status, is_trial, trial_expires_at')
           .eq('id', adminId)
           .single();
 
@@ -97,72 +87,15 @@ const SubscriptionStatus = ({ businessName }: SubscriptionStatusProps) => {
 
         if (!adminRecord) {
           console.warn('No admin data found for ID:', adminId);
-          toast.error('Admin record not found. Please contact the owner.');
+          toast.error('Admin record not found.');
           setLoading(false);
           return;
         }
 
-        const admin = adminRecord;
+        // Fetch payment settings - admin has full control
+        const settings = await fetchPaymentSettings();
 
-        // If we have owner_id, try to fetch owner data separately
-        let ownerData = null;
-        let settings: PaymentSetting[] = [];
-        if (admin.owner_id) {
-          
-          const { data: ownerResult, error: ownerError } = await supabase
-            .from('owners')
-            .select('business_name, paybill_number, paybill_account, till_number')
-            .eq('id', admin.owner_id)
-            .single();
-
-          if (ownerError) {
-            console.warn('Could not fetch owner data:', ownerError);
-          } else {
-            ownerData = ownerResult;
-          }
-
-          // Fetch payment settings from owner_payment_settings table
-          settings = await fetchPaymentSettings(admin.owner_id);
-          
-          
-          // Set up real-time subscription for payment settings changes
-          channel = supabase
-            .channel(`owner_payment_settings:${admin.owner_id}`)
-            .on(
-              'postgres_changes',
-              {
-                event: '*',
-                schema: 'public',
-                table: 'owner_payment_settings',
-                filter: `owner_id=eq.${admin.owner_id}`
-              },
-              async (payload) => {
-                
-                // Refresh payment settings immediately
-                const updatedSettings = await fetchPaymentSettings(admin.owner_id);
-                setPaymentSettings(updatedSettings);
-                
-                if (payload.eventType === 'INSERT') {
-                  toast.success('New payment method added by owner');
-                } else if (payload.eventType === 'UPDATE') {
-                  toast.info('Payment method updated by owner');
-                } else if (payload.eventType === 'DELETE') {
-                  toast.info('Payment method removed by owner');
-                }
-              }
-            )
-            .subscribe((status) => {
-              if (status === 'SUBSCRIBED') {
-              } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
-                console.error('❌ Real-time subscription error:', status);
-              }
-            });
-        }
-
-        setAdminData({
-          ...admin,
-          owner: ownerData
-        });
+        setAdminData(adminRecord);
         setPaymentSettings(settings);
       } catch (error) {
         console.error('Error fetching admin data:', error);
@@ -173,13 +106,6 @@ const SubscriptionStatus = ({ businessName }: SubscriptionStatusProps) => {
     };
 
     fetchAdminData();
-
-    // Cleanup function to unsubscribe from channel
-    return () => {
-      if (channel) {
-        supabase.removeChannel(channel);
-      }
-    };
   }, [user]);
 
   const handleVerifyPayment = async () => {
@@ -427,11 +353,11 @@ const SubscriptionStatus = ({ businessName }: SubscriptionStatusProps) => {
                   ))}
                 </div>
               ) : (
-                // Fallback to legacy owner data if no payment settings found
+                // Display admin business information
                 <div className="space-y-2 text-sm">
-                  <p><strong>Business:</strong> {adminData.owner?.business_name || 'N/A'}</p>
-                  <p><strong>Paybill/Till Number:</strong> {adminData.owner?.till_number || adminData.owner?.paybill_number || 'N/A'}</p>
-                  <p><strong>Account Number:</strong> {adminData.owner?.paybill_account || 'N/A'}</p>
+                  <p><strong>Business:</strong> {adminData.business_name || 'N/A'}</p>
+                  <p><strong>Admin:</strong> {adminData.username || 'N/A'}</p>
+                  <p><strong>Email:</strong> {adminData.email || 'N/A'}</p>
                 </div>
               )}
               <div className="border-t border-blue-200 pt-2 mt-2">

@@ -69,13 +69,6 @@ const AdminAddMikrotik = () => {
         return;
       }
 
-      // Get owner_id from admin record
-      const { data: admin } = await supabase
-        .from('admins')
-        .select('owner_id')
-        .eq('id', user?.id)
-        .single();
-
       // Generate a unique router_id for manual registration
       const randomChars = Math.random().toString(36).substring(2, 8).toUpperCase();
       const routerId = `MANUAL${randomChars}`;
@@ -83,7 +76,6 @@ const AdminAddMikrotik = () => {
       // Build insert object dynamically
       const insertData: any = {
         admin_id: user?.id,
-        // owner_id will be auto-set by trigger from admin_id
         name: formData.name.trim(),
         router_name: formData.router_name.trim() || formData.name.trim(),
         router_id: routerId,

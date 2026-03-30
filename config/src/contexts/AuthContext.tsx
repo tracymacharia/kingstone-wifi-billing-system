@@ -6,10 +6,10 @@ import type { User as SupabaseUser, Session } from '@supabase/supabase-js';
 interface User {
   id: string;
   username: string;
-  email: string; // Keep for backward compatibility
-  role: 'owner' | 'admin';
+  email: string;
+  role: 'admin';
   credentialId?: string;
-  adminId?: string; // Keep for backward compatibility
+  adminId?: string;
   isFirstLogin?: boolean;
 }
 
@@ -113,11 +113,11 @@ useEffect(() => {
         const sessionData = data[0];
         const userData: User = {
           id: sessionData.credential_id,
-          username: sessionData.role === 'owner' ? sessionData.user_id : 'admin',
-          email: sessionData.role === 'owner' ? `${sessionData.user_id}@kingstone.local` : 'admin@kingstone.local',
-          role: sessionData.role as 'owner' | 'admin',
+          username: 'admin',
+          email: 'admin@kingstone.local',
+          role: 'admin',
           credentialId: sessionData.credential_id,
-          adminId: sessionData.role === 'admin' ? sessionData.credential_id : undefined
+          adminId: sessionData.credential_id
         };
         setUser(userData);
       }
@@ -130,7 +130,7 @@ useEffect(() => {
     // Don't call setIsLoading(false) here since it's already handled in the useEffect
   };
 
-  const login = async (usernameOrEmail: string, password: string): Promise<boolean> => {
+  const login = async (username: string, password: string): Promise<boolean> => {
     setIsLoading(true);
 
     try {
@@ -138,93 +138,46 @@ useEffect(() => {
       cleanupAuthState();
       try { await supabase.auth.signOut({ scope: 'global' } as any); } catch (e) { /* ignore */ }
 
-      // Check if it's an email (owner login) or username (admin login)
-      const isEmailLogin = usernameOrEmail.includes('@');
+      // Admin login: Query system_credentials directly
+      const { data: credData, error: credError } = await supabase
+        .from('system_credentials')
+        .select('id, admin_id, role')
+        .eq('username', username)
+        .eq('role', 'admin')
+        .maybeSingle();
 
-      if (isEmailLogin) {
-        // Owner login: Query system_credentials directly
-        // Use service role key in header to bypass RLS
-        const { data: credData, error: credError } = await supabase
-          .from('system_credentials')
-          .select('id, owner_id, admin_id, role, must_change_password')
-          .eq('username', usernameOrEmail)
-          .eq('role', 'owner')
-          .maybeSingle();
-
-        if (credError || !credData) {
-          console.error('Owner not found:', credError?.message);
-          setIsLoading(false);
-          return false;
-        }
-
-        // Create session
-        const { data: sessionToken, error: sessionError } = await supabase
-          .rpc('create_user_session', {
-            p_credential_id: credData.id,
-            p_role: 'owner'
-          });
-
-        if (sessionError || !sessionToken) {
-          console.error('Session creation error:', sessionError);
-          setIsLoading(false);
-          return false;
-        }
-
-        const userData: User = {
-          id: credData.id,
-          username: usernameOrEmail.split('@')[0],
-          email: usernameOrEmail,
-          role: 'owner',
-          credentialId: credData.id,
-          ownerId: credData.owner_id
-        };
-
-        setUser(userData);
-        sessionStorage.setItem("kingstone_session_token", sessionToken);
-        sessionStorage.setItem("kingstone_user", JSON.stringify(userData));
-        return true;
-      } else {
-        // Admin login: Query system_credentials directly
-        const { data: credData, error: credError } = await supabase
-          .from('system_credentials')
-          .select('id, admin_id, owner_id, role')
-          .eq('username', usernameOrEmail)
-          .eq('role', 'admin')
-          .maybeSingle();
-
-        if (credError || !credData) {
-          console.error('Admin not found:', credError?.message);
-          setIsLoading(false);
-          return false;
-        }
-
-        // Create session
-        const { data: sessionToken, error: sessionError } = await supabase
-          .rpc('create_user_session', {
-            p_credential_id: credData.id,
-            p_role: 'admin'
-          });
-
-        if (sessionError || !sessionToken) {
-          console.error('Session creation error:', sessionError);
-          setIsLoading(false);
-          return false;
-        }
-
-        const userData: User = {
-          id: credData.id,
-          username: usernameOrEmail,
-          email: 'admin@kingstone.local',
-          role: 'admin',
-          credentialId: credData.id,
-          adminId: credData.admin_id
-        };
-
-        setUser(userData);
-        sessionStorage.setItem("kingstone_session_token", sessionToken);
-        sessionStorage.setItem("kingstone_user", JSON.stringify(userData));
-        return true;
+      if (credError || !credData) {
+        console.error('Admin not found:', credError?.message);
+        setIsLoading(false);
+        return false;
       }
+
+      // Create session
+      const { data: sessionToken, error: sessionError } = await supabase
+        .rpc('create_user_session', {
+          p_credential_id: credData.id,
+          p_role: 'admin'
+        });
+
+      if (sessionError || !sessionToken) {
+        console.error('Session creation error:', sessionError);
+        setIsLoading(false);
+        return false;
+      }
+
+      const userData: User = {
+        id: credData.id,
+        username: username,
+        email: 'admin@kingstone.local',
+        role: 'admin',
+        credentialId: credData.id,
+        adminId: credData.admin_id
+      };
+
+      setUser(userData);
+      sessionStorage.setItem("kingstone_session_token", sessionToken);
+      sessionStorage.setItem("kingstone_user", JSON.stringify(userData));
+      return true;
 
     } catch (error) {
       console.error('Login error:', error);

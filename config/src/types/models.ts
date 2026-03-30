@@ -73,17 +73,19 @@ export interface Mikrotik {
 export interface Payment {
   id: string;
   admin_id: string;
+  mikrotik_id?: string;
   user_phone?: string;
   amount: number;
   package_name?: string;
-  status: 'completed' | 'pending' | 'failed';
-  receipt_number?: string;
+  status: 'completed' | 'pending' | 'failed' | 'cancelled';
+  transaction_id?: string;
+  mpesa_receipt_number?: string;
   created_at: string;
+  updated_at?: string;
 }
 
 export interface Admin {
   id: string;
-  owner_id: string;
   email: string;
   username: string;
   full_name: string;
@@ -91,15 +93,6 @@ export interface Admin {
   phone?: string;
   is_active: boolean;
   profile_picture?: string;
-  created_at: string;
-}
-
-export interface Owner {
-  id: string;
-  profile_id: string;
-  business_name: string;
-  subscription_status: string;
-  is_trial: boolean;
   created_at: string;
 }
 
@@ -125,17 +118,4 @@ export interface SmsLog {
   type: 'manual' | 'automated' | 'payment' | 'expiry';
   error_message?: string;
   created_at: string;
-}
-
-export interface OwnerPaymentSettings {
-  id: string;
-  owner_id: string;
-  method: 'paybill' | 'till';
-  paybill_number?: string;
-  account_number?: string;
-  till_number?: string;
-  description?: string;
-  is_active: boolean;
-  created_at: string;
-  updated_at: string;
 }

@@ -11,7 +11,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Plus, Trash2, Eye, Wifi, Zap, Clock, Calendar, CalendarDays, CreditCard, Smartphone, Shield, Router, CheckCircle, MessageSquare, Key, UserCheck, RefreshCw, Download, X } from "lucide-react";
+import { Plus, Trash2, Eye, Wifi, Zap, Clock, Calendar, CalendarDays, Shield, Router, MessageSquare, UserCheck, RefreshCw, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
@@ -56,8 +56,7 @@ const WiFiSettings = () => {
   const [hotspotPackages, setHotspotPackages] = useState<HotspotPackage[]>([]);
   const [newFaq, setNewFaq] = useState({ question: '', answer: '' });
   const [isLoading, setIsLoading] = useState(false);
-  const [previewPhone, setPreviewPhone] = useState('254712345678');
-  const [previewVoucher, setPreviewVoucher] = useState('VOUCHER123');
+  const [previewRouterId, setPreviewRouterId] = useState<string | null>(null);
   const previewRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -65,8 +64,30 @@ const WiFiSettings = () => {
     if (adminId) {
       loadSettings();
       loadHotspotPackages();
+      loadMikrotikForPreview();
     }
   }, [user]);
+
+  const loadMikrotikForPreview = async () => {
+    try {
+      const adminId = getAdminIdFromUser(user);
+      if (!adminId) return;
+
+      // Load the admin's first mikrotik router for preview
+      const { data, error } = await supabase
+        .from('mikrotiks')
+        .select('router_id')
+        .eq('admin_id', adminId)
+        .limit(1)
+        .maybeSingle();
+
+      if (data && data.router_id) {
+        setPreviewRouterId(data.router_id);
+      }
+    } catch (error) {
+      console.error('Failed to load mikrotik for preview:', error);
+    }
+  };
 
   const loadSettings = async () => {
     try {
@@ -154,42 +175,6 @@ const WiFiSettings = () => {
 
   const formatDuration = (value: number, type: string) => {
     return `${value} ${type}`;
-  };
-
-  const downloadPreview = async () => {
-    try {
-      toast.info('Preparing preview download...');
-      
-      // Dynamically import html2canvas
-      const html2canvas = (await import('html2canvas')).default;
-      
-      if (!previewRef.current) {
-        toast.error('Preview not ready');
-        return;
-      }
-
-      // Capture the preview
-      const canvas = await html2canvas(previewRef.current, {
-        scale: 2,
-        useCORS: true,
-        backgroundColor: '#ffffff',
-        logging: false,
-      });
-
-      // Convert to image
-      const image = canvas.toDataURL('image/png');
-      
-      // Create download link
-      const link = document.createElement('a');
-      link.href = image;
-      link.download = `wifi-portal-preview-${new Date().toISOString().split('T')[0]}.png`;
-      link.click();
-      
-      toast.success('Preview downloaded successfully!');
-    } catch (error) {
-      console.error('Download error:', error);
-      toast.error('Failed to download preview. Please try again.');
-    }
   };
 
   const saveSettings = async () => {
@@ -454,119 +439,34 @@ const WiFiSettings = () => {
                 </Button>
               </DialogTrigger>
               <DialogContent className="max-w-7xl max-h-[90vh] overflow-y-auto p-0">
-                <DialogHeader className="px-6 py-4 border-b flex items-center justify-between">
+                <DialogHeader className="px-6 py-4 border-b">
                   <div>
                     <DialogTitle className="text-xl">Hotspot Payment Portal Preview</DialogTitle>
                     <DialogDescription>
-                      Live preview of your hotspot login and payment page - matches exactly what users see
+                      This is exactly what your customers see when they connect to your WiFi
                     </DialogDescription>
                   </div>
-                  <Button onClick={downloadPreview} variant="outline" size="sm">
-                    <Download className="h-4 w-4 mr-2" />
-                    Download Preview
-                  </Button>
                 </DialogHeader>
 
-                {/* Preview Container - Simple Customer Payment Page */}
-                <div ref={previewRef} className="min-h-screen flex items-center justify-center p-4" style={{ background: `linear-gradient(135deg, ${settings.theme_color}15 0%, #f3f4f6 100%)` }}>
-                  <div className="w-full max-w-md">
-                    {/* Header */}
-                    <div className="text-center mb-6">
-                      <div className="flex justify-center mb-4">
-                        <div className="w-20 h-20 rounded-full flex items-center justify-center shadow-lg" style={{ backgroundColor: settings.theme_color }}>
-                          <Wifi className="w-10 h-10 text-white" />
-                        </div>
+                {/* Preview Container - Live iframe of actual PaymentPortal */}
+                <div ref={previewRef} className="w-full h-[80vh] bg-white">
+                  {previewRouterId ? (
+                    <iframe
+                      src={`/portal/${previewRouterId}`}
+                      className="w-full h-full border-0"
+                      title="Payment Portal Preview"
+                    />
+                  ) : (
+                    <div className="flex items-center justify-center h-full">
+                      <div className="text-center">
+                        <Wifi className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                        <p className="text-gray-500 text-lg font-medium">No router configured</p>
+                        <p className="text-gray-400 text-sm mt-2">
+                          Add a Mikrotik router in the Hotspot Management section to preview your portal
+                        </p>
                       </div>
-                      <h1 className="text-2xl font-bold mb-2" style={{ color: settings.theme_color }}>
-                        {settings.hotspot_title || 'Kingstone WiFi'}
-                      </h1>
-                      <p className="text-sm text-muted-foreground">
-                        {settings.description || 'Select a package and connect'}
-                      </p>
                     </div>
-
-                    {/* Simple Payment Card */}
-                    <Card className="shadow-xl border-0">
-                      <CardHeader className="pb-4">
-                        <CardTitle className="text-lg font-semibold">Choose Package & Pay</CardTitle>
-                        <CardDescription className="text-xs">Enter payment details to connect</CardDescription>
-                      </CardHeader>
-                      <CardContent className="space-y-4">
-                        {/* Package Selection */}
-                        <div className="space-y-2">
-                          <Label>Internet Package</Label>
-                          <select className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2">
-                            <option value="">-- Select Package --</option>
-                            <option value="1hr">1 Hour - KES 20</option>
-                            <option value="3hrs">3 Hours - KES 50</option>
-                            <option value="6hrs">6 Hours - KES 100</option>
-                            <option value="1day">1 Day - KES 300</option>
-                            <option value="7days">7 Days - KES 1,000</option>
-                            <option value="1month">1 Month - KES 2,000</option>
-                            <option value="6months">6 Months - KES 8,000</option>
-                          </select>
-                        </div>
-
-                        {/* Phone Number */}
-                        <div className="space-y-2">
-                          <Label>M-Pesa Phone Number</Label>
-                          <div className="relative">
-                            <Smartphone className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                            <Input
-                              type="tel"
-                              placeholder="254712345678"
-                              className="pl-10"
-                              value={previewPhone}
-                              onChange={(e) => setPreviewPhone(e.target.value)}
-                            />
-                          </div>
-                        </div>
-
-                        {/* PIN Input */}
-                        <div className="space-y-2">
-                          <Label>M-Pesa PIN</Label>
-                          <div className="relative">
-                            <Key className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                            <Input
-                              type="password"
-                              placeholder="Enter PIN"
-                              className="pl-10"
-                              maxLength={4}
-                            />
-                          </div>
-                        </div>
-
-                        {/* Pay Button */}
-                        <Button
-                          className="w-full text-lg font-semibold py-6"
-                          size="lg"
-                          style={{ backgroundColor: settings.theme_color }}
-                        >
-                          <CreditCard className="mr-2 h-5 w-5" />
-                          Pay & Connect
-                        </Button>
-                      </CardContent>
-                    </Card>
-
-                    {/* Success Message */}
-                    <Card className="mt-4 border-green-200 bg-green-50">
-                      <CardContent className="pt-4">
-                        <div className="flex items-center gap-3">
-                          <CheckCircle className="w-8 h-8 text-green-600" />
-                          <div>
-                            <p className="font-semibold text-green-700 text-sm">Payment Successful!</p>
-                            <p className="text-xs text-green-600">Connected to internet</p>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-
-                    {/* Footer */}
-                    <div className="text-center mt-6 text-xs text-muted-foreground">
-                      <p>Contact: {settings.contact_phone || 'Not set'}</p>
-                      <p className="mt-1">Kingstone WiFi</p>
-                    </div>
-                  </div>
+                  )}
                 </div>
               </DialogContent>
             </Dialog>

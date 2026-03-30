@@ -34,7 +34,13 @@ serve(async (req) => {
       throw new Error("Method not allowed");
     }
 
+    console.log("Callback received at:", new Date().toISOString());
+
+    // Safaricom doesn't send auth headers - accept the callback
+    // In production, we would verify the request source IP
+    
     const callbackData: MpesaCallback = await req.json();
+    console.log("Callback data:", JSON.stringify(callbackData, null, 2));
     const stkCallback = callbackData.Body.stkCallback;
 
     // Get Supabase credentials
@@ -47,7 +53,7 @@ serve(async (req) => {
 
     const supabase = createClient(supabaseUrl, supabaseServiceRoleKey);
 
-    // Find payment record by CheckoutRequestID
+    // Find payment record by CheckoutRequestID (transaction_id)
     const { data: payment, error: fetchError } = await supabase
       .from("payments")
       .select("*")
@@ -59,9 +65,18 @@ serve(async (req) => {
       throw new Error("Payment record not found");
     }
 
+    // IDEMPOTENCY: Check if already processed
+    if (payment.status === "completed" || payment.status === "failed" || payment.status === "cancelled") {
+      console.log(`Payment ${payment.id} already processed with status: ${payment.status}`);
+      return new Response(
+        JSON.stringify({ success: true, message: "Callback already processed" }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     // Check if payment was successful (ResultCode 0 = success)
     if (stkCallback.ResultCode === 0) {
-      // Extract callback metadata
+      // Extract callback metadata with null checks
       const metadata = stkCallback.CallbackMetadata?.Item || [];
       const getMetadataValue = (name: string) => {
         const item = metadata.find((item) => item.Name === name);
@@ -71,6 +86,10 @@ serve(async (req) => {
       const mpesaReceiptNumber = getMetadataValue("MpesaReceiptNumber");
       const transactionDate = getMetadataValue("TransactionDate");
       const amount = getMetadataValue("Amount");
+
+      if (!mpesaReceiptNumber) {
+        throw new Error("Missing receipt number in callback - cannot verify payment");
+      }
 
       // Update payment record as completed
       const { error: updateError } = await supabase

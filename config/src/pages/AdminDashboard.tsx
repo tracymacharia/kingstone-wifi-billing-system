@@ -14,7 +14,8 @@ import {
   Router,
   Eye,
   EyeOff,
-  Lock
+  Lock,
+  CreditCard
 } from "lucide-react";
 import { toast } from "sonner";
 import { useDashboardVisibility } from "@/hooks/useDashboardVisibility";
@@ -26,7 +27,6 @@ import AccountSettings from "@/components/admin/AccountSettings";
 import AssignedMikrotiks from "@/components/admin/AssignedMikrotiks";
 import MikrotikManagement from "@/components/admin/MikrotikManagement";
 import SMSSettings from "@/components/admin/SMSSettings";
-import SubscriptionStatus from "@/components/admin/SubscriptionStatus";
 import GraphDashboard from "@/components/admin/GraphDashboard";
 import RealTimeMonitor from "@/components/admin/RealTimeMonitor";
 import PaymentHistory from "@/components/admin/PaymentHistory";
@@ -664,44 +664,6 @@ const AdminDashboard = () => {
           );
         case 'sms':
           return <SMSSettings businessName={adminData.businessName} />;
-        case 'subscription':
-          return (
-            <Card>
-              <CardHeader>
-                <CardTitle>Subscription</CardTitle>
-                <CardDescription>Your subscription status and billing</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <Card>
-                      <CardHeader className="pb-3">
-                        <CardTitle className="text-sm font-medium text-muted-foreground">Status</CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="flex items-center gap-2">
-                          <div className="w-3 h-3 rounded-full bg-green-500"></div>
-                          <span className="text-2xl font-bold">Active</span>
-                        </div>
-                      </CardContent>
-                    </Card>
-                    <Card>
-                      <CardHeader className="pb-3">
-                        <CardTitle className="text-sm font-medium text-muted-foreground">Plan</CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <span className="text-2xl font-bold">Trial</span>
-                      </CardContent>
-                    </Card>
-                  </div>
-                  <div className="text-sm text-muted-foreground">
-                    <p>Your subscription is managed by the system owner.</p>
-                    <p className="mt-2">Contact: {adminData?.email || 'support@kingstone.com'}</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          );
         case 'password-management':
           return <AdminPasswordManager />;
         case 'business-contact':

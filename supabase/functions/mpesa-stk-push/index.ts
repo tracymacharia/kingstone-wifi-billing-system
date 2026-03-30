@@ -6,6 +6,11 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+// Helper function to encode to base64 (Deno-compatible)
+function encodeBase64(str: string): string {
+  return btoa(unescape(encodeURIComponent(str)));
+}
+
 interface STKPushRequest {
   phone: string;
   amount: number;
@@ -29,6 +34,13 @@ serve(async (req) => {
       throw new Error("Method not allowed");
     }
 
+    // Log the authorization header for debugging
+    const authHeader = req.headers.get("authorization");
+    console.log("Auth header present:", !!authHeader);
+    if (authHeader) {
+      console.log("Auth header type:", authHeader.split(' ')[0]);
+    }
+
     const body: STKPushRequest = await req.json();
     const { phone, amount, packageId, packageName, adminId, mpesaType, mpesaNumber } = body;
 
@@ -36,7 +48,15 @@ serve(async (req) => {
       throw new Error("Missing required fields: phone, amount, packageId, packageName, adminId, mpesaNumber");
     }
 
-    const phoneRegex = /^(\+254|0)[17]\d{8}$/;
+    // Validate amount
+    if (amount <= 0) {
+      throw new Error("Invalid amount: must be greater than zero");
+    }
+    if (amount > 150000) {
+      throw new Error("Invalid amount: exceeds maximum transaction limit (KSh 150,000)");
+    }
+
+    const phoneRegex = /^(\+254|0|254)[17]\d{8}$/;
     if (!phoneRegex.test(phone)) {
       throw new Error("Invalid phone number. Use format 0712345678 or +254712345678");
     }
@@ -45,7 +65,9 @@ serve(async (req) => {
       ? phone.substring(1)
       : phone.startsWith("0")
         ? "254" + phone.substring(1)
-        : phone;
+        : phone.startsWith("254")
+          ? phone
+          : "254" + phone.substring(1);
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
     const supabaseServiceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
@@ -73,7 +95,7 @@ serve(async (req) => {
       {
         method: "GET",
         headers: {
-          "Authorization": `Basic ${btoa(`${mpesaConsumerKey}:${mpesaConsumerSecret}`)}`,
+          "Authorization": `Basic ${encodeBase64(`${mpesaConsumerKey}:${mpesaConsumerSecret}`)}`,
         },
       }
     );
@@ -88,7 +110,7 @@ serve(async (req) => {
     const accessToken = tokenData.access_token;
 
     const timestamp = new Date().toISOString().replace(/[^0-9]/g, "").slice(0, 14);
-    const password = btoa(`${mpesaNumber}${mpesaPasskey}${timestamp}`);
+    const password = encodeBase64(`${mpesaNumber}${mpesaPasskey}${timestamp}`);
 
     const { data: paymentRecord, error: paymentError } = await supabase
       .from("payments")
@@ -112,6 +134,15 @@ serve(async (req) => {
       ? "CustomerBuyGoodsOnline"
       : "CustomerPayBillOnline";
 
+    console.log('Transaction details:', {
+      mpesaType,
+      mpesaNumber,
+      transactionType,
+      amount: Math.floor(amount),
+      formattedPhone,
+      BusinessShortCode: mpesaNumber
+    });
+
     const stkResponse = await fetch(
       `${baseUrl}/mpesa/stkpush/v1/processrequest`,
       {
@@ -129,7 +160,7 @@ serve(async (req) => {
           PartyA: formattedPhone,
           PartyB: mpesaNumber,
           PhoneNumber: formattedPhone,
-          CallBackURL: `${supabaseUrl}/functions/v1/mpesa-callback`,
+          CallBackURL: Deno.env.get("MPESA_CALLBACK_URL") || `${supabaseUrl}/functions/v1/mpesa-callback`,
           AccountReference: `WiFi-${paymentRecord.id.substring(0, 8)}`,
           TransactionDesc: `${packageName} WiFi Package`,
         }),

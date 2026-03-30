@@ -44,18 +44,24 @@ const GraphDashboard: React.FC<GraphDashboardProps> = ({ adminId }) => {
         .select('status')
         .eq('admin_id', adminId);
 
-      // Fetch today's revenue
-      const today = new Date().toISOString().split('T')[0];
+      // Fetch today's revenue (from midnight today)
+      const now = new Date();
+      const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
+      
       const { data: paymentsData } = await supabase
         .from('payments')
-        .select('amount, created_at')
+        .select('amount, status, created_at')
         .eq('admin_id', adminId)
         .eq('status', 'completed')
-        .gte('created_at', today);
+        .gte('created_at', startOfToday);
 
-      // Calculate stats
+      // Calculate today's revenue from completed payments only
+      const todayRevenue = paymentsData
+        ?.filter(p => p.status === 'completed')
+        .reduce((sum, p) => sum + Number(p.amount), 0) || 0;
+
+      // Calculate mikrotik stats
       const onlineMikrotiks = mikrotiksData?.filter(m => m.status === 'online').length || 0;
-      const todayRevenue = paymentsData?.reduce((sum, p) => sum + p.amount, 0) || 0;
 
       setStats({
         activeUsers: usersData?.length || 0,

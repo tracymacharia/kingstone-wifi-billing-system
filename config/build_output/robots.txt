@@ -1,5 +1,0 @@
-User-agent: *
-Allow: /
-
-# Optimized for production hosting
-Sitemap: /sitemap.xml

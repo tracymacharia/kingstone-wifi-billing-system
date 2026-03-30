@@ -30,12 +30,8 @@ const AuthPage = () => {
 
   useEffect(() => {
     if (user) {
-      // Redirect authenticated users to appropriate dashboard
-      if (user.role === 'owner') {
-        navigate('/owner/dashboard');
-      } else {
-        navigate('/admin/dashboard');
-      }
+      // Redirect authenticated users to dashboard
+      navigate('/admin/dashboard');
     }
   }, [user, navigate]);
 
@@ -232,7 +228,7 @@ const AuthPage = () => {
                 <p className="text-sm text-muted-foreground mb-2">Need an account?</p>
                 <div className="flex flex-col sm:flex-row gap-2">
                   <Button variant="outline" asChild className="flex-1">
-                    <Link to="/owner/register">Owner Registration</Link>
+                    <Link to="/admin/register">Admin Registration</Link>
                   </Button>
                 </div>
               </div>

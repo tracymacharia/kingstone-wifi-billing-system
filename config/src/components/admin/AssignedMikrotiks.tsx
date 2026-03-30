@@ -62,10 +62,15 @@ const AssignedMikrotiks = ({ mikrotiks, onManageMikrotik }: AssignedMikrotiksPro
           {mikrotiks.length === 0 ? (
             <div className="text-center py-8">
               <Router className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
-              <h3 className="text-lg font-medium mb-2">No Mikrotiks Assigned</h3>
-              <p className="text-muted-foreground">
-                Contact the system owner to assign Mikrotik routers to your account.
+              <h3 className="text-lg font-medium mb-2">No Mikrotik Routers Yet</h3>
+              <p className="text-muted-foreground mb-4">
+                Add your first Mikrotik router to start managing your network
               </p>
+              <Button asChild>
+                <Link to="/admin/mikrotiks/add">
+                  Add Mikrotik Router
+                </Link>
+              </Button>
             </div>
           ) : (
             <div className="space-y-4">
@@ -154,9 +159,9 @@ const AssignedMikrotiks = ({ mikrotiks, onManageMikrotik }: AssignedMikrotiksPro
       {/* Payment Settings (Read-Only) */}
       <Card>
         <CardHeader>
-          <CardTitle>Payment Settings</CardTitle>
+          <CardTitle>MPESA Payment Settings</CardTitle>
           <CardDescription>
-            View MPESA payment destinations for your routers (configured by system owner)
+            Configure payment destinations for your routers
           </CardDescription>
         </CardHeader>
         <CardContent>

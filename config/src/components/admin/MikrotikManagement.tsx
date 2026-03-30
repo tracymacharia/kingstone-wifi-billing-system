@@ -35,8 +35,6 @@ import { toast } from "sonner";
 import { downloadOVPNPackage } from "@/lib/ovpnGenerator";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { validateMikrotik, sanitizeInput } from "@/lib/validators";
-import { ProvisioningCommands } from "@/components/owner/ProvisioningCommands";
-import { DeviceSettings } from "@/components/owner/DeviceSettings";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 
@@ -712,30 +710,6 @@ const MikrotikManagement = ({
                             <TooltipContent>
                               <p>Download OVPN configuration</p>
                               <p className="text-xs text-muted-foreground">Secure VPN tunnel for remote control</p>
-                            </TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
-
-                        <TooltipProvider>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <DeviceSettings mikrotik={mikrotik} />
-                            </TooltipTrigger>
-                            <TooltipContent>
-                              <p>Device Settings</p>
-                              <p className="text-xs text-muted-foreground">Wireless & Ethernet configuration</p>
-                            </TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
-
-                        <TooltipProvider>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <ProvisioningCommands mikrotik={mikrotik} />
-                            </TooltipTrigger>
-                            <TooltipContent>
-                              <p>Winbox Provisioning Commands</p>
-                              <p className="text-xs text-muted-foreground">Terminal setup & anti-sharing</p>
                             </TooltipContent>
                           </Tooltip>
                         </TooltipProvider>

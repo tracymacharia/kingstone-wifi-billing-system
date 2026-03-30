@@ -87,7 +87,7 @@ serve(async (req) => {
       const apiKey = settings.api_key_encrypted
 
       if (!username || !apiKey) {
-        throw new Error('Africa's Talking credentials not configured')
+        throw new Error('Africa\'s Talking credentials not configured')
       }
 
       const response = await fetch('https://api.africastalking.com/v1/messaging', {

@@ -32,15 +32,14 @@ const Index = () => {
             </div>
             <div className="flex flex-wrap justify-center gap-2">
               <Button asChild variant="outline" size="sm" className="border-white/20 bg-white/5 hover:bg-white/10 text-white backdrop-blur-sm">
-                <Link to="/owner/register" className="flex items-center gap-2">
-                  Get Started <ArrowRight className="w-4 h-4" />
+                <Link to="/admin/register" className="flex items-center gap-2">
+                  Create Account <ArrowRight className="w-4 h-4" />
                 </Link>
               </Button>
               <Button asChild variant="outline" size="sm" className="border-white/20 bg-white/5 hover:bg-white/10 text-white backdrop-blur-sm">
-                <Link to="/owner">Owner Login</Link>
-              </Button>
-              <Button asChild variant="outline" size="sm" className="border-white/20 bg-white/5 hover:bg-white/10 text-white backdrop-blur-sm">
-                <Link to="/admin">Admin Login</Link>
+                <Link to="/admin" className="flex items-center gap-2">
+                  Admin Login <ArrowRight className="w-4 h-4" />
+                </Link>
               </Button>
             </div>
           </div>
@@ -77,9 +76,9 @@ const Index = () => {
             
             <div className="flex flex-col sm:flex-row gap-4 justify-center animate-scale-in animation-delay-600">
               <Button asChild size="lg" className="bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 text-white shadow-lg shadow-primary/25 text-lg px-8 py-4 h-auto group w-full sm:w-auto">
-                <Link to="/owner/register" className="flex items-center gap-3">
+                <Link to="/admin" className="flex items-center gap-3">
                   <Play className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                  Start Your Journey
+                  Login to Dashboard
                 </Link>
               </Button>
               <Button asChild variant="outline" size="lg" className="border-white/20 bg-white/5 hover:bg-white/10 text-white backdrop-blur-sm text-lg px-8 py-4 h-auto w-full sm:w-auto">
@@ -178,29 +177,29 @@ const Index = () => {
               </CardContent>
             </Card>
 
-            <Card className="group border border-white/10 bg-black/20 backdrop-blur-md hover:bg-black/30 transition-all duration-500 hover:scale-105 hover:border-accent/50 animate-fade-in animation-delay-400">
+            <Card className="group border border-white/10 bg-black/20 backdrop-blur-md hover:bg-black/30 transition-all duration-500 hover:scale-105 hover:border-secondary/50 animate-fade-in animation-delay-400">
               <CardHeader>
                 <div className="w-16 h-16 bg-gradient-to-br from-purple-500/20 to-purple-600/30 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
                   <Users className="w-8 h-8 text-purple-400" />
                 </div>
-                <CardTitle className="text-xl text-white group-hover:text-purple-400 transition-colors">Multi-Admin Support</CardTitle>
+                <CardTitle className="text-xl text-white group-hover:text-purple-400 transition-colors">Admin Management</CardTitle>
                 <CardDescription className="text-gray-300">
-                  Manage multiple administrators and locations
+                  Complete control over your Wi-Fi business
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 <ul className="space-y-3 text-sm text-gray-400">
                   <li className="flex items-center gap-2">
                     <div className="w-1.5 h-1.5 bg-purple-400 rounded-full"></div>
-                    Custom admin URLs
+                    User management
                   </li>
                   <li className="flex items-center gap-2">
                     <div className="w-1.5 h-1.5 bg-purple-400 rounded-full"></div>
-                    Role-based access control
+                    Package configuration
                   </li>
                   <li className="flex items-center gap-2">
                     <div className="w-1.5 h-1.5 bg-purple-400 rounded-full"></div>
-                    Individual admin analytics
+                    Payment tracking
                   </li>
                 </ul>
               </CardContent>

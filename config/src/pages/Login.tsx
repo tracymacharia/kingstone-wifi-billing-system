@@ -21,12 +21,8 @@ const Login = () => {
 
   useEffect(() => {
     if (user) {
-      // Redirect authenticated users to appropriate dashboard
-      if (user.role === 'owner') {
-        navigate('/owner/dashboard');
-      } else {
-        navigate('/admin/dashboard');
-      }
+      // Redirect authenticated users to dashboard
+      navigate('/admin/dashboard');
     }
   }, [user, navigate]);
 
@@ -108,7 +104,7 @@ const Login = () => {
                   <Input
                     id="username"
                     type="text"
-                    placeholder="Enter username (owner or admin)"
+                    placeholder="Enter your username"
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
                     className="pl-10"

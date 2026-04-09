@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { MapPin, Navigation, ExternalLink, Loader2, X } from "lucide-react";
 import { toast } from "sonner";
+import { logger } from "@/lib/logger";
 
 interface LocationViewerProps {
   open: boolean;
@@ -72,7 +73,7 @@ const LocationViewer = ({ open, onOpenChange, location, mikrotikName }: Location
         setDirectionsUrl(directions);
       }
     } catch (error) {
-      console.error('Error loading map data:', error);
+      logger.error('Error loading map data:', error);
       toast.error('Failed to load map');
     } finally {
       setLoading(false);

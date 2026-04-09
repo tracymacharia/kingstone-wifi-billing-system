@@ -10,6 +10,7 @@ import { Trash2, Search, FileX, RefreshCw } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
+import { logger } from "@/lib/logger";
 
 interface Payment {
   id: string;
@@ -56,7 +57,7 @@ const RecycleBin = () => {
       if (error) throw error;
       setPayments(data || []);
     } catch (error) {
-      console.error('Error loading payments:', error);
+      logger.error('Error loading payments:', error);
       toast.error('Failed to load transactions');
     } finally {
       setIsLoading(false);
@@ -97,7 +98,7 @@ const RecycleBin = () => {
       setSelectedPayments([]);
       loadFailedPayments();
     } catch (error) {
-      console.error('Error updating payments:', error);
+      logger.error('Error updating payments:', error);
       toast.error('Failed to update transactions');
     } finally {
       setIsLoading(false);
@@ -118,7 +119,7 @@ const RecycleBin = () => {
       setSelectedPayments([]);
       loadFailedPayments();
     } catch (error) {
-      console.error('Error deleting payments:', error);
+      logger.error('Error deleting payments:', error);
       toast.error('Failed to delete transactions');
     } finally {
       setIsLoading(false);

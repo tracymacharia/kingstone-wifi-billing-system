@@ -37,6 +37,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { validateMikrotik, sanitizeInput } from "@/lib/validators";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { logger } from "@/lib/logger";
 
 interface Mikrotik {
   id: string;
@@ -375,7 +376,7 @@ const MikrotikManagement = ({
       await navigator.clipboard.writeText(text);
       toast.success(`${label} copied to clipboard!`);
     } catch (err) {
-      console.error('Failed to copy:', err);
+      logger.error('Failed to copy:', err);
       toast.error('Failed to copy. Please copy manually.');
     }
   };

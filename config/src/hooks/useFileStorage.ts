@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { logger } from "@/lib/logger";
 
 interface FileUploadOptions {
   bucket: 'ovpn-files' | 'hotspot-assets';
@@ -94,7 +95,7 @@ export const useFileStorage = (): FileStorageHook => {
           });
 
         if (dbError) {
-          console.error('Database record error:', dbError);
+          logger.error('Database record error:', dbError);
           // Continue despite DB error - file is uploaded
         }
       }

@@ -8,6 +8,7 @@ import { Loader2, Eye, EyeOff, Key, Mail, Phone } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { logger } from "@/lib/logger";
 
 const AdminPasswordManager = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -37,7 +38,7 @@ const AdminPasswordManager = () => {
           if (error.code === '42703' || error.code === 'PGRST116') {
             return;
           }
-          console.warn('Could not load recovery contacts:', error.message);
+          logger.warn('Could not load recovery contacts:', error.message);
           return;
         }
 
@@ -46,7 +47,7 @@ const AdminPasswordManager = () => {
           setRecoveryPhone((credentials as any).recovery_phone || '');
         }
       } catch (error) {
-        console.warn('Recovery contacts not available:', error);
+        logger.warn('Recovery contacts not available:', error);
       }
     };
 
@@ -76,7 +77,7 @@ const AdminPasswordManager = () => {
 
       toast.success('Recovery contacts updated successfully!');
     } catch (error) {
-      console.error('Recovery contacts update error:', error);
+      logger.error('Recovery contacts update error:', error);
       setError('Failed to update recovery contacts. Please try again.');
     } finally {
       setIsLoading(false);
@@ -116,7 +117,7 @@ const AdminPasswordManager = () => {
       setNewPassword('');
       setConfirmPassword('');
     } catch (error) {
-      console.error('Password update error:', error);
+      logger.error('Password update error:', error);
       setError('Failed to update password. Please try again.');
     } finally {
       setIsLoading(false);

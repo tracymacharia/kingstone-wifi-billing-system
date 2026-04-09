@@ -8,6 +8,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Loader2, ArrowLeft, Eye, EyeOff, User, Lock } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
+import { logger } from "@/lib/logger";
 
 const Login = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -47,7 +48,7 @@ const Login = () => {
         setError('Invalid username or password');
       }
     } catch (error) {
-      console.error('Login error:', error);
+      logger.error('Login error:', error);
       setError('An unexpected error occurred');
     } finally {
       setIsLoading(false);

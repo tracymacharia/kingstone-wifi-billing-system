@@ -4,16 +4,16 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { 
+import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { 
-  CreditCard, 
-  Search, 
+import {
+  CreditCard,
+  Search,
   Download,
   Filter,
   Calendar,
@@ -26,6 +26,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { getAdminIdFromUser } from "@/hooks/useAdminId";
+import { logger } from "@/lib/logger";
 
 interface Payment {
   id: string;
@@ -88,7 +89,7 @@ const PaymentHistory = () => {
 
       setPayments(data || []);
     } catch (error) {
-      console.error('Error fetching payments:', error);
+      logger.error('Error fetching payments:', error);
       toast.error('Failed to fetch payment history');
     } finally {
       setIsLoading(false);

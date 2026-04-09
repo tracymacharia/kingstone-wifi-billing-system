@@ -12,6 +12,7 @@ import { toast } from "sonner";
 import { formatKESSimple } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 import { getAdminIdFromUser } from "@/hooks/useAdminId";
+import { logger } from "@/lib/logger";
 
 interface FilteredUser {
   id: string;
@@ -73,7 +74,7 @@ const FilteredUsersList = ({ filter, onBack, selectedUsers, onSelectionChange }:
         .eq('admin_id', adminId);
 
       if (wifiError) {
-        console.error('Error loading WiFi users:', wifiError);
+        logger.error('Error loading WiFi users:', wifiError);
         return;
       }
 
@@ -84,7 +85,7 @@ const FilteredUsersList = ({ filter, onBack, selectedUsers, onSelectionChange }:
         .eq('admin_id', adminId);
 
       if (broadbandError) {
-        console.error('Error loading broadband users:', broadbandError);
+        logger.error('Error loading broadband users:', broadbandError);
       }
 
       // Transform data
@@ -128,7 +129,7 @@ const FilteredUsersList = ({ filter, onBack, selectedUsers, onSelectionChange }:
 
       setUsers(allUsers);
     } catch (error) {
-      console.error('Error loading users:', error);
+      logger.error('Error loading users:', error);
       toast.error('Failed to load users');
     } finally {
       setLoading(false);
@@ -214,7 +215,7 @@ const FilteredUsersList = ({ filter, onBack, selectedUsers, onSelectionChange }:
           .eq('id', userId);
         
         if (broadbandError) {
-          console.error('Error deleting user:', broadbandError);
+          logger.error('Error deleting user:', broadbandError);
           toast.error('Failed to delete user');
           return;
         }
@@ -223,7 +224,7 @@ const FilteredUsersList = ({ filter, onBack, selectedUsers, onSelectionChange }:
       toast.success('User deleted successfully');
       loadUsers();
     } catch (error) {
-      console.error('Error deleting user:', error);
+      logger.error('Error deleting user:', error);
       toast.error('Failed to delete user');
     }
   };

@@ -12,6 +12,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { getAdminIdFromUser } from "@/hooks/useAdminId";
+import { logger } from "@/lib/logger";
 
 interface BulkActionsProps {
   selectedUsers: string[];
@@ -59,7 +60,7 @@ const BulkActions = ({ selectedUsers, onSelectionChange, onRefresh }: BulkAction
       const { error } = await query;
 
       if (error) {
-        console.error('Error deleting users:', error);
+        logger.error('Error deleting users:', error);
         toast.error('Failed to delete users');
         return;
       }
@@ -69,7 +70,7 @@ const BulkActions = ({ selectedUsers, onSelectionChange, onRefresh }: BulkAction
       onSelectionChange([]);
       onRefresh();
     } catch (error) {
-      console.error('Error deleting users:', error);
+      logger.error('Error deleting users:', error);
       toast.error('Failed to delete users');
     } finally {
       setLoading(false);
@@ -100,7 +101,7 @@ const BulkActions = ({ selectedUsers, onSelectionChange, onRefresh }: BulkAction
         .in('id', selectedUsers);
 
       if (fetchError) {
-        console.error('Error fetching users:', fetchError);
+        logger.error('Error fetching users:', fetchError);
         toast.error('Failed to fetch user data');
         return;
       }
@@ -120,7 +121,7 @@ const BulkActions = ({ selectedUsers, onSelectionChange, onRefresh }: BulkAction
           .in('id', packageIds);
 
         if (updateError) {
-          console.error('Error updating packages:', updateError);
+          logger.error('Error updating packages:', updateError);
           toast.error('Failed to update packages');
           return;
         }
@@ -134,7 +135,7 @@ const BulkActions = ({ selectedUsers, onSelectionChange, onRefresh }: BulkAction
         toast.warning('No packages found for selected users');
       }
     } catch (error) {
-      console.error('Error editing packages:', error);
+      logger.error('Error editing packages:', error);
       toast.error('Failed to edit packages');
     } finally {
       setLoading(false);

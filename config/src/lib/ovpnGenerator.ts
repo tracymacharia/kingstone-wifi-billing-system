@@ -1,4 +1,5 @@
 import { toast } from "sonner";
+import { logger } from "@/lib/logger";
 
 export interface VPNCredentials {
   username: string;
@@ -400,7 +401,7 @@ export const downloadOVPNPackage = async (mikrotik: any): Promise<void> => {
 
     // Validate config before proceeding
     if (!validateOVPNConfig(config)) {
-      console.error('Invalid OVPN config:', config);
+      logger.error('Invalid OVPN config:', config);
       toast.error('Invalid mikrotik configuration. Missing required fields.');
       return;
     }
@@ -430,7 +431,7 @@ export const downloadOVPNPackage = async (mikrotik: any): Promise<void> => {
           document.body.removeChild(link);
           URL.revokeObjectURL(url);
         } catch (error) {
-          console.error('Error downloading file:', filename, error);
+          logger.error('Error downloading file:', filename, error);
           toast.error(`Failed to download ${filename}`);
         }
       }, delay);
@@ -484,7 +485,7 @@ For detailed setup instructions, visit: https://docs.yobrazlyan.com/mikrotik-set
     }
 
   } catch (error) {
-    console.error('Error generating OVPN package:', error);
+    logger.error('Error generating OVPN package:', error);
     toast.error('Failed to generate OVPN package', {
       description: error instanceof Error ? error.message : 'Unknown error occurred'
     });
@@ -508,7 +509,7 @@ export const validateOVPNConfig = (config: OVPNConfig): boolean => {
   );
   
   if (!isValid) {
-    console.error('OVPN config validation failed:', {
+    logger.error('OVPN config validation failed:', {
       mikrotikId: !!config.mikrotikId,
       adminId: !!config.adminId,
       routerId: !!config.routerId,

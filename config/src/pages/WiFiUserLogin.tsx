@@ -8,6 +8,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Loader2, ArrowLeft, Eye, EyeOff, Wifi, Smartphone, CheckCircle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { logger } from "@/lib/logger";
 
 const WiFiUserLogin = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -60,7 +61,7 @@ const WiFiUserLogin = () => {
       });
 
       if (error) {
-        console.error('Database error:', error);
+        logger.error('Database error:', error);
         setError('Invalid username or password');
         setIsLoading(false);
         return;
@@ -69,7 +70,7 @@ const WiFiUserLogin = () => {
 
       if (!data || data.length === 0 || !data[0].success) {
         const errorMsg = data?.[0]?.message || 'Invalid username or password';
-        console.error('Authentication failed:', errorMsg);
+        logger.error('Authentication failed:', errorMsg);
         setError(errorMsg);
         setIsLoading(false);
         return;
@@ -93,7 +94,7 @@ const WiFiUserLogin = () => {
       }, 1500);
 
     } catch (error) {
-      console.error('Login error:', error);
+      logger.error('Login error:', error);
       setError('An unexpected error occurred. Please try again.');
     } finally {
       setIsLoading(false);

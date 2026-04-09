@@ -22,6 +22,7 @@ import {
 import { AdminSidebar } from "@/components/admin/AdminSidebar";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { useAuth } from "@/contexts/AuthContext";
+import { logger } from "@/lib/logger";
 
 interface ScriptGenerationData {
   routerId: string;
@@ -110,7 +111,7 @@ const AdminSelfInstall = () => {
         }
       }
     } catch (error) {
-      console.error('Error loading script:', error);
+      logger.error('Error loading script:', error);
     } finally {
       setLoading(false);
     }
@@ -168,7 +169,7 @@ const AdminSelfInstall = () => {
       const result = await response.json();
 
       if (!response.ok) {
-        console.error('Edge Function error:', result);
+        logger.error('Edge Function error:', result);
         if (response.status === 401) {
           toast.error('Session expired. Please login again.');
           navigate('/admin');
@@ -185,7 +186,7 @@ const AdminSelfInstall = () => {
         throw new Error(result.error || 'Failed to generate script');
       }
     } catch (error: any) {
-      console.error('Generate script error:', error);
+      logger.error('Generate script error:', error);
       toast.error(error.message || 'Failed to generate script');
     } finally {
       setGenerating(false);
@@ -213,7 +214,7 @@ const AdminSelfInstall = () => {
         throw new Error(data.error || 'Failed to register router');
       }
     } catch (error: any) {
-      console.error('Register router error:', error);
+      logger.error('Register router error:', error);
       toast.error(error.message || 'Failed to register router');
     } finally {
       setRegistering(false);

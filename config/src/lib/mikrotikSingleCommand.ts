@@ -7,6 +7,7 @@
  */
 
 import type { ProvisioningConfig } from "./mikrotikProvisioning";
+import { logger } from "@/lib/logger";
 
 // ============================================================================
 // SINGLE COMMAND GENERATOR - WINBOX COMPATIBLE
@@ -244,7 +245,7 @@ export async function copyCommandToClipboard(
     await navigator.clipboard.writeText(command);
     return true;
   } catch (error) {
-    console.error('Failed to copy:', error);
+    logger.error('Failed to copy:', error);
     return false;
   }
 }

@@ -5,6 +5,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
 import { Activity, User, Package, Router, DollarSign, Shield } from "lucide-react";
+import { logger } from "@/lib/logger";
 
 interface AuditLog {
   id: string;
@@ -50,14 +51,14 @@ const SystemAuditLogs = ({ userRole, userId }: SystemAuditLogsProps) => {
           setLoading(false);
           return;
         }
-        console.error('Error loading audit logs:', error);
+        logger.error('Error loading audit logs:', error);
         setLoading(false);
         return;
       }
 
       setLogs(data || []);
     } catch (error) {
-      console.error('Error loading audit logs:', error);
+      logger.error('Error loading audit logs:', error);
     } finally {
       setLoading(false);
     }

@@ -8,6 +8,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { ArrowLeft, User, Mail, Phone, Building2, Lock, Eye, EyeOff } from 'lucide-react';
+import { logger } from "@/lib/logger";
 
 const AdminRegister = () => {
   const navigate = useNavigate();
@@ -82,7 +83,7 @@ const AdminRegister = () => {
       });
 
       if (error) {
-        console.error('RPC error:', error);
+        logger.error('RPC error:', error);
         setError('Failed to create account: ' + error.message);
         setLoading(false);
         return;
@@ -99,7 +100,7 @@ const AdminRegister = () => {
       toast.success('Account created successfully! Please login.');
       navigate('/admin');
     } catch (err: any) {
-      console.error('Registration error:', err);
+      logger.error('Registration error:', err);
       setError('An unexpected error occurred');
     } finally {
       setLoading(false);

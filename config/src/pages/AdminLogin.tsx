@@ -12,6 +12,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Loader2, User, ArrowLeft, UserRound, Lock, Sparkles } from "lucide-react";
 import { toast } from "sonner";
+import { logger } from "@/lib/logger";
 
 const AdminLogin = () => {
   const [currentStep, setCurrentStep] = useState(0);
@@ -46,7 +47,7 @@ const AdminLogin = () => {
       setAccountVerified(true);
       return true;
     } catch (err: any) {
-      console.error('Username validation error:', err);
+      logger.error('Username validation error:', err);
       setError(err?.message || "An error occurred. Please try again.");
       return false;
     } finally {
@@ -73,7 +74,7 @@ const AdminLogin = () => {
         setError("Invalid credentials. Please check your username and password.");
       }
     } catch (err) {
-      console.error('Login error:', err);
+      logger.error('Login error:', err);
       setError("An error occurred during login. Please try again.");
     } finally {
       setIsLoading(false);
@@ -124,7 +125,7 @@ const AdminLogin = () => {
       setIsRecoveryDialogOpen(false);
       setRecoveryContact('');
     } catch (error: any) {
-      console.error('Password recovery error:', error);
+      logger.error('Password recovery error:', error);
       toast.error(error.message || 'Failed to send recovery message');
     } finally {
       setIsRecoveryLoading(false);

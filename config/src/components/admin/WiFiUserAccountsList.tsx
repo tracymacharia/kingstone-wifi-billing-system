@@ -23,6 +23,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { getAdminIdFromUser } from "@/hooks/useAdminId";
 import { WiFiUser, Package as PackageOption } from "@/types/models";
+import { logger } from "@/lib/logger";
 
 interface WiFiUserAccountsListProps {
   users: WiFiUser[];
@@ -76,13 +77,13 @@ const WiFiUserAccountsList = ({ users, onRefresh, onEdit, onDelete }: WiFiUserAc
         .order('name');
 
       if (error) {
-        console.error('Error loading packages:', error);
+        logger.error('Error loading packages:', error);
         return;
       }
 
       setPackages(data || []);
     } catch (error) {
-      console.error('Error loading packages:', error);
+      logger.error('Error loading packages:', error);
     }
   };
 
@@ -161,7 +162,7 @@ const WiFiUserAccountsList = ({ users, onRefresh, onEdit, onDelete }: WiFiUserAc
         .eq('id', editingUser.id);
 
       if (error) {
-        console.error('Error updating user:', error);
+        logger.error('Error updating user:', error);
         toast.error("Failed to update user");
         return;
       }
@@ -171,7 +172,7 @@ const WiFiUserAccountsList = ({ users, onRefresh, onEdit, onDelete }: WiFiUserAc
       setEditingUser(null);
       onRefresh();
     } catch (error) {
-      console.error('Error updating user:', error);
+      logger.error('Error updating user:', error);
       toast.error("Failed to update user");
     } finally {
       setLoading(false);

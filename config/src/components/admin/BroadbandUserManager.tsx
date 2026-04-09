@@ -12,6 +12,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { getAdminIdFromUser } from "@/hooks/useAdminId";
+import { logger } from "@/lib/logger";
 
 interface BroadbandUser {
   id: string;
@@ -80,7 +81,7 @@ const BroadbandUserManager = () => {
 
 
       if (!userId) {
-        console.error('No admin ID available for loading broadband users');
+        logger.error('No admin ID available for loading broadband users');
         return;
       }
 
@@ -99,7 +100,7 @@ const BroadbandUserManager = () => {
         .order('created_at', { ascending: false });
 
       if (error) {
-        console.error('Error loading broadband users:', error);
+        logger.error('Error loading broadband users:', error);
         return;
       }
 
@@ -126,7 +127,7 @@ const BroadbandUserManager = () => {
       
       setUsers(usersData);
     } catch (error) {
-      console.error('Error loading broadband users:', error);
+      logger.error('Error loading broadband users:', error);
     }
   };
 
@@ -135,7 +136,7 @@ const BroadbandUserManager = () => {
       const userId = getAdminIdFromUser(user);
 
       if (!userId) {
-        console.error('No admin ID available for loading packages');
+        logger.error('No admin ID available for loading packages');
         return;
       }
 
@@ -148,13 +149,13 @@ const BroadbandUserManager = () => {
         .order('name');
 
       if (error) {
-        console.error('Error loading packages:', error);
+        logger.error('Error loading packages:', error);
         return;
       }
 
       setPackages(data || []);
     } catch (error) {
-      console.error('Error loading packages:', error);
+      logger.error('Error loading packages:', error);
     }
   };
 
@@ -203,7 +204,7 @@ const BroadbandUserManager = () => {
 
 
       if (!userId) {
-        console.error('BroadbandUserManager handleSave - No admin ID available');
+        logger.error('BroadbandUserManager handleSave - No admin ID available');
         toast.error("Admin not authenticated");
         return;
       }
@@ -229,7 +230,7 @@ const BroadbandUserManager = () => {
       }
 
       if (error) {
-        console.error('Error saving broadband user:', error);
+        logger.error('Error saving broadband user:', error);
         if (error.code === '23505') {
           toast.error("Username already exists");
         } else {
@@ -249,7 +250,7 @@ const BroadbandUserManager = () => {
         toast.info("Consider sending welcome SMS with portal link");
       }
     } catch (error) {
-      console.error('Error saving broadband user:', error);
+      logger.error('Error saving broadband user:', error);
       toast.error("Failed to save user");
     } finally {
       setLoading(false);
@@ -266,7 +267,7 @@ const BroadbandUserManager = () => {
         .eq('id', userId);
 
       if (error) {
-        console.error('Error deleting broadband user:', error);
+        logger.error('Error deleting broadband user:', error);
         toast.error("Failed to delete user");
         return;
       }
@@ -274,7 +275,7 @@ const BroadbandUserManager = () => {
       toast.success("User deleted!");
       loadUsers();
     } catch (error) {
-      console.error('Error deleting broadband user:', error);
+      logger.error('Error deleting broadband user:', error);
       toast.error("Failed to delete user");
     }
   };
@@ -318,7 +319,7 @@ const BroadbandUserManager = () => {
         .eq('id', assignData.user_id);
 
       if (error) {
-        console.error('Error assigning package:', error);
+        logger.error('Error assigning package:', error);
         toast.error("Failed to assign package");
         return;
       }
@@ -328,7 +329,7 @@ const BroadbandUserManager = () => {
       setAssignData({ user_id: '', package_id: '', duration_override: 0 });
       loadUsers();
     } catch (error) {
-      console.error('Error assigning package:', error);
+      logger.error('Error assigning package:', error);
       toast.error("Failed to assign package");
     } finally {
       setLoading(false);
@@ -343,7 +344,7 @@ const BroadbandUserManager = () => {
         .eq('id', userId);
 
       if (error) {
-        console.error('Error updating user status:', error);
+        logger.error('Error updating user status:', error);
         toast.error("Failed to update user status");
         return;
       }
@@ -351,7 +352,7 @@ const BroadbandUserManager = () => {
       toast.success(`User ${!currentStatus ? 'activated' : 'deactivated'}`);
       loadUsers();
     } catch (error) {
-      console.error('Error updating user status:', error);
+      logger.error('Error updating user status:', error);
       toast.error("Failed to update user status");
     }
   };
@@ -400,7 +401,7 @@ Pay via Till/Paybill: [Payment Details]`;
       setSmsMessage('');
       setSelectedUser(null);
     } catch (error) {
-      console.error('Error sending SMS:', error);
+      logger.error('Error sending SMS:', error);
       toast.error("Failed to send SMS");
     }
   };
@@ -417,7 +418,7 @@ Pay via Till/Paybill: [Payment Details]`;
       // Here you would send SMS to all users
       toast.success(`Bulk SMS sent to ${usersWithPhone.length} users`);
     } catch (error) {
-      console.error('Error sending bulk SMS:', error);
+      logger.error('Error sending bulk SMS:', error);
       toast.error("Failed to send bulk SMS");
     }
   };

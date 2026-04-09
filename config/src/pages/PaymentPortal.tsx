@@ -9,6 +9,7 @@ import { Wifi, CheckCircle, Loader2, AlertCircle, Smartphone } from "lucide-reac
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { formatKES } from "@/lib/utils";
+import { logger } from "@/lib/logger";
 
 interface Package {
   id: string;
@@ -51,8 +52,8 @@ const PaymentPortal = () => {
     setIsLoading(true);
     setError(null);
     try {
-      console.log('Loading portal data for mikrotikId:', mikrotikId);
-      
+      logger.debug('Loading portal data for mikrotikId:', mikrotikId);
+
       // First get the admin_id from the mikrotik
       const { data: mikrotikData, error: mikrotikError } = await supabase
         .from('mikrotiks')
@@ -61,13 +62,13 @@ const PaymentPortal = () => {
         .single();
 
       if (mikrotikError || !mikrotikData) {
-        console.error('Mikrotik not found:', mikrotikError);
+        logger.error('Mikrotik not found:', mikrotikError);
         setError('Router not found. Please check the portal URL.');
         setIsLoading(false);
         return;
       }
 
-      console.log('Mikrotik found, admin_id:', mikrotikData.admin_id);
+      logger.debug('Mikrotik found, admin_id:', mikrotikData.admin_id);
 
       // Load wifi_settings for this admin
       const { data: settings, error: settingsError } = await supabase
@@ -77,7 +78,7 @@ const PaymentPortal = () => {
         .maybeSingle();
 
       if (settingsError) {
-        console.error('Error loading wifi_settings:', settingsError);
+        logger.error('Error loading wifi_settings:', settingsError);
       }
 
       if (settings) {
@@ -88,7 +89,7 @@ const PaymentPortal = () => {
           contact_phone: settings.contact_phone || "",
           contact_email: settings.contact_email || ""
         });
-        console.log('WiFi settings loaded:', settings);
+        logger.debug('WiFi settings loaded:', settings);
       }
 
       // Load packages for this admin (hotspot packages only)
@@ -100,14 +101,14 @@ const PaymentPortal = () => {
         .order('price', { ascending: true });
 
       if (packagesError) {
-        console.error('Error loading packages:', packagesError);
+        logger.error('Error loading packages:', packagesError);
         setError('Unable to load packages');
       } else {
-        console.log('Packages loaded:', packagesData?.length || 0);
+        logger.debug('Packages loaded:', packagesData?.length || 0);
         setPackages(packagesData || []);
       }
     } catch (error) {
-      console.error('Error loading portal data:', error);
+      logger.error('Error loading portal data:', error);
       setError('Failed to load portal data');
     } finally {
       setIsLoading(false);
@@ -148,10 +149,10 @@ const PaymentPortal = () => {
         throw new Error("Router not found");
       }
 
-      console.log('Mikrotik data:', mikrotikData);
+      logger.debug('Mikrotik data:', mikrotikData);
 
       if (!mikrotikData.mpesa_type || !mikrotikData.mpesa_number) {
-        console.error('M-Pesa configuration missing:', {
+        logger.error('M-Pesa configuration missing:', {
           mpesa_type: mikrotikData.mpesa_type,
           mpesa_number: mikrotikData.mpesa_number
         });
@@ -170,14 +171,14 @@ const PaymentPortal = () => {
         mpesaNumber: mikrotikData.mpesa_number
       };
 
-      console.log('Sending to STK push:', paymentData);
+      logger.debug('Sending to STK push:', paymentData);
 
       // Initiate STK Push using direct fetch to get full error details
       const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
       const supabaseKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
-      
-      console.log('Using Supabase URL:', supabaseUrl);
-      console.log('Using key prefix:', supabaseKey ? supabaseKey.substring(0, 50) + '...' : 'NO KEY');
+
+      logger.debug('Using Supabase URL:', supabaseUrl);
+      logger.debug('Using key prefix:', supabaseKey ? supabaseKey.substring(0, 50) + '...' : 'NO KEY');
       
       try {
         const response = await fetch(`${supabaseUrl}/functions/v1/mpesa-stk-push`, {
@@ -192,21 +193,21 @@ const PaymentPortal = () => {
         });
 
         const result = await response.json();
-        
-        console.log('STK push response:', { 
-          status: response.status, 
-          ok: response.ok, 
-          data: result 
+
+        logger.debug('STK push response:', {
+          status: response.status,
+          ok: response.ok,
+          data: result
         });
 
         if (!response.ok) {
           const errorMsg = result?.error || result?.message || `HTTP ${response.status}: ${response.statusText}`;
-          console.error('STK Push failed - full response:', result);
+          logger.error('STK Push failed - full response:', result);
           throw new Error(errorMsg);
         }
 
         if (!result?.success) {
-          console.error('STK Push failed - not successful:', result);
+          logger.error('STK Push failed - not successful:', result);
           throw new Error(result?.error || 'STK Push failed');
         }
 
@@ -222,7 +223,7 @@ const PaymentPortal = () => {
       }
 
     } catch (error: any) {
-      console.error('Payment error:', error);
+      logger.error('Payment error:', error);
       toast.error(error.message || "Payment failed. Please try again");
       setIsProcessing(false);
     }
@@ -243,7 +244,7 @@ const PaymentPortal = () => {
           .eq('id', paymentId)
           .single();
 
-        console.log(`Polling attempt ${attempts}: Payment status =`, payment?.status);
+        logger.debug(`Polling attempt ${attempts}: Payment status =`, payment?.status);
 
         if (payment?.status === 'completed') {
           clearInterval(poll);
@@ -262,19 +263,32 @@ const PaymentPortal = () => {
 
         // If still pending after 3 attempts, query M-Pesa directly
         if (attempts >= 3 && payment?.transaction_id && payment?.status === 'pending') {
-          console.log('Querying M-Pesa for payment status...');
-          
+          logger.debug('Querying M-Pesa for payment status...');
+
+          // Get mikrotik info for shortcode
+          const { data: mikrotikData } = await supabase
+            .from('mikrotiks')
+            .select('mpesa_number')
+            .eq('router_id', mikrotikId)
+            .single();
+
+          const shortcode = mikrotikData?.mpesa_number;
+          if (!shortcode) {
+            logger.error('M-Pesa shortcode not found in mikrotik configuration');
+            return;
+          }
+
           const { data: stkStatus, error: stkError } = await supabase.functions.invoke('check-stk-status', {
             body: {
               transaction_id: payment.transaction_id,
-              shortcode: '174379'
+              shortcode: shortcode
             }
           });
 
           if (stkError) {
-            console.error('STK status query error:', stkError);
+            logger.error('STK status query error:', stkError);
           } else if (stkStatus?.success) {
-            console.log('STK status query result:', stkStatus.status);
+            logger.debug('STK status query result:', stkStatus.status);
             
             if (stkStatus.status === 'completed') {
               // Payment completed!
@@ -300,7 +314,7 @@ const PaymentPortal = () => {
           setIsProcessing(false);
         }
       } catch (error) {
-        console.error('Polling error:', error);
+        logger.error('Polling error:', error);
       }
     }, 5000); // Check every 5 seconds
   };
@@ -385,10 +399,21 @@ const PaymentPortal = () => {
     }
 
     try {
+      // Get mikrotik info for payment verification
+      const { data: mikrotikData } = await supabase
+        .from('mikrotiks')
+        .select('id, admin_id, mpesa_number')
+        .eq('router_id', mikrotikId)
+        .single();
+
+      if (!mikrotikData) {
+        throw new Error("Router not found");
+      }
+
       const { data: recentPayment } = await supabase
         .from('payments')
         .select('transaction_id, status')
-        .eq('admin_id', mikrotikData?.admin_id)
+        .eq('admin_id', mikrotikData.admin_id)
         .order('created_at', { ascending: false })
         .limit(1)
         .single();
@@ -403,7 +428,7 @@ const PaymentPortal = () => {
       const { data, error } = await supabase.functions.invoke('check-stk-status', {
         body: {
           transaction_id: recentPayment.transaction_id,
-          shortcode: mikrotikData?.mpesa_number || '174379'
+          shortcode: mikrotikData.mpesa_number
         }
       });
 
@@ -422,7 +447,7 @@ const PaymentPortal = () => {
         toast.error(data?.error || "Verification failed");
       }
     } catch (error: any) {
-      console.error('Manual verification error:', error);
+      logger.error('Manual verification error:', error);
       toast.error(error.message || "Verification failed. Please try again.");
     }
   };

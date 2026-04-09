@@ -17,6 +17,7 @@ import {
 import { AdminSidebar } from "@/components/admin/AdminSidebar";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { useAuth } from "@/contexts/AuthContext";
+import { logger } from "@/lib/logger";
 
 const AdminAddMikrotik = () => {
   const navigate = useNavigate();
@@ -104,7 +105,7 @@ const AdminAddMikrotik = () => {
       toast.success('Router added successfully!');
       navigate('/admin/mikrotiks/list');
     } catch (error: any) {
-      console.error('Add router error:', error);
+      logger.error('Add router error:', error);
       toast.error('Failed to add router: ' + error.message);
     } finally {
       setLoading(false);

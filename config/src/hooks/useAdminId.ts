@@ -1,6 +1,7 @@
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useRPC } from './useRPC';
+import { logger } from "@/lib/logger";
 
 /**
  * Enhanced hook to get the current admin ID for database operations
@@ -38,7 +39,7 @@ export const useAdminId = () => {
         
         return null;
       } catch (error) {
-        console.error('Error getting admin ID:', error);
+        logger.error('Error getting admin ID:', error);
         return null;
       }
     }

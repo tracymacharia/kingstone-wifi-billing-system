@@ -9,13 +9,13 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { 
-  RefreshCw, 
-  Eye, 
-  CheckCircle, 
-  XCircle, 
-  Clock, 
-  Smartphone, 
+import {
+  RefreshCw,
+  Eye,
+  CheckCircle,
+  XCircle,
+  Clock,
+  Smartphone,
   MessageSquare,
   Search,
   Wifi,
@@ -25,6 +25,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { getAdminIdFromUser } from "@/hooks/useAdminId";
+import { logger } from "@/lib/logger";
 
 interface ReconnectionRequest {
   id: string;
@@ -76,13 +77,13 @@ const ReconnectionManager = () => {
         .order('created_at', { ascending: false });
 
       if (error) {
-        console.error('Error loading reconnection requests:', error);
+        logger.error('Error loading reconnection requests:', error);
         return;
       }
 
       setRequests(data || []);
     } catch (error) {
-      console.error('Error loading reconnection requests:', error);
+      logger.error('Error loading reconnection requests:', error);
     } finally {
       setLoading(false);
     }
@@ -110,7 +111,7 @@ const ReconnectionManager = () => {
         .eq('id', selectedRequest.id);
 
       if (error) {
-        console.error('Error updating request:', error);
+        logger.error('Error updating request:', error);
         toast.error("Failed to update request");
         return;
       }
@@ -126,7 +127,7 @@ const ReconnectionManager = () => {
       setAdminNotes("");
       loadReconnectionRequests();
     } catch (error) {
-      console.error('Error processing request:', error);
+      logger.error('Error processing request:', error);
       toast.error("Failed to process request");
     }
   };
@@ -165,7 +166,7 @@ const ReconnectionManager = () => {
 
       toast.success("User activated on router");
     } catch (error) {
-      console.error('Error activating user on Mikrotik:', error);
+      logger.error('Error activating user on Mikrotik:', error);
       toast.error("Could not activate user on router. Please do it manually.");
     }
   };

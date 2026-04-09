@@ -4,6 +4,8 @@
  */
 
 import { supabase } from "@/integrations/supabase/client";
+import { logger } from "@/lib/logger";
+import { normalizeKenyanPhone, isValidKenyanPhone } from "@/lib/validators";
 
 export interface PaymentRequest {
   admin_id: string;
@@ -59,20 +61,17 @@ export async function initiateSTKPush(request: PaymentRequest): Promise<{
       checkout_request_id: result.checkout_request_id,
     };
   } catch (error: any) {
-    console.error("STK Push error:", error);
-    return {
-      success: false,
-      error: error.message || "Failed to initiate payment",
-    };
+    logger.error("STK Push error:", error);
+    throw error; // Throw instead of returning to make errors visible
   }
 }
 
 /**
- * Check payment status
+ * Check payment status - throws on error instead of returning null
  */
 export async function checkPaymentStatus(
   paymentId: string
-): Promise<PaymentStatus | null> {
+): Promise<PaymentStatus> {
   try {
     const { data, error } = await supabase
       .from("payments")
@@ -81,7 +80,7 @@ export async function checkPaymentStatus(
       .single();
 
     if (error || !data) {
-      return null;
+      throw new Error(error?.message || "Payment not found");
     }
 
     return {
@@ -94,8 +93,8 @@ export async function checkPaymentStatus(
       updated_at: data.updated_at,
     };
   } catch (error) {
-    console.error("Error checking payment status:", error);
-    return null;
+    logger.error("Error checking payment status:", error);
+    throw error; // Throw instead of returning null
   }
 }
 
@@ -106,27 +105,29 @@ export async function pollPaymentStatus(
   paymentId: string,
   maxAttempts: number = 30,
   intervalMs: number = 2000
-): Promise<PaymentStatus | null> {
+): Promise<PaymentStatus> {
   let attempts = 0;
 
   while (attempts < maxAttempts) {
-    const status = await checkPaymentStatus(paymentId);
+    try {
+      const status = await checkPaymentStatus(paymentId);
 
-    if (!status) {
-      return null;
+      if (status.status === "completed" || status.status === "failed" || status.status === "cancelled") {
+        return status;
+      }
+
+      // Wait before next poll
+      await new Promise((resolve) => setTimeout(resolve, intervalMs));
+      attempts++;
+    } catch (error) {
+      logger.error(`Polling error on attempt ${attempts + 1}:`, error);
+      await new Promise((resolve) => setTimeout(resolve, intervalMs));
+      attempts++;
     }
-
-    if (status.status === "completed" || status.status === "failed" || status.status === "cancelled") {
-      return status;
-    }
-
-    // Wait before next poll
-    await new Promise((resolve) => setTimeout(resolve, intervalMs));
-    attempts++;
   }
 
-  // Timeout
-  return null;
+  // Timeout - throw error instead of returning null
+  throw new Error("Payment polling timed out after maximum attempts");
 }
 
 /**
@@ -141,8 +142,7 @@ export async function getAdminPayments(adminId: string): Promise<PaymentStatus[]
       .order("created_at", { ascending: false });
 
     if (error) {
-      console.error("Error fetching payments:", error);
-      return [];
+      throw new Error(error.message);
     }
 
     return data.map((payment) => ({
@@ -155,36 +155,23 @@ export async function getAdminPayments(adminId: string): Promise<PaymentStatus[]
       updated_at: payment.updated_at,
     }));
   } catch (error) {
-    console.error("Error fetching payments:", error);
-    return [];
+    logger.error("Error fetching payments:", error);
+    throw error;
   }
 }
 
 /**
- * Format M-Pesa phone number
+ * Format M-Pesa phone number to 254XXXXXXXXX format
  */
 export function formatMpesaPhoneNumber(phone: string): string {
-  // Remove spaces and special characters
-  const cleaned = phone.replace(/[\s\-\(\)]/g, "");
-
-  // Format to 2547XXXXXXXX
-  if (cleaned.startsWith("+254")) {
-    return cleaned.substring(1);
-  } else if (cleaned.startsWith("0") && cleaned.length === 10) {
-    return "254" + cleaned.substring(1);
-  } else if (cleaned.startsWith("254") && cleaned.length === 12) {
-    return cleaned;
-  }
-
-  return cleaned;
+  return normalizeKenyanPhone(phone);
 }
 
 /**
  * Validate M-Pesa phone number
  */
 export function validateMpesaPhoneNumber(phone: string): boolean {
-  const kenyanRegex = /^(\+254|0)[17]\d{8}$/;
-  return kenyanRegex.test(phone);
+  return isValidKenyanPhone(phone);
 }
 
 export default {

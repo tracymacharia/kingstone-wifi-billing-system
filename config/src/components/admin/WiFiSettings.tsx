@@ -16,6 +16,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { getAdminIdFromUser } from "@/hooks/useAdminId";
+import { logger } from "@/lib/logger";
 
 interface WiFiSettingsData {
   id?: string;
@@ -85,7 +86,7 @@ const WiFiSettings = () => {
         setPreviewRouterId(data.router_id);
       }
     } catch (error) {
-      console.error('Failed to load mikrotik for preview:', error);
+      logger.error('Failed to load mikrotik for preview:', error);
     }
   };
 
@@ -93,11 +94,11 @@ const WiFiSettings = () => {
     try {
       const adminId = getAdminIdFromUser(user);
       if (!adminId) {
-        console.log('No admin ID found for loading settings');
+        logger.debug('No admin ID found for loading settings');
         return;
       }
 
-      console.log('Loading WiFi settings for admin:', adminId);
+      logger.debug('Loading WiFi settings for admin:', adminId);
 
       const { data, error } = await supabase
         .from('wifi_settings')
@@ -106,27 +107,27 @@ const WiFiSettings = () => {
         .maybeSingle();
 
       if (error && error.code !== 'PGRST116') {
-        console.error('Error loading WiFi settings:', error);
+        logger.error('Error loading WiFi settings:', error);
         if ((error as any).code === '42P01') {
-          console.log('WiFi settings table does not exist');
+          logger.debug('WiFi settings table does not exist');
           return;
         }
         throw error;
       }
 
-      console.log('Loaded WiFi settings:', data);
+      logger.debug('Loaded WiFi settings:', data);
 
       if (data) {
         setSettings({
           ...data,
           faq_json: Array.isArray(data.faq_json) ? data.faq_json : []
         });
-        console.log('Settings applied to state');
+        logger.debug('Settings applied to state');
       } else {
-        console.log('No existing settings found, using defaults');
+        logger.debug('No existing settings found, using defaults');
       }
     } catch (error) {
-      console.error('Failed to load WiFi settings:', error);
+      logger.error('Failed to load WiFi settings:', error);
     }
   };
 
@@ -151,7 +152,7 @@ const WiFiSettings = () => {
         setHotspotPackages(data);
       }
     } catch (error) {
-      console.error('Failed to load hotspot packages:', error);
+      logger.error('Failed to load hotspot packages:', error);
     }
   };
 
@@ -186,8 +187,8 @@ const WiFiSettings = () => {
         return;
       }
 
-      console.log('Saving WiFi settings for admin:', adminId);
-      console.log('Settings to save:', settings);
+      logger.debug('Saving WiFi settings for admin:', adminId);
+      logger.debug('Settings to save:', settings);
 
       // First, check if settings exist
       const { data: existing, error: fetchError } = await supabase
@@ -197,21 +198,21 @@ const WiFiSettings = () => {
         .maybeSingle();
 
       if (fetchError) {
-        console.error('Error checking existing settings:', fetchError);
+        logger.error('Error checking existing settings:', fetchError);
         if ((fetchError as any).code === '42P01') {
           toast.error('WiFi settings table does not exist. Please contact support to set up the database.');
           return;
         }
       }
 
-      console.log('Existing settings:', existing);
+      logger.debug('Existing settings:', existing);
 
       let result;
       let error;
       
       if (existing) {
         // Update existing
-        console.log('Updating existing settings...');
+        logger.debug('Updating existing settings...');
         result = await supabase
           .from('wifi_settings')
           .update({
@@ -231,7 +232,7 @@ const WiFiSettings = () => {
         error = result.error;
       } else {
         // Insert new
-        console.log('Inserting new settings...');
+        logger.debug('Inserting new settings...');
         result = await supabase
           .from('wifi_settings')
           .insert({
@@ -250,11 +251,11 @@ const WiFiSettings = () => {
         error = result.error;
       }
 
-      console.log('Save result:', result);
-      console.log('Save error:', error);
+      logger.debug('Save result:', result);
+      logger.debug('Save error:', error);
 
       if (error) {
-        console.error('Save error details:', error);
+        logger.error('Save error details:', error);
         if ((error as any).code === '42P01') {
           toast.error('WiFi settings table does not exist. Please run the database setup SQL.');
           return;
@@ -265,10 +266,10 @@ const WiFiSettings = () => {
       toast.success('WiFi settings saved successfully');
       
       // Reload settings to ensure UI reflects the saved data
-      console.log('Reloading settings...');
+      logger.debug('Reloading settings...');
       await loadSettings();
     } catch (error) {
-      console.error('Failed to save WiFi settings:', error);
+      logger.error('Failed to save WiFi settings:', error);
       toast.error(`Failed to save WiFi settings: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setIsLoading(false);

@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Eye, EyeOff, Key, Shield } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
+import { logger } from "@/lib/logger";
 
 interface PasswordChangePromptProps {
   onPasswordChanged?: () => void;
@@ -57,7 +58,7 @@ const PasswordChangePrompt = ({ onPasswordChanged, isFirstLogin = false }: Passw
         toast.error("Current password is incorrect");
       }
     } catch (error) {
-      console.error('Password change error:', error);
+      logger.error('Password change error:', error);
       toast.error("Failed to change password");
     } finally {
       setLoading(false);

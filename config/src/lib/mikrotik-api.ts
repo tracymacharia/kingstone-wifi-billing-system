@@ -3,6 +3,8 @@
  * Handles communication with Mikrotik hotspot routers
  */
 
+import { logger } from "@/lib/logger";
+
 export interface MikrotikConfig {
   host: string;
   port: number;
@@ -61,7 +63,7 @@ export class MikrotikAPI {
         };
 
         this.socket.onerror = (error) => {
-          console.error('Mikrotik connection error:', error);
+          logger.error('Mikrotik connection error:', error);
           reject(new Error('Failed to connect to Mikrotik'));
         };
 

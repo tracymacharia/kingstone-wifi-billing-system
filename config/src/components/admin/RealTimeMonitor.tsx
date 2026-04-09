@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { logger } from "@/lib/logger";
 
 interface ConnectedUser {
   id: string;
@@ -139,7 +140,7 @@ const RealTimeMonitor = () => {
       ]);
       setLastUpdated(new Date());
     } catch (error) {
-      console.error('Error fetching real-time data:', error);
+      logger.error('Error fetching real-time data:', error);
       toast.error('Failed to fetch real-time data');
     } finally {
       setIsLoading(false);
@@ -156,7 +157,7 @@ const RealTimeMonitor = () => {
       .order('created_at', { ascending: false });
 
     if (error) {
-      console.error('Error fetching active users:', error);
+      logger.error('Error fetching active users:', error);
       return;
     }
 
@@ -183,7 +184,7 @@ const RealTimeMonitor = () => {
       .order('name', { ascending: true });
 
     if (error) {
-      console.error('Error fetching mikrotik status:', error);
+      logger.error('Error fetching mikrotik status:', error);
       return;
     }
 
@@ -202,7 +203,7 @@ const RealTimeMonitor = () => {
       toast.success(`User ${username} disconnected successfully`);
       fetchConnectedUsers();
     } catch (error) {
-      console.error('Error disconnecting user:', error);
+      logger.error('Error disconnecting user:', error);
       toast.error('Failed to disconnect user');
     }
   };
@@ -223,7 +224,7 @@ const RealTimeMonitor = () => {
         fetchMikrotikStatus();
       }
     } catch (error) {
-      console.error('Error refreshing router status:', error);
+      logger.error('Error refreshing router status:', error);
       toast.error('Failed to refresh router status');
     }
   };

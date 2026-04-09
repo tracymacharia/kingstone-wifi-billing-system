@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { getAdminIdFromUser } from "@/hooks/useAdminId";
+import { logger } from "@/lib/logger";
 
 interface UserStats {
   totalActiveUsers: number;
@@ -52,7 +53,7 @@ const UserStatsCards = ({ onCardClick }: UserStatsCardsProps) => {
         .eq('admin_id', adminId);
 
       if (wifiError) {
-        console.error('Error loading WiFi users:', wifiError);
+        logger.error('Error loading WiFi users:', wifiError);
         return;
       }
 
@@ -63,7 +64,7 @@ const UserStatsCards = ({ onCardClick }: UserStatsCardsProps) => {
         .eq('admin_id', adminId);
 
       if (broadbandError) {
-        console.error('Error loading broadband users:', broadbandError);
+        logger.error('Error loading broadband users:', broadbandError);
       }
 
       // Calculate stats
@@ -110,7 +111,7 @@ const UserStatsCards = ({ onCardClick }: UserStatsCardsProps) => {
       });
 
     } catch (error) {
-      console.error('Error loading user stats:', error);
+      logger.error('Error loading user stats:', error);
       toast.error('Failed to load user statistics');
     } finally {
       setLoading(false);

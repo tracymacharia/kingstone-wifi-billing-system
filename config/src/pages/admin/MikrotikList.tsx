@@ -30,6 +30,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { logger } from "@/lib/logger";
 
 interface Mikrotik {
   id: string;
@@ -78,7 +79,7 @@ const AdminMikrotikList = () => {
 
       setMikrotiks(data || []);
     } catch (error: any) {
-      console.error('Error loading mikrotiks:', error);
+      logger.error('Error loading mikrotiks:', error);
       toast.error('Failed to load routers: ' + error.message);
     } finally {
       setLoading(false);
@@ -155,7 +156,7 @@ const AdminMikrotikList = () => {
         throw new Error(data.error || 'Failed to regenerate script');
       }
     } catch (error: any) {
-      console.error('Regenerate script error:', error);
+      logger.error('Regenerate script error:', error);
       toast.error(error.message || 'Failed to regenerate script');
     }
   };
@@ -179,7 +180,7 @@ const AdminMikrotikList = () => {
         throw new Error('Failed to generate download URL');
       }
     } catch (error: any) {
-      console.error('Download script error:', error);
+      logger.error('Download script error:', error);
       toast.error('Failed to download script: ' + error.message);
     }
   };
@@ -214,7 +215,7 @@ const AdminMikrotikList = () => {
         throw new Error(result.error || 'Failed to delete router');
       }
     } catch (error: any) {
-      console.error('Error deleting router:', error);
+      logger.error('Error deleting router:', error);
       toast.error(error.message || 'Failed to delete router');
     }
   };

@@ -24,6 +24,7 @@ import {
 import { AdminSidebar } from "@/components/admin/AdminSidebar";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { useAuth } from "@/contexts/AuthContext";
+import { logger } from "@/lib/logger";
 
 interface Mikrotik {
   id: string;
@@ -78,7 +79,7 @@ const AdminMikrotikManager = () => {
         .single();
 
       if (error) {
-        console.error('Error loading MikroTik:', error);
+        logger.error('Error loading MikroTik:', error);
         toast.error('Failed to load MikroTik details');
         return;
       }
@@ -92,7 +93,7 @@ const AdminMikrotikManager = () => {
         setApiPort(data.api_port || 8728);
       }
     } catch (error) {
-      console.error('Error loading MikroTik:', error);
+      logger.error('Error loading MikroTik:', error);
       toast.error('Failed to load MikroTik details');
     } finally {
       setLoading(false);
@@ -134,7 +135,7 @@ const AdminMikrotikManager = () => {
         .eq('id', mikrotikId);
 
       if (error) {
-        console.error('Error updating MikroTik:', error);
+        logger.error('Error updating MikroTik:', error);
         toast.error('Failed to update MikroTik: ' + error.message);
         return;
       }
@@ -144,7 +145,7 @@ const AdminMikrotikManager = () => {
       // Reload to get updated data
       await loadMikrotik(mikrotikId);
     } catch (error) {
-      console.error('Error saving MikroTik:', error);
+      logger.error('Error saving MikroTik:', error);
       toast.error('Failed to save changes');
     } finally {
       setSaving(false);
@@ -194,7 +195,7 @@ const AdminMikrotikManager = () => {
         throw new Error(result.error || 'Failed to delete MikroTik');
       }
     } catch (error: any) {
-      console.error('Error deleting MikroTik:', error);
+      logger.error('Error deleting MikroTik:', error);
       toast.error(error.message || 'Failed to delete MikroTik');
     } finally {
       setSaving(false);

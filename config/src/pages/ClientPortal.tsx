@@ -49,6 +49,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { formatKESSimple } from "@/lib/utils";
+import { logger } from "@/lib/logger";
 
 // Types
 interface ClientData {
@@ -186,7 +187,7 @@ const ClientPortal = () => {
       await loadNotifications();
       await loadLoginHistory();
     } catch (error) {
-      console.error('Error loading data:', error);
+      logger.error('Error loading data:', error);
       setError('Failed to load client information');
     } finally {
       setLoading(false);
@@ -210,12 +211,12 @@ const ClientPortal = () => {
         error = result.error;
         
         if (error) {
-          console.error('Error fetching client data by username:', error);
+          logger.error('Error fetching client data by username:', error);
         }
-        
+
         if (data && data.length > 0) {
         } else {
-          console.warn('No client data found for username:', storedUsername);
+          logger.warn('No client data found for username:', storedUsername);
         }
       } else if (token && token !== 'demo') {
         // Load by portal token (legacy method) - skip 'demo' token
@@ -225,13 +226,13 @@ const ClientPortal = () => {
         error = result.error;
       } else {
         // No authentication found
-        console.warn('No username or valid token found');
+        logger.warn('No username or valid token found');
         setError('No authentication found. Please login at /client-login');
         return;
       }
 
       if (error || !data || data.length === 0) {
-        console.error('Failed to load client data:', error, data);
+        logger.error('Failed to load client data:', error, data);
         // Show specific error for username-based access
         if (storedUsername && error) {
           setError(`Failed to load data for user "${storedUsername}". Please check your credentials.`);
@@ -244,7 +245,7 @@ const ClientPortal = () => {
 
       setClientData(data[0] as ClientData);
     } catch (error) {
-      console.error('Error loading client data:', error);
+      logger.error('Error loading client data:', error);
       setError('Failed to load client information');
     }
   };
@@ -264,7 +265,7 @@ const ClientPortal = () => {
         .rpc('get_client_usage_history', { p_portal_token: token, p_days: 30 });
 
       if (error) {
-        console.error('Error loading usage data:', error);
+        logger.error('Error loading usage data:', error);
         return;
       }
 
@@ -277,7 +278,7 @@ const ClientPortal = () => {
 
       setUsageData(formattedData);
     } catch (error) {
-      console.error('Error loading usage data:', error);
+      logger.error('Error loading usage data:', error);
     }
   };
 
@@ -296,13 +297,13 @@ const ClientPortal = () => {
         .rpc('get_client_invoices', { p_portal_token: token });
 
       if (error) {
-        console.error('Error loading invoices:', error);
+        logger.error('Error loading invoices:', error);
         return;
       }
 
       setInvoices(data || []);
     } catch (error) {
-      console.error('Error loading invoices:', error);
+      logger.error('Error loading invoices:', error);
     }
   };
 
@@ -319,13 +320,13 @@ const ClientPortal = () => {
         .rpc('get_client_tickets', { p_portal_token: token });
 
       if (error) {
-        console.error('Error loading tickets:', error);
+        logger.error('Error loading tickets:', error);
         return;
       }
 
       setTickets(data || []);
     } catch (error) {
-      console.error('Error loading tickets:', error);
+      logger.error('Error loading tickets:', error);
     }
   };
 
@@ -339,13 +340,13 @@ const ClientPortal = () => {
       //   .rpc('get_active_notifications');
       //
       // if (error) {
-      //   console.error('Error loading notifications:', error);
+      //   logger.error('Error loading notifications:', error);
       //   return;
       // }
       //
       // setNotifications(data || []);
     } catch (error) {
-      console.error('Error loading notifications:', error);
+      logger.error('Error loading notifications:', error);
     }
   };
 
@@ -362,13 +363,13 @@ const ClientPortal = () => {
         .rpc('get_client_login_history', { p_portal_token: token, p_limit: 10 });
 
       if (error) {
-        console.error('Error loading login history:', error);
+        logger.error('Error loading login history:', error);
         return;
       }
 
       setLoginHistory(data || []);
     } catch (error) {
-      console.error('Error loading login history:', error);
+      logger.error('Error loading login history:', error);
     }
   };
 
@@ -468,7 +469,7 @@ const ClientPortal = () => {
       setTicketForm({ subject: "", description: "", priority: "normal" });
       loadTickets();
     } catch (error) {
-      console.error('Error creating ticket:', error);
+      logger.error('Error creating ticket:', error);
       toast.error("Failed to create ticket");
     }
   };
@@ -495,7 +496,7 @@ const ClientPortal = () => {
       setShowChangePasswordDialog(false);
       setPasswordForm({ current_password: "", new_password: "", confirm_password: "" });
     } catch (error) {
-      console.error('Error changing password:', error);
+      logger.error('Error changing password:', error);
       toast.error("Failed to change password");
     }
   };
@@ -537,7 +538,7 @@ const ClientPortal = () => {
 
       if (isDemoMode) {
         // In demo mode, prompt user to enter admin ID for testing
-        console.warn('Demo mode detected. For testing, you need a valid admin ID.');
+        logger.warn('Demo mode detected. For testing, you need a valid admin ID.');
         
         // For demo/testing, you can set a test admin ID here
         // Get this from your Supabase admins table
@@ -571,7 +572,7 @@ const ClientPortal = () => {
           .single();
 
         if (userError || !userData) {
-          console.error('Error fetching admin ID:', userError);
+          logger.error('Error fetching admin ID:', userError);
           toast.error("Failed to process payment. Please contact support.");
           setIsProcessingPayment(false);
           return;
@@ -591,7 +592,7 @@ const ClientPortal = () => {
 
 
       if (error) {
-        console.error('Payment error:', error);
+        logger.error('Payment error:', error);
         toast.error(error.message || "Payment failed. Please try again.");
         setIsProcessingPayment(false);
         return;
@@ -609,7 +610,7 @@ const ClientPortal = () => {
       }
 
     } catch (error) {
-      console.error('Payment processing error:', error);
+      logger.error('Payment processing error:', error);
       toast.error("Payment failed. Please try again.");
     } finally {
       setIsProcessingPayment(false);

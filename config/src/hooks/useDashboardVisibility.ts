@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { logger } from "@/lib/logger";
 
 export interface DashboardVisibilitySettings {
   revenue: boolean;
@@ -52,7 +53,7 @@ export const useDashboardVisibility = (userId: string = 'guest') => {
     try {
       localStorage.setItem(storageKey, JSON.stringify(settings));
     } catch (error) {
-      console.warn('Failed to save dashboard visibility settings:', error);
+      logger.warn('Failed to save dashboard visibility settings:', error);
     }
   }, [settings, storageKey]);
 

@@ -16,6 +16,7 @@ import { getAdminIdFromUser } from "@/hooks/useAdminId";
 import { validateUsername, validatePassword, validatePhoneNumber, sanitizeInput } from "@/lib/validators";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { WiFiUser, Package as PackageOption } from "@/types/models";
+import { logger } from "@/lib/logger";
 
 const WiFiUserManager = () => {
   const location = useLocation();
@@ -58,7 +59,7 @@ const WiFiUserManager = () => {
 
 
       if (!userId) {
-        console.error('No admin ID available for loading wifi users');
+        logger.error('No admin ID available for loading wifi users');
         return;
       }
 
@@ -77,7 +78,7 @@ const WiFiUserManager = () => {
         .order('created_at', { ascending: false });
 
       if (error) {
-        console.error('Error loading wifi users:', error);
+        logger.error('Error loading wifi users:', error);
         return;
       }
 
@@ -100,7 +101,7 @@ const WiFiUserManager = () => {
       
       setUsers(usersData);
     } catch (error) {
-      console.error('Error loading wifi users:', error);
+      logger.error('Error loading wifi users:', error);
     }
   };
 
@@ -109,7 +110,7 @@ const WiFiUserManager = () => {
       const userId = getAdminIdFromUser(user);
 
       if (!userId) {
-        console.error('No admin ID available for loading packages');
+        logger.error('No admin ID available for loading packages');
         return;
       }
 
@@ -122,14 +123,14 @@ const WiFiUserManager = () => {
         .order('name');
 
       if (error) {
-        console.error('Error loading packages:', error);
+        logger.error('Error loading packages:', error);
         toast.error("Failed to load packages");
         return;
       }
 
       setPackages(data || []);
     } catch (error) {
-      console.error('Error loading packages - Exception:', error);
+      logger.error('Error loading packages - Exception:', error);
       toast.error("Failed to load packages");
     }
   };
@@ -214,7 +215,7 @@ const WiFiUserManager = () => {
 
 
       if (!userId) {
-        console.error('WiFiUserManager handleSave - No admin ID available');
+        logger.error('WiFiUserManager handleSave - No admin ID available');
         toast.error("Admin not authenticated");
         return;
       }
@@ -243,7 +244,7 @@ const WiFiUserManager = () => {
       }
 
       if (error) {
-        console.error('Error saving wifi user:', error);
+        logger.error('Error saving wifi user:', error);
         if (error.code === '23505') {
           toast.error("Username already exists");
         } else {
@@ -262,7 +263,7 @@ const WiFiUserManager = () => {
         toast.info("Consider sending welcome SMS with portal link");
       }
     } catch (error) {
-      console.error('Error saving wifi user:', error);
+      logger.error('Error saving wifi user:', error);
       toast.error("Failed to save user");
     } finally {
       setLoading(false);
@@ -279,7 +280,7 @@ const WiFiUserManager = () => {
         .eq('id', userId);
 
       if (error) {
-        console.error('Error deleting wifi user:', error);
+        logger.error('Error deleting wifi user:', error);
         toast.error("Failed to delete user");
         return;
       }
@@ -287,7 +288,7 @@ const WiFiUserManager = () => {
       toast.success("User deleted!");
       loadUsers();
     } catch (error) {
-      console.error('Error deleting wifi user:', error);
+      logger.error('Error deleting wifi user:', error);
       toast.error("Failed to delete user");
     }
   };
@@ -311,7 +312,7 @@ const WiFiUserManager = () => {
         .eq('id', selectedUser.id);
 
       if (error) {
-        console.error('Error assigning package:', error);
+        logger.error('Error assigning package:', error);
         toast.error("Failed to assign package");
         return;
       }
@@ -322,7 +323,7 @@ const WiFiUserManager = () => {
       setSelectedPackageId('');
       loadUsers();
     } catch (error) {
-      console.error('Error assigning package:', error);
+      logger.error('Error assigning package:', error);
       toast.error("Failed to assign package");
     }
   };
@@ -379,7 +380,7 @@ const WiFiUserManager = () => {
           .eq('id', selectedUser.id);
 
         if (deactError) {
-          console.error('Error deactivating user:', deactError);
+          logger.error('Error deactivating user:', deactError);
           toast.error("Failed to deactivate user");
           return;
         }
@@ -412,7 +413,7 @@ const WiFiUserManager = () => {
           .eq('id', selectedUser.id);
 
         if (actError) {
-          console.error('Error activating user:', actError);
+          logger.error('Error activating user:', actError);
           toast.error("Failed to activate user: " + actError.message);
           return;
         }
@@ -424,7 +425,7 @@ const WiFiUserManager = () => {
       setSelectedUser(null);
       loadUsers();
     } catch (error) {
-      console.error('Error in activation:', error);
+      logger.error('Error in activation:', error);
       toast.error("Failed to process activation");
     } finally {
       setLoading(false);
@@ -474,7 +475,7 @@ Pay via Till/Paybill: [Payment Details]`;
       setSmsMessage('');
       setSelectedUser(null);
     } catch (error) {
-      console.error('Error sending SMS:', error);
+      logger.error('Error sending SMS:', error);
       toast.error("Failed to send SMS");
     }
   };
@@ -491,7 +492,7 @@ Pay via Till/Paybill: [Payment Details]`;
       // Here you would send SMS to all users
       toast.success(`Bulk SMS sent to ${usersWithPhone.length} users`);
     } catch (error) {
-      console.error('Error sending bulk SMS:', error);
+      logger.error('Error sending bulk SMS:', error);
       toast.error("Failed to send bulk SMS");
     }
   };

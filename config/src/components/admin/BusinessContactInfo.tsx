@@ -10,6 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { getAdminIdFromUser } from "@/hooks/useAdminId";
+import { logger } from "@/lib/logger";
 
 interface AdminContactData {
   business_name: string;
@@ -59,7 +60,7 @@ const BusinessContactInfo = () => {
         });
       }
     } catch (error) {
-      console.error('Error loading contact info:', error);
+      logger.error('Error loading contact info:', error);
       toast.error('Failed to load contact information');
     } finally {
       setIsLoading(false);
@@ -96,7 +97,7 @@ const BusinessContactInfo = () => {
       toast.success('Contact information updated successfully!');
       toast.info('These details will now appear in your clients\' portal');
     } catch (error) {
-      console.error('Error saving contact info:', error);
+      logger.error('Error saving contact info:', error);
       toast.error('Failed to save contact information');
     } finally {
       setIsSaving(false);

@@ -11,6 +11,7 @@ import { Loader2, ArrowLeft, Eye, EyeOff, Mail, Lock } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
+import { logger } from "@/lib/logger";
 
 const AuthPage = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -100,7 +101,7 @@ const AuthPage = () => {
         setError('Invalid credentials. Please check your email and password.');
       }
     } catch (error) {
-      console.error('Login error:', error);
+      logger.error('Login error:', error);
       setError('An unexpected error occurred during login');
     } finally {
       setIsLoading(false);

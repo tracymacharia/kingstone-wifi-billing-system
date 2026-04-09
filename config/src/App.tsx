@@ -3,6 +3,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./contexts/AuthContext";
 import { Toaster } from "./components/ui/sonner";
+import { validateEnvironment } from "./lib/validate-env";
 import Index from "./pages/Index";
 import AuthPage from "./pages/AuthPage";
 import Login from "./pages/Login";
@@ -18,6 +19,9 @@ import AdminMikrotikManager from "./pages/AdminMikrotikManager";
 import AdminMikrotikList from "./pages/admin/MikrotikList";
 import AdminSelfInstall from "./pages/admin/SelfInstall";
 import AdminAddMikrotik from "./pages/admin/AddMikrotik";
+
+// Validate environment variables at startup
+validateEnvironment();
 
 const queryClient = new QueryClient();
 

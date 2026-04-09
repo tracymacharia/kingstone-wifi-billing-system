@@ -2,6 +2,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import type { User as SupabaseUser, Session } from '@supabase/supabase-js';
+import { logger } from "@/lib/logger";
 
 interface User {
   id: string;
@@ -44,7 +45,7 @@ const cleanupAuthState = () => {
       }
     });
   } catch (e) {
-    console.warn('Auth cleanup error:', e);
+    logger.warn('Auth cleanup error:', e);
   }
 };
 
@@ -56,7 +57,7 @@ const restoreUserFromStorage = (): User | null => {
       return JSON.parse(storedUser);
     }
   } catch (error) {
-    console.error('Error restoring user from storage:', error);
+    logger.error('Error restoring user from storage:', error);
   }
   return null;
 };
@@ -85,7 +86,7 @@ useEffect(() => {
         }
       }
     } catch (error) {
-      console.error('Error initializing auth:', error);
+      logger.error('Error initializing auth:', error);
       // Clear any invalid session token
       sessionStorage.removeItem("kingstone_session_token");
       sessionStorage.removeItem("kingstone_user");
@@ -122,7 +123,7 @@ useEffect(() => {
         setUser(userData);
       }
     } catch (error) {
-      console.error('Session validation error:', error);
+      logger.error('Session validation error:', error);
       sessionStorage.removeItem("kingstone_session_token");
       setUser(null);
       setSession(null);
@@ -147,7 +148,7 @@ useEffect(() => {
         .maybeSingle();
 
       if (credError || !credData) {
-        console.error('Admin not found:', credError?.message);
+        logger.error('Admin not found:', credError?.message);
         setIsLoading(false);
         return false;
       }
@@ -160,7 +161,7 @@ useEffect(() => {
         });
 
       if (sessionError || !sessionToken) {
-        console.error('Session creation error:', sessionError);
+        logger.error('Session creation error:', sessionError);
         setIsLoading(false);
         return false;
       }
@@ -180,7 +181,7 @@ useEffect(() => {
       return true;
 
     } catch (error) {
-      console.error('Login error:', error);
+      logger.error('Login error:', error);
       return false;
     } finally {
       // Only set loading to false if we're still in the loading state
@@ -201,7 +202,7 @@ useEffect(() => {
           });
 
         if (error) {
-          console.error('Password change error:', error);
+          logger.error('Password change error:', error);
           // The error message from the function will be descriptive
           throw error;
         }
@@ -216,14 +217,14 @@ useEffect(() => {
           });
 
         if (error) {
-          console.error('Password change error:', error);
+          logger.error('Password change error:', error);
           return false;
         }
 
         return data;
       }
     } catch (error: any) {
-      console.error('Password change exception:', error);
+      logger.error('Password change exception:', error);
       // Re-throw to let the caller handle the specific error message
       throw error;
     }
@@ -249,7 +250,7 @@ useEffect(() => {
       // Global sign out to clear all Supabase sessions
       try { await supabase.auth.signOut({ scope: 'global' } as any); } catch (e) { /* ignore */ }
     } catch (error) {
-      console.error('Logout error:', error);
+      logger.error('Logout error:', error);
     }
 
     setUser(null);

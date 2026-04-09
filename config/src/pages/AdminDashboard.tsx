@@ -46,6 +46,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { getAdminIdFromUser } from "@/hooks/useAdminId";
 import SystemAuditLogs from "@/components/shared/SystemAuditLogs";
 import { Package, Payment, Mikrotik } from "@/types/models";
+import { logger } from "@/lib/logger";
 
 interface ConnectedUser {
   id: string;
@@ -127,7 +128,7 @@ const AdminDashboard = () => {
     try {
       const adminId = getAdminIdFromUser(user);
       if (!adminId) {
-        console.error('No admin ID available');
+        logger.error('No admin ID available');
         toast.error('No admin ID available');
         // Still need to set loading to false even if adminId is not available
         setLoading(false);
@@ -142,7 +143,7 @@ const AdminDashboard = () => {
         .eq('admin_id', adminId);
 
       if (packagesError) {
-        console.error('Error loading packages:', packagesError);
+        logger.error('Error loading packages:', packagesError);
         toast.error('Failed to load packages');
       } else if (packagesData) {
         setPackages(packagesData.map(pkg => ({
@@ -172,7 +173,7 @@ const AdminDashboard = () => {
         .limit(20);
 
       if (paymentsError) {
-        console.error('Error loading payments:', paymentsError);
+        logger.error('Error loading payments:', paymentsError);
       } else if (paymentsData) {
         setPayments(paymentsData.map(p => ({
           id: p.id,
@@ -193,7 +194,7 @@ const AdminDashboard = () => {
         .limit(50);
 
       if (connectedError) {
-        console.error('Error loading users:', connectedError);
+        logger.error('Error loading users:', connectedError);
       } else if (connectedData) {
         setConnectedUsers(connectedData.map((u: any) => ({
           id: u.id,
@@ -214,7 +215,7 @@ const AdminDashboard = () => {
         .order('created_at', { ascending: false });
 
       if (mikrotiksError) {
-        console.error('Error loading Mikrotiks:', mikrotiksError);
+        logger.error('Error loading Mikrotiks:', mikrotiksError);
         toast.error('Failed to load Mikrotik devices');
       } else if (mikrotiksData) {
         setAssignedMikrotiks(mikrotiksData.map(mk => ({
@@ -243,7 +244,7 @@ const AdminDashboard = () => {
         .maybeSingle();
 
       if (adminError) {
-        console.error('Error loading admin data:', adminError);
+        logger.error('Error loading admin data:', adminError);
       }
 
       setAdminData({
@@ -253,7 +254,7 @@ const AdminDashboard = () => {
       });
 
     } catch (error) {
-      console.error('Error loading dashboard data:', error);
+      logger.error('Error loading dashboard data:', error);
       toast.error('Failed to load dashboard data');
     } finally {
       // Ensure loading is set to false even if there are errors
@@ -352,7 +353,7 @@ const AdminDashboard = () => {
         .single();
 
       if (error) {
-        console.error('Error creating Mikrotik:', error);
+        logger.error('Error creating Mikrotik:', error);
         toast.error('Failed to create Mikrotik: ' + error.message);
         return;
       }
@@ -364,7 +365,7 @@ const AdminDashboard = () => {
       // Refresh the data to ensure consistency
       await loadDashboardData();
     } catch (error: any) {
-      console.error('Error creating Mikrotik:', error);
+      logger.error('Error creating Mikrotik:', error);
       toast.error('Failed to create Mikrotik: ' + (error.message || 'Unknown error'));
     }
   };
@@ -390,7 +391,7 @@ const AdminDashboard = () => {
         .eq('id', updatedMikrotik.id);
 
       if (error) {
-        console.error('Error updating Mikrotik:', error);
+        logger.error('Error updating Mikrotik:', error);
         toast.error('Failed to update Mikrotik: ' + error.message);
         return;
       }
@@ -401,7 +402,7 @@ const AdminDashboard = () => {
       // Refresh the data to ensure consistency
       await loadDashboardData();
     } catch (error: any) {
-      console.error('Error updating Mikrotik:', error);
+      logger.error('Error updating Mikrotik:', error);
       toast.error('Failed to update Mikrotik: ' + (error.message || 'Unknown error'));
     }
   };
@@ -420,7 +421,7 @@ const AdminDashboard = () => {
       });
 
       if (error) {
-        console.error('Error deleting Mikrotik via RPC:', error);
+        logger.error('Error deleting Mikrotik via RPC:', error);
         toast.error('Failed to delete Mikrotik: ' + error.message);
         return;
       }
@@ -436,7 +437,7 @@ const AdminDashboard = () => {
       // Refresh the data to ensure consistency
       await loadDashboardData();
     } catch (error: any) {
-      console.error('Error deleting Mikrotik:', error);
+      logger.error('Error deleting Mikrotik:', error);
       toast.error('Failed to delete Mikrotik: ' + (error.message || 'Unknown error'));
     }
   };
@@ -750,7 +751,7 @@ const AdminDashboard = () => {
           );
       }
     } catch (error) {
-      console.error('Error rendering dashboard content:', error);
+      logger.error('Error rendering dashboard content:', error);
       return (
         <div className="p-6">
           <Card>

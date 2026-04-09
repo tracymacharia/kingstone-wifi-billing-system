@@ -16,6 +16,7 @@ import { formatKES } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 import { getAdminIdFromUser } from "@/hooks/useAdminId";
 import { validatePackage, sanitizeInput } from "@/lib/validators";
+import { logger } from "@/lib/logger";
 
 interface PackageData {
   id?: string;
@@ -64,7 +65,7 @@ const EnhancedPackageManager = () => {
       
 
       if (!userId) {
-        console.error('No admin ID available for loading packages');
+        logger.error('No admin ID available for loading packages');
         return;
       }
 
@@ -75,7 +76,7 @@ const EnhancedPackageManager = () => {
         .order('created_at', { ascending: false });
 
       if (error) {
-        console.error('Error loading packages:', error);
+        logger.error('Error loading packages:', error);
         return;
       }
 
@@ -85,7 +86,7 @@ const EnhancedPackageManager = () => {
         duration_type: pkg.duration_type as 'minutes' | 'hours' | 'days' | 'months'
       })));
     } catch (error) {
-      console.error('Error loading packages:', error);
+      logger.error('Error loading packages:', error);
     }
   };
 
@@ -123,7 +124,7 @@ const EnhancedPackageManager = () => {
       
       
       if (!userId) {
-        console.error('PackageManager HandleSave - No admin ID available');
+        logger.error('PackageManager HandleSave - No admin ID available');
         toast.error("Admin not authenticated");
         return;
       }
@@ -181,7 +182,7 @@ const EnhancedPackageManager = () => {
 
 
       if (error) {
-        console.error('Error saving package:', error);
+        logger.error('Error saving package:', error);
         toast.error(`Failed to save package: ${error.message}`);
         return;
       }
@@ -191,7 +192,7 @@ const EnhancedPackageManager = () => {
       resetForm();
       loadPackages();
     } catch (error) {
-      console.error('Error saving package - Exception:', error);
+      logger.error('Error saving package - Exception:', error);
       toast.error(`Failed to save package: ${error.message || 'Unknown error'}`);
     } finally {
       setLoading(false);
@@ -208,7 +209,7 @@ const EnhancedPackageManager = () => {
         .eq('id', packageId);
 
       if (error) {
-        console.error('Error deleting package:', error);
+        logger.error('Error deleting package:', error);
         toast.error("Failed to delete package");
         return;
       }
@@ -216,7 +217,7 @@ const EnhancedPackageManager = () => {
       toast.success("Package deleted!");
       loadPackages();
     } catch (error) {
-      console.error('Error deleting package:', error);
+      logger.error('Error deleting package:', error);
       toast.error("Failed to delete package");
     }
   };

@@ -1,9 +1,17 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+// CORS configuration - restrict to known origins in production
+const getCorsHeaders = (origin?: string) => {
+  const allowedOrigins = (Deno.env.get("ALLOWED_ORIGINS") || "").split(",");
+  const isAllowed = origin && allowedOrigins.includes(origin);
+  
+  return {
+    "Access-Control-Allow-Origin": isAllowed ? origin : (Deno.env.get("DEV_MODE") === "true" ? "*" : ""),
+    "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+    "Access-Control-Allow-Methods": "POST, OPTIONS",
+    "Access-Control-Max-Age": "86400", // 24 hours
+  };
 };
 
 // Helper function to encode to base64
@@ -18,7 +26,7 @@ interface StatusQueryRequest {
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
-    return new Response("ok", { headers: corsHeaders });
+    return new Response("ok", { headers: getCorsHeaders(req.headers.get("Origin")) });
   }
 
   try {
@@ -35,7 +43,7 @@ serve(async (req) => {
           success: false,
           error: "Missing transaction_id or shortcode"
         }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        { status: 400, headers: { ...getCorsHeaders(req.headers.get("Origin")), "Content-Type": "application/json" } }
       );
     }
 
@@ -51,7 +59,7 @@ serve(async (req) => {
           success: false,
           error: "M-Pesa credentials not configured"
         }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        { status: 400, headers: { ...getCorsHeaders(req.headers.get("Origin")), "Content-Type": "application/json" } }
       );
     }
 
@@ -82,7 +90,7 @@ serve(async (req) => {
           error: "Failed to get OAuth token",
           details: errText
         }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        { status: 400, headers: { ...getCorsHeaders(req.headers.get("Origin")), "Content-Type": "application/json" } }
       );
     }
 
@@ -119,7 +127,7 @@ serve(async (req) => {
           error: queryData.errorMessage || queryData.ResponseDescription || "Query failed",
           details: queryData
         }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        { status: 400, headers: { ...getCorsHeaders(req.headers.get("Origin")), "Content-Type": "application/json" } }
       );
     }
 
@@ -172,7 +180,7 @@ serve(async (req) => {
         mpesa_receipt_number,
         raw_response: queryData
       }),
-      { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      { status: 200, headers: { ...getCorsHeaders(req.headers.get("Origin")), "Content-Type": "application/json" } }
     );
   } catch (error) {
     console.error("Error in check-stk-status:", error);
@@ -181,7 +189,7 @@ serve(async (req) => {
         success: false,
         error: error instanceof Error ? error.message : "Unknown error"
       }),
-      { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      { status: 400, headers: { ...getCorsHeaders(req.headers.get("Origin")), "Content-Type": "application/json" } }
     );
   }
 });

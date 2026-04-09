@@ -12,6 +12,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { getAdminIdFromUser } from "@/hooks/useAdminId";
+import { logger } from "@/lib/logger";
 
 interface SMSLog {
   id: string;
@@ -59,7 +60,7 @@ const SMSSettings = ({ businessName }: SMSSettingsProps) => {
       });
 
       if (error) {
-        console.error('Error loading SMS settings via RPC:', error);
+        logger.error('Error loading SMS settings via RPC:', error);
         
         // Handle missing function - fallback to direct query
         if (error.code === '42883' || error.message.includes('does not exist')) {
@@ -74,7 +75,7 @@ const SMSSettings = ({ businessName }: SMSSettingsProps) => {
 
           if (directError && directError.code !== 'PGRST116') {
             if ((directError as any).code === '42P01') return;
-            console.error('Fallback query failed:', directError);
+            logger.error('Fallback query failed:', directError);
             return;
           }
 
@@ -99,7 +100,7 @@ const SMSSettings = ({ businessName }: SMSSettingsProps) => {
         setMessageTemplate(settings.message_template || messageTemplate);
       }
     } catch (error) {
-      console.error('Error loading SMS settings:', error);
+      logger.error('Error loading SMS settings:', error);
     }
   };
 
@@ -117,7 +118,7 @@ const SMSSettings = ({ businessName }: SMSSettingsProps) => {
 
       if (error) {
         if ((error as any).code === '42P01') return;
-        console.error('Error loading SMS logs:', error);
+        logger.error('Error loading SMS logs:', error);
         return;
       }
 
@@ -132,7 +133,7 @@ const SMSSettings = ({ businessName }: SMSSettingsProps) => {
 
       setSmsLogs(formattedLogs);
     } catch (error) {
-      console.error('Error loading SMS logs:', error);
+      logger.error('Error loading SMS logs:', error);
     }
   };
 
@@ -151,7 +152,7 @@ const SMSSettings = ({ businessName }: SMSSettingsProps) => {
       });
 
       if (error) {
-        console.error('Error saving SMS settings via RPC:', error);
+        logger.error('Error saving SMS settings via RPC:', error);
         
         // Handle missing function - fallback to direct query
         if (error.code === '42883' || error.message.includes('does not exist')) {
@@ -181,7 +182,7 @@ const SMSSettings = ({ businessName }: SMSSettingsProps) => {
               setSaving(false);
               return;
             }
-            console.error('Fallback upsert failed:', upsertError);
+            logger.error('Fallback upsert failed:', upsertError);
             toast.error("Failed to save SMS settings");
             setSaving(false);
             return;
@@ -201,7 +202,7 @@ const SMSSettings = ({ businessName }: SMSSettingsProps) => {
       toast.success("SMS settings updated successfully!");
       loadSMSSettings();
     } catch (error) {
-      console.error('Error saving SMS settings:', error);
+      logger.error('Error saving SMS settings:', error);
       toast.error("Failed to save SMS settings");
     } finally {
       setSaving(false);
@@ -227,7 +228,7 @@ const SMSSettings = ({ businessName }: SMSSettingsProps) => {
       });
 
       if (error) {
-        console.error('Error sending test SMS:', error);
+        logger.error('Error sending test SMS:', error);
         toast.error(`Failed to send test SMS: ${error.message}`);
         return;
       }
@@ -236,7 +237,7 @@ const SMSSettings = ({ businessName }: SMSSettingsProps) => {
       setTestPhone("");
       loadSMSLogs(); // Refresh logs to show the new test SMS
     } catch (error) {
-      console.error('Error sending test SMS:', error);
+      logger.error('Error sending test SMS:', error);
       toast.error("Failed to send test SMS");
     } finally {
       setLoading(false);

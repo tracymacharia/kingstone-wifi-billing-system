@@ -10,6 +10,7 @@ import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { getAdminIdFromUser } from '@/hooks/useAdminId';
 import { Phone, DollarSign, Smartphone } from 'lucide-react';
+import { logger } from "@/lib/logger";
 
 interface SubscriptionStatusProps {
   businessName: string;
@@ -51,13 +52,13 @@ const SubscriptionStatus = ({ businessName }: SubscriptionStatusProps) => {
         .order('created_at', { ascending: false });
 
       if (error) {
-        console.error('❌ Error fetching payment settings:', error);
+        logger.error('Error fetching payment settings:', error);
         return [];
       }
 
       return data || [];
     } catch (error) {
-      console.error('❌ Error fetching payment settings:', error);
+      logger.error('Error fetching payment settings:', error);
       return [];
     }
   };
@@ -68,7 +69,7 @@ const SubscriptionStatus = ({ businessName }: SubscriptionStatusProps) => {
     const fetchAdminData = async () => {
       try {
         if (!adminId) {
-          console.error('No admin ID available');
+          logger.error('No admin ID available');
           setLoading(false);
           return;
         }
@@ -80,13 +81,13 @@ const SubscriptionStatus = ({ businessName }: SubscriptionStatusProps) => {
           .single();
 
         if (adminError) {
-          console.error('Error fetching admin data:', adminError);
+          logger.error('Error fetching admin data:', adminError);
           setLoading(false);
           return;
         }
 
         if (!adminRecord) {
-          console.warn('No admin data found for ID:', adminId);
+          logger.warn('No admin data found for ID:', adminId);
           toast.error('Admin record not found.');
           setLoading(false);
           return;
@@ -98,7 +99,7 @@ const SubscriptionStatus = ({ businessName }: SubscriptionStatusProps) => {
         setAdminData(adminRecord);
         setPaymentSettings(settings);
       } catch (error) {
-        console.error('Error fetching admin data:', error);
+        logger.error('Error fetching admin data:', error);
         toast.error('Failed to load admin data');
       } finally {
         setLoading(false);
@@ -145,7 +146,7 @@ const SubscriptionStatus = ({ businessName }: SubscriptionStatusProps) => {
         toast.error(result.error || 'Payment verification failed');
       }
     } catch (error) {
-      console.error('Verification error:', error);
+      logger.error('Verification error:', error);
       toast.error('An error occurred during payment verification');
     } finally {
       setVerifying(false);
@@ -186,7 +187,7 @@ const SubscriptionStatus = ({ businessName }: SubscriptionStatusProps) => {
       setRequestPhone('');
       setRequestAmount('');
     } catch (error) {
-      console.error('Request error:', error);
+      logger.error('Request error:', error);
       toast.error('An error occurred while submitting your request');
     } finally {
       setRequesting(false);
@@ -240,7 +241,7 @@ const SubscriptionStatus = ({ businessName }: SubscriptionStatusProps) => {
         toast.error(result.error || 'Failed to initiate STK Push');
       }
     } catch (error) {
-      console.error('STK Push error:', error);
+      logger.error('STK Push error:', error);
       toast.error('An error occurred while initiating STK Push. Please try again.');
     } finally {
       setInitiatingStk(false);

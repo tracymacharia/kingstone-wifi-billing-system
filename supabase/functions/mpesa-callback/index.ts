@@ -1,9 +1,17 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+// CORS configuration - restrict to known origins in production
+const getCorsHeaders = (origin?: string) => {
+  const allowedOrigins = (Deno.env.get("ALLOWED_ORIGINS") || "").split(",");
+  const isAllowed = origin && allowedOrigins.includes(origin);
+  
+  return {
+    "Access-Control-Allow-Origin": isAllowed ? origin : (Deno.env.get("DEV_MODE") === "true" ? "*" : ""),
+    "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+    "Access-Control-Allow-Methods": "POST, OPTIONS",
+    "Access-Control-Max-Age": "86400", // 24 hours
+  };
 };
 
 interface MpesaCallback {
@@ -26,7 +34,7 @@ interface MpesaCallback {
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
-    return new Response("ok", { headers: corsHeaders });
+    return new Response("ok", { headers: getCorsHeaders(req.headers.get("Origin")) });
   }
 
   try {
@@ -70,7 +78,7 @@ serve(async (req) => {
       console.log(`Payment ${payment.id} already processed with status: ${payment.status}`);
       return new Response(
         JSON.stringify({ success: true, message: "Callback already processed" }),
-        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        { status: 200, headers: { ...getCorsHeaders(req.headers.get("Origin")), "Content-Type": "application/json" } }
       );
     }
 
@@ -129,7 +137,7 @@ serve(async (req) => {
       }),
       {
         status: 200,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        headers: { ...getCorsHeaders(req.headers.get("Origin")), "Content-Type": "application/json" },
       }
     );
   } catch (error) {
@@ -142,7 +150,7 @@ serve(async (req) => {
       }),
       {
         status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        headers: { ...getCorsHeaders(req.headers.get("Origin")), "Content-Type": "application/json" },
       }
     );
   }

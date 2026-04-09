@@ -6,6 +6,7 @@ import { X, CreditCard, AlertTriangle, CheckCircle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
+import { logger } from "@/lib/logger";
 
 interface TrialPopupProps {
   daysRemaining: number;
@@ -39,7 +40,7 @@ export const TrialSubscriptionPopup = ({ daysRemaining, expiresAt, onDismiss }: 
       }, 1500);
       
     } catch (error) {
-      console.error('Payment error:', error);
+      logger.error('Payment error:', error);
       toast.error('Failed to initiate payment. Please try again.');
       setIsProcessing(false);
     }

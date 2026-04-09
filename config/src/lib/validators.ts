@@ -57,16 +57,35 @@ export const validateIpAddress = (ip: string): ValidationResult => {
   return { isValid: errors.length === 0, errors };
 };
 
-// Password validation
-export const validatePassword = (password: string, minLength = 4, maxLength = 6): ValidationResult => {
+// Password validation - production-grade with strong requirements
+export const validatePassword = (password: string, minLength = 8, maxLength = 128): ValidationResult => {
   const errors: string[] = [];
 
   if (!password) {
     errors.push("Password is required");
-  } else if (password.length < minLength) {
-    errors.push(`Password must be at least ${minLength} characters long`);
-  } else if (password.length > maxLength) {
-    errors.push(`Password must not exceed ${maxLength} characters`);
+  } else {
+    if (password.length < minLength) {
+      errors.push(`Password must be at least ${minLength} characters long`);
+    }
+    if (password.length > maxLength) {
+      errors.push(`Password must not exceed ${maxLength} characters`);
+    }
+    // Require at least one uppercase letter
+    if (!/[A-Z]/.test(password)) {
+      errors.push("Password must contain at least one uppercase letter");
+    }
+    // Require at least one lowercase letter
+    if (!/[a-z]/.test(password)) {
+      errors.push("Password must contain at least one lowercase letter");
+    }
+    // Require at least one number
+    if (!/[0-9]/.test(password)) {
+      errors.push("Password must contain at least one number");
+    }
+    // Require at least one special character
+    if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) {
+      errors.push("Password must contain at least one special character (!@#$%^&* etc.)");
+    }
   }
 
   return { isValid: errors.length === 0, errors };

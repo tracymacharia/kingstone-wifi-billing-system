@@ -1,0 +1,3023 @@
+<!DOCTYPE html>
+<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">
+<head>
+    <meta charset="utf-8">
+    <title>Kingstone WiFi Billing System - SDS</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 2.54cm;
+        }
+        body {
+            font-family: Arial, sans-serif;
+            font-size: 11pt;
+            line-height: 1.5;
+            color: #000000;
+            background-color: #ffffff;
+        }
+        .cover-page {
+            page-break-after: always;
+            text-align: center;
+            padding: 100px 0;
+        }
+        .cover-title {
+            font-size: 24pt;
+            font-weight: bold;
+            text-decoration: underline;
+            margin-bottom: 20px;
+        }
+        .cover-subtitle {
+            font-size: 16pt;
+            font-weight: bold;
+            margin-bottom: 40px;
+        }
+        .cover-description {
+            font-size: 12pt;
+            font-style: italic;
+            margin-bottom: 60px;
+        }
+        .cover-details {
+            font-size: 12pt;
+            margin-bottom: 10px;
+        }
+        .cover-details-label {
+            font-weight: bold;
+        }
+        .cover-date {
+            font-size: 14pt;
+            font-weight: bold;
+            margin-top: 40px;
+        }
+        .title-page {
+            page-break-after: always;
+            text-align: center;
+            padding: 50px 0;
+        }
+        .title-main {
+            font-size: 20pt;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+        .title-project {
+            font-size: 16pt;
+            font-weight: bold;
+            margin-bottom: 40px;
+        }
+        .info-table {
+            width: 80%;
+            margin: 0 auto 40px auto;
+            border-collapse: collapse;
+        }
+        .info-table td {
+            border: 1px solid #000000;
+            padding: 8px;
+            font-size: 11pt;
+        }
+        .info-table td:first-child {
+            font-weight: bold;
+            width: 40%;
+        }
+        .copyright {
+            font-size: 10pt;
+            font-style: italic;
+        }
+        .toc-page {
+            page-break-after: always;
+        }
+        .toc-title {
+            font-size: 16pt;
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .toc-item {
+            font-size: 11pt;
+            margin-bottom: 5px;
+        }
+        h1 {
+            font-size: 18pt;
+            font-weight: bold;
+            margin-top: 24pt;
+            margin-bottom: 12pt;
+            page-break-after: avoid;
+        }
+        h2 {
+            font-size: 14pt;
+            font-weight: bold;
+            margin-top: 18pt;
+            margin-bottom: 10pt;
+            page-break-after: avoid;
+        }
+        h3 {
+            font-size: 12pt;
+            font-weight: bold;
+            margin-top: 14pt;
+            margin-bottom: 8pt;
+            page-break-after: avoid;
+        }
+        h4 {
+            font-size: 11pt;
+            font-weight: bold;
+            margin-top: 12pt;
+            margin-bottom: 6pt;
+            page-break-after: avoid;
+        }
+        p {
+            margin-bottom: 10pt;
+            text-align: justify;
+        }
+        ul, ol {
+            margin-bottom: 10pt;
+            margin-top: 5pt;
+        }
+        li {
+            margin-bottom: 5pt;
+        }
+        .code-block {
+            font-family: 'Courier New', monospace;
+            font-size: 9pt;
+            background-color: #f5f5f5;
+            border: 1px solid #dddddd;
+            padding: 10px;
+            margin: 10px 0;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        .diagram {
+            font-family: 'Courier New', monospace;
+            font-size: 8pt;
+            background-color: #ffffff;
+            border: 1px solid #000000;
+            padding: 10px;
+            margin: 15px 0;
+            white-space: pre;
+            overflow-x: auto;
+            line-height: 1.2;
+        }
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 15px 0;
+        }
+        th, td {
+            border: 1px solid #000000;
+            padding: 8px;
+            text-align: left;
+            font-size: 10pt;
+        }
+        th {
+            background-color: #f0f0f0;
+            font-weight: bold;
+        }
+        .inline-code {
+            font-family: 'Courier New', monospace;
+            font-size: 10pt;
+            background-color: #f5f5f5;
+            padding: 2px 4px;
+        }
+        .approval-table {
+            width: 100%;
+            margin-top: 20px;
+        }
+        .approval-table td {
+            border: 1px solid #000000;
+            padding: 15px 10px;
+            height: 40px;
+        }
+        .approval-table td:first-child {
+            font-weight: bold;
+            width: 25%;
+        }
+        hr {
+            border: none;
+            border-top: 1px solid #000000;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <!-- Cover Page -->
+    <div class="cover-page">
+        <div class="cover-title">KINGSTONE WIFI BILLING SYSTEM</div>
+        <div class="cover-subtitle">Software Design Specification (SDS)</div>
+        <div class="cover-description">
+            A Comprehensive WiFi Billing and Management System<br>
+            for ISP Hotspots in Kenya
+        </div>
+        
+        <div style="height: 60px;"></div>
+        
+        <div class="cover-details">
+            <span class="cover-details-label">Student Name:</span> TRACY [YOUR FULL NAME]
+        </div>
+        <div class="cover-details">
+            <span class="cover-details-label">Registration Number:</span> [YOUR REG NUMBER]
+        </div>
+        <div class="cover-details">
+            <span class="cover-details-label">Supervisor:</span> [SUPERVISOR NAME]
+        </div>
+        <div class="cover-details">
+            <span class="cover-details-label">Department:</span> Computer Science/Information Technology
+        </div>
+        <div class="cover-details">
+            <span class="cover-details-label">Institution:</span> [YOUR UNIVERSITY NAME]
+        </div>
+        
+        <div style="height: 40px;"></div>
+        
+        <div class="cover-details">
+            Submitted in Partial Fulfillment of the Requirements<br>
+            for the Degree of [DEGREE NAME]
+        </div>
+        
+        <div class="cover-date">March 2026</div>
+    </div>
+
+    <!-- Title Page -->
+    <div class="title-page">
+        <div class="title-main">SOFTWARE DESIGN SPECIFICATION</div>
+        <div class="title-project">Kingstone WiFi Billing System</div>
+        
+        <div style="height: 30px;"></div>
+        
+        <table class="info-table">
+            <tr>
+                <td>Document Version:</td>
+                <td>1.0.0</td>
+            </tr>
+            <tr>
+                <td>Date:</td>
+                <td>March 31, 2026</td>
+            </tr>
+            <tr>
+                <td>Prepared By:</td>
+                <td>Development Team</td>
+            </tr>
+            <tr>
+                <td>Status:</td>
+                <td>Production Ready</td>
+            </tr>
+            <tr>
+                <td>Document Type:</td>
+                <td>Software Design Specification</td>
+            </tr>
+        </table>
+        
+        <div class="copyright">
+            © 2026 Kingstone WiFi Billing System<br>
+            All Rights Reserved
+        </div>
+    </div>
+
+    <!-- Table of Contents -->
+    <div class="toc-page">
+        <div class="toc-title">TABLE OF CONTENTS</div>
+        <div class="toc-item">1. INTRODUCTION ........................................................................ 1</div>
+        <div class="toc-item">&nbsp;&nbsp;&nbsp;&nbsp;1.1 Purpose ............................................................................................ 1</div>
+        <div class="toc-item">&nbsp;&nbsp;&nbsp;&nbsp;1.2 Scope .............................................................................................. 1</div>
+        <div class="toc-item">&nbsp;&nbsp;&nbsp;&nbsp;1.3 Definitions and Acronyms ................................................................... 2</div>
+        <div class="toc-item">&nbsp;&nbsp;&nbsp;&nbsp;1.4 References ......................................................................................... 3</div>
+        <div class="toc-item">&nbsp;&nbsp;&nbsp;&nbsp;1.5 Document Overview ........................................................................... 3</div>
+        <div class="toc-item">2. SYSTEM OVERVIEW .................................................................. 4</div>
+        <div class="toc-item">&nbsp;&nbsp;&nbsp;&nbsp;2.1 System Context ................................................................................... 4</div>
+        <div class="toc-item">&nbsp;&nbsp;&nbsp;&nbsp;2.2 System Functions ................................................................................. 5</div>
+        <div class="toc-item">&nbsp;&nbsp;&nbsp;&nbsp;2.3 User Classes and Characteristics ........................................................... 6</div>
+        <div class="toc-item">&nbsp;&nbsp;&nbsp;&nbsp;2.4 Operating Environment ........................................................................ 7</div>
+        <div class="toc-item">&nbsp;&nbsp;&nbsp;&nbsp;2.5 Design Constraints ............................................................................... 8</div>
+        <div class="toc-item">&nbsp;&nbsp;&nbsp;&nbsp;2.6 Assumptions and Dependencies ............................................................. 8</div>
+        <div class="toc-item">3. ARCHITECTURAL DESIGN ........................................................... 9</div>
+        <div class="toc-item">&nbsp;&nbsp;&nbsp;&nbsp;3.1 High-Level Architecture ........................................................................ 9</div>
+        <div class="toc-item">&nbsp;&nbsp;&nbsp;&nbsp;3.2 Technology Stack ............................................................................... 11</div>
+        <div class="toc-item">&nbsp;&nbsp;&nbsp;&nbsp;3.3 Architecture Patterns .......................................................................... 12</div>
+        <div class="toc-item">&nbsp;&nbsp;&nbsp;&nbsp;3.4 System Flow Diagrams ........................................................................ 13</div>
+        <div class="toc-item">4. DATABASE DESIGN ................................................................... 16</div>
+        <div class="toc-item">&nbsp;&nbsp;&nbsp;&nbsp;4.1 Database Schema Overview .................................................................. 16</div>
+        <div class="toc-item">&nbsp;&nbsp;&nbsp;&nbsp;4.2 Table Specifications ............................................................................. 18</div>
+        <div class="toc-item">&nbsp;&nbsp;&nbsp;&nbsp;4.3 Database Functions (RPC) .................................................................... 25</div>
+        <div class="toc-item">&nbsp;&nbsp;&nbsp;&nbsp;4.4 Data Integrity Constraints .................................................................... 27</div>
+        <div class="toc-item">5. INTERFACE DESIGN ................................................................... 28</div>
+        <div class="toc-item">&nbsp;&nbsp;&nbsp;&nbsp;5.1 User Interfaces ................................................................................... 28</div>
+        <div class="toc-item">&nbsp;&nbsp;&nbsp;&nbsp;5.2 API Interfaces ...................................................................................... 30</div>
+        <div class="toc-item">&nbsp;&nbsp;&nbsp;&nbsp;5.3 Hardware Interfaces ........................................................................... 32</div>
+        <div class="toc-item">&nbsp;&nbsp;&nbsp;&nbsp;5.4 Communication Interfaces ................................................................... 33</div>
+        <div class="toc-item">6. COMPONENT DESIGN ................................................................ 34</div>
+        <div class="toc-item">&nbsp;&nbsp;&nbsp;&nbsp;6.1 Frontend Components ......................................................................... 34</div>
+        <div class="toc-item">&nbsp;&nbsp;&nbsp;&nbsp;6.2 Backend Components (Edge Functions) .................................................. 36</div>
+        <div class="toc-item">&nbsp;&nbsp;&nbsp;&nbsp;6.3 Utility Components .............................................................................. 38</div>
+        <div class="toc-item">7. SECURITY DESIGN ..................................................................... 39</div>
+        <div class="toc-item">&nbsp;&nbsp;&nbsp;&nbsp;7.1 Authentication Security ........................................................................ 39</div>
+        <div class="toc-item">&nbsp;&nbsp;&nbsp;&nbsp;7.2 Authorization Security .......................................................................... 41</div>
+        <div class="toc-item">&nbsp;&nbsp;&nbsp;&nbsp;7.3 Data Protection ................................................................................... 42</div>
+        <div class="toc-item">&nbsp;&nbsp;&nbsp;&nbsp;7.4 API Security ........................................................................................ 43</div>
+        <div class="toc-item">&nbsp;&nbsp;&nbsp;&nbsp;7.5 Audit Logging ..................................................................................... 45</div>
+        <div class="toc-item">8. INTEGRATION DESIGN ............................................................... 46</div>
+        <div class="toc-item">&nbsp;&nbsp;&nbsp;&nbsp;8.1 M-Pesa Integration .............................................................................. 46</div>
+        <div class="toc-item">&nbsp;&nbsp;&nbsp;&nbsp;8.2 Mikrotik Integration ............................................................................. 48</div>
+        <div class="toc-item">&nbsp;&nbsp;&nbsp;&nbsp;8.3 SMS Gateway Integration ..................................................................... 49</div>
+        <div class="toc-item">&nbsp;&nbsp;&nbsp;&nbsp;8.4 Integration Error Handling ................................................................... 50</div>
+        <div class="toc-item">9. DEPLOYMENT DESIGN ............................................................... 51</div>
+        <div class="toc-item">&nbsp;&nbsp;&nbsp;&nbsp;9.1 Deployment Architecture ...................................................................... 51</div>
+        <div class="toc-item">&nbsp;&nbsp;&nbsp;&nbsp;9.2 Environment Configuration ................................................................... 52</div>
+        <div class="toc-item">&nbsp;&nbsp;&nbsp;&nbsp;9.3 Deployment Steps ............................................................................... 53</div>
+        <div class="toc-item">&nbsp;&nbsp;&nbsp;&nbsp;9.4 CI/CD Pipeline .................................................................................... 54</div>
+        <div class="toc-item">&nbsp;&nbsp;&nbsp;&nbsp;9.5 Monitoring and Logging ...................................................................... 55</div>
+        <div class="toc-item">10. TESTING STRATEGY .................................................................. 56</div>
+        <div class="toc-item">&nbsp;&nbsp;&nbsp;&nbsp;10.1 Testing Levels .................................................................................... 56</div>
+        <div class="toc-item">&nbsp;&nbsp;&nbsp;&nbsp;10.2 Test Data Management ....................................................................... 57</div>
+        <div class="toc-item">&nbsp;&nbsp;&nbsp;&nbsp;10.3 Performance Testing .......................................................................... 58</div>
+        <div class="toc-item">&nbsp;&nbsp;&nbsp;&nbsp;10.4 Security Testing .................................................................................. 58</div>
+        <div class="toc-item">&nbsp;&nbsp;&nbsp;&nbsp;10.5 Test Coverage Goals .......................................................................... 59</div>
+        <div class="toc-item">11. APPENDICES ........................................................................... 60</div>
+        <div class="toc-item">&nbsp;&nbsp;&nbsp;&nbsp;Appendix A: Database Migration Scripts .................................................... 60</div>
+        <div class="toc-item">&nbsp;&nbsp;&nbsp;&nbsp;Appendix B: Edge Function Code .............................................................. 60</div>
+        <div class="toc-item">&nbsp;&nbsp;&nbsp;&nbsp;Appendix C: API Reference ....................................................................... 60</div>
+        <div class="toc-item">&nbsp;&nbsp;&nbsp;&nbsp;Appendix D: Troubleshooting Guide .......................................................... 61</div>
+        <div class="toc-item">&nbsp;&nbsp;&nbsp;&nbsp;Appendix E: Glossary .............................................................................. 61</div>
+        <div class="toc-item">&nbsp;&nbsp;&nbsp;&nbsp;Appendix F: Revision History ................................................................... 62</div>
+        <div class="toc-item">DOCUMENT APPROVAL .............................................................. 63</div>
+    </div>
+
+    <!-- Main Content -->
+    
+
+
+<p><strong>Document Version:</strong> 1.0.0</p>
+<p><strong>Date:</strong> March 31, 2026</p>
+<p><strong>Prepared By:</strong> Development Team</p>
+<p><strong>Status:</strong> Production Ready</p>
+
+<hr>
+
+<h2>TABLE OF CONTENTS</h2>
+<li>[Introduction](#1-introduction)</li>
+<li>[System Overview](#2-system-overview)</li>
+<li>[Architectural Design](#3-architectural-design)</li>
+<li>[Database Design](#4-database-design)</li>
+<li>[Interface Design](#5-interface-design)</li>
+<li>[Component Design](#6-component-design)</li>
+<li>[Security Design](#7-security-design)</li>
+<li>[Integration Design](#8-integration-design)</li>
+<li>[Deployment Design](#9-deployment-design)</li>
+<li>[Testing Strategy](#10-testing-strategy)</li>
+<li>[Appendices](#11-appendices)</li>
+
+<hr>
+
+<h2>1. INTRODUCTION</h2>
+
+<h3>1.1 Purpose</h3>
+
+<p>This Software Design Specification (SDS) document provides a comprehensive technical description of the Kingstone WiFi Billing System. It serves as the authoritative reference for developers, testers, project managers, and stakeholders involved in the development, deployment, and maintenance of the system.</p>
+
+<h3>1.2 Scope</h3>
+
+<p>The Kingstone WiFi Billing System is a comprehensive hotspot management and billing platform designed for Internet Service Providers (ISPs) and WiFi hotspot operators in Kenya. The system enables:</p>
+<ul><li>Automated user authentication and access control</li>
+<li>M-Pesa payment integration for seamless transactions</li>
+<li>Real-time session management and monitoring</li>
+<li>Multi-tenant administration with role-based access</li>
+<li>Mikrotik router integration for network control</li>
+<li>SMS notifications and OTP verification</li>
+</ul>
+<h3>1.3 Definitions and Acronyms</h3>
+
+<table>
+<p><tr></p>
+<p><th>Term</th></p>
+<p><th>Definition</th></p>
+</tr>
+<p><tr></p>
+<p><td><strong>SDS</strong></td></p>
+<p><td>Software Design Specification</td></p>
+</tr>
+<p><tr></p>
+<p><td><strong>ISP</strong></td></p>
+<p><td>Internet Service Provider</td></p>
+</tr>
+<p><tr></p>
+<p><td><strong>M-Pesa</strong></td></p>
+<p><td>Mobile money transfer service by Safaricom</td></p>
+</tr>
+<p><tr></p>
+<p><td><strong>STK Push</strong></td></p>
+<p><td>Secure Transaction Key Push (M-Pesa payment method)</td></p>
+</tr>
+<p><tr></p>
+<p><td><strong>Mikrotik</strong></td></p>
+<p><td>Network router hardware and RouterOS software</td></p>
+</tr>
+<p><tr></p>
+<p><td><strong>RLS</strong></td></p>
+<p><td>Row Level Security (PostgreSQL feature)</td></p>
+</tr>
+<p><tr></p>
+<p><td><strong>RPC</strong></td></p>
+<p><td>Remote Procedure Call</td></p>
+</tr>
+<p><tr></p>
+<p><td><strong>CORS</strong></td></p>
+<p><td>Cross-Origin Resource Sharing</td></p>
+</tr>
+<p><tr></p>
+<p><td><strong>JWT</strong></td></p>
+<p><td>JSON Web Token</td></p>
+</tr>
+<p><tr></p>
+<p><td><strong>PPPoE</strong></td></p>
+<p><td>Point-to-Point Protocol over Ethernet</td></p>
+</tr>
+<p><tr></p>
+<p><td><strong>SMS</strong></td></p>
+<p><td>Short Message Service</td></p>
+</tr>
+<p><tr></p>
+<p><td><strong>OTP</strong></td></p>
+<p><td>One-Time Password</td></p>
+</tr>
+<p><tr></p>
+<p><td><strong>KES</strong></td></p>
+<p><td>Kenyan Shilling</td></p>
+</tr>
+<p><tr></p>
+<p><td><strong>API</strong></td></p>
+<p><td>Application Programming Interface</td></p>
+</tr>
+</table>
+
+
+<h3>1.4 References</h3>
+<li>Supabase Documentation - https://supabase.com/docs</li>
+<li>M-Pesa Daraja API - https://developer.safaricom.co.ke</li>
+<li>Mikrotik RouterOS API - https://help.mikrotik.com/docs/display/ROS/REST+API</li>
+<li>React Documentation - https://react.dev</li>
+<li>PostgreSQL Documentation - https://postgresql.org/docs</li>
+
+<h3>1.5 Document Overview</h3>
+
+<p>This SDS describes the complete system architecture, database schema, component interactions, security measures, and deployment strategies. It is intended to be used throughout the software development lifecycle.</p>
+
+<hr>
+
+<h2>2. SYSTEM OVERVIEW</h2>
+
+<h3>2.1 System Context</h3>
+
+<p>The Kingstone WiFi Billing System operates within the following ecosystem:</p>
+
+<div class="diagram">┌─────────────────────────────────────────────────────────────────┐
+<p>│                         EXTERNAL ENTITIES                       │</p>
+<p>├─────────────────────────────────────────────────────────────────┤</p>
+<p>│                                                                 │</p>
+<p>│  ┌──────────────┐  ┌──────────────┐                           │</p>
+<p>│  │   End Users  │  │  Administrators │                         │</p>
+<p>│  │  (WiFi Users)│  │   (Operators) │                           │</p>
+<p>│  └──────┬───────┘  └──────┬───────┘                           │</p>
+<p>│         │                  │                  │                 │</p>
+<p>│  ┌──────▼───────┐  ┌──────▼───────┐  ┌──────▼───────┐         │</p>
+<p>│  │  M-Pesa API  │  │   Mikrotik   │  │  SMS Gateway │         │</p>
+<p>│  │  (Safaricom) │  │   Routers    │  │  (Africa&#039;s   │         │</p>
+<p>│  │              │  │              │  │   Talking)   │         │</p>
+<p>│  └──────────────┘  └──────────────┘  └──────────────┘         │</p>
+<p>│                                                                 │</p>
+<p>└─────────────────────────────────────────────────────────────────┘</p>
+<p>│</p>
+<p>┌────────▼─────────┐</p>
+<p>│   KINGSTONE      │</p>
+<p>│   WiFi Billing   │</p>
+<p>│   System         │</p>
+<p>└──────────────────┘</p>
+</div>
+
+<h3>2.2 System Functions</h3>
+
+<h4>2.2.1 User Management</h4>
+<ul><li>Self-registration via payment portal</li>
+<li>Automatic account creation upon payment</li>
+<li>Voucher-based authentication</li>
+<li>Session management and timeout</li>
+<li>Account suspension and reactivation</li>
+</ul>
+<h4>2.2.2 Payment Processing</h4>
+<ul><li>M-Pesa STK Push integration</li>
+<li>Payment verification (triple-layer)</li>
+<li>Transaction logging and audit</li>
+<li>Refund processing</li>
+<li>Revenue tracking and reporting</li>
+</ul>
+<h4>2.2.3 Package Management</h4>
+<ul><li>Configurable internet packages</li>
+<li>Time-based and data-based plans</li>
+<li>Dynamic pricing</li>
+<li>Promotional offers</li>
+<li>Package activation and renewal</li>
+</ul>
+<h4>2.2.4 Router Management</h4>
+<ul><li>Mikrotik hotspot configuration</li>
+<li>User synchronization</li>
+<li>Bandwidth control</li>
+<li>Session monitoring</li>
+<li>Remote router management</li>
+</ul>
+<h4>2.2.5 Administrative Functions</h4>
+<ul><li>Admin dashboard and management</li>
+<li>Package and user management</li>
+<li>Payment tracking and reporting</li>
+<li>Router configuration and monitoring</li>
+<li>System analytics and audit logs</li>
+</ul>
+<h3>2.3 User Classes and Characteristics</h3>
+
+<table>
+<p><tr></p>
+<p><th>User Class</th></p>
+<p><th>Characteristics</th></p>
+<p><th>Permissions</th></p>
+</tr>
+<p><tr></p>
+<p><td><strong>WiFi User</strong></td></p>
+<p><td>General public, mobile devices</td></p>
+<p><td>Purchase packages, view usage, manage sessions</td></p>
+</tr>
+<p><tr></p>
+<p><td><strong>Admin</strong></td></p>
+<p><td>Business operators, hotspot owners</td></p>
+<p><td>Full system access: manage packages, users, routers, payments, view analytics</td></p>
+</tr>
+<p><tr></p>
+<p><td><strong>System</strong></td></p>
+<p><td>Automated processes</td></p>
+<p><td>Background jobs, payment processing, notifications</td></p>
+</tr>
+</table>
+
+
+<h3>2.4 Operating Environment</h3>
+
+<h4>2.4.1 Frontend</h4>
+<ul><li><strong>Framework:</strong> React 18+ with TypeScript</li>
+<li><strong>Styling:</strong> Tailwind CSS with shadcn/ui components</li>
+<li><strong>State Management:</strong> React Context API</li>
+<li><strong>Build Tool:</strong> Vite</li>
+<li><strong>Browser Support:</strong> Chrome, Firefox, Safari, Edge (latest 2 versions)</li>
+</ul>
+<h4>2.4.2 Backend</h4>
+<ul><li><strong>Platform:</strong> Supabase (Serverless)</li>
+<li><strong>Database:</strong> PostgreSQL 15+</li>
+<li><strong>Edge Functions:</strong> Deno runtime</li>
+<li><strong>Authentication:</strong> Custom session-based with JWT</li>
+<li><strong>API:</strong> RESTful with RPC functions</li>
+</ul>
+<h4>2.4.3 Infrastructure</h4>
+<ul><li><strong>Hosting:</strong> Supabase Cloud / VPS</li>
+<li><strong>CDN:</strong> Supabase Edge Network</li>
+<li><strong>Routers:</strong> Mikrotik RouterOS 7+</li>
+<li><strong>Payment Gateway:</strong> M-Pesa Daraja API</li>
+<li><strong>SMS Gateway:</strong> Africa's Talking</li>
+</ul>
+<h3>2.5 Design Constraints</h3>
+<li><strong>Network Dependency:</strong> Requires stable internet connection for M-Pesa and API calls</li>
+<li><strong>Router Compatibility:</strong> Limited to Mikrotik RouterOS devices</li>
+<li><strong>Payment Region:</strong> M-Pesa integration limited to Kenya and supported regions</li>
+<li><strong>Session Storage:</strong> Browser sessionStorage for tokens (no persistent cookies)</li>
+<li><strong>CORS Policy:</strong> Restricted to authorized domains only</li>
+
+<h3>2.6 Assumptions and Dependencies</h3>
+<li>Users have M-Pesa registered phone numbers</li>
+<li>Mikrotik routers are properly configured and accessible</li>
+<li>M-Pesa Daraja API credentials are valid and active</li>
+<li>SMS gateway credentials are configured</li>
+<li>Database migrations are applied in sequence</li>
+<li>Environment variables are properly configured</li>
+
+<hr>
+
+<h2>3. ARCHITECTURAL DESIGN</h2>
+
+<h3>3.1 High-Level Architecture</h3>
+
+<div class="diagram">┌─────────────────────────────────────────────────────────────────┐
+<p>│                      PRESENTATION LAYER                         │</p>
+<p>├─────────────────────────────────────────────────────────────────┤</p>
+<p>│                                                                 │</p>
+<p>│  ┌─────────────────────────────────────────────────────────┐   │</p>
+<p>│  │              React Frontend (config/src)                │   │</p>
+<p>│  │  ┌──────────┐  ┌──────────┐  ┌──────────┐              │   │</p>
+<p>│  │  │   Admin  │  │  Payment │  │   User   │              │   │</p>
+<p>│  │  │Dashboard │  │  Portal  │  │  Portal  │              │   │</p>
+<p>│  │  └──────────┘  └──────────┘  └──────────┘              │   │</p>
+<p>│  └─────────────────────────────────────────────────────────┘   │</p>
+<p>│                                                                 │</p>
+<p>└─────────────────────────────────────────────────────────────────┘</p>
+<p>│</p>
+<p>┌────────▼─────────┐</p>
+<p>│   API Gateway    │</p>
+<p>│   (Supabase)     │</p>
+<p>└────────┬─────────┘</p>
+<p>│</p>
+<p>┌─────────────────────────────────────────────────────────────────┐</p>
+<p>│                     APPLICATION LAYER                           │</p>
+<p>├─────────────────────────────────────────────────────────────────┤</p>
+<p>│                                                                 │</p>
+<p>│  ┌─────────────────────────────────────────────────────────┐   │</p>
+<p>│  │              Supabase Edge Functions                    │   │</p>
+<p>│  │  ┌──────────┐  ┌──────────┐  ┌──────────┐              │   │</p>
+<p>│  │  │  M-Pesa  │  │   SMS    │  │   Auth   │              │   │</p>
+<p>│  │  │  STK     │  │  Gateway │  │  Validate│              │   │</p>
+<p>│  │  └──────────┘  └──────────┘  └──────────┘              │   │</p>
+<p>│  └─────────────────────────────────────────────────────────┘   │</p>
+<p>│                                                                 │</p>
+<p>└─────────────────────────────────────────────────────────────────┘</p>
+<p>│</p>
+<p>┌────────▼─────────┐</p>
+<p>│   Data Access    │</p>
+<p>│   (RLS Policies) │</p>
+<p>└────────┬─────────┘</p>
+<p>│</p>
+<p>┌─────────────────────────────────────────────────────────────────┐</p>
+<p>│                       DATA LAYER                                │</p>
+<p>├─────────────────────────────────────────────────────────────────┤</p>
+<p>│                                                                 │</p>
+<p>│  ┌─────────────────────────────────────────────────────────┐   │</p>
+<p>│  │           PostgreSQL Database (Supabase)                │   │</p>
+<p>│  │  ┌──────────┐  ┌──────────┐  ┌──────────┐              │   │</p>
+<p>│  │  │  Admin   │  │ Payment  │ │  User    │              │   │</p>
+<p>│  │  │  Tables  │  │  Tables  │ │  Tables  │              │   │</p>
+<p>│  │  └──────────┘  └──────────┘  └──────────┘              │   │</p>
+<p>│  └─────────────────────────────────────────────────────────┘   │</p>
+<p>│                                                                 │</p>
+<p>└─────────────────────────────────────────────────────────────────┘</p>
+</div>
+
+<h3>3.2 Technology Stack</h3>
+
+<table>
+<p><tr></p>
+<p><th>Layer</th></p>
+<p><th>Technology</th></p>
+<p><th>Version</th></p>
+<p><th>Purpose</th></p>
+</tr>
+<p><tr></p>
+<p><td><strong>Frontend Framework</strong></td></p>
+<p><td>React</td></p>
+<p><td>18+</td></p>
+<p><td>UI rendering and state management</td></p>
+</tr>
+<p><tr></p>
+<p><td><strong>Language</strong></td></p>
+<p><td>TypeScript</td></p>
+<p><td>5+</td></p>
+<p><td>Type-safe JavaScript</td></p>
+</tr>
+<p><tr></p>
+<p><td><strong>Styling</strong></td></p>
+<p><td>Tailwind CSS</td></p>
+<p><td>3+</td></p>
+<p><td>Utility-first CSS framework</td></p>
+</tr>
+<p><tr></p>
+<p><td><strong>UI Components</strong></td></p>
+<p><td>shadcn/ui</td></p>
+<p><td>Latest</td></p>
+<p><td>Pre-built accessible components</td></p>
+</tr>
+<p><tr></p>
+<p><td><strong>Backend Platform</strong></td></p>
+<p><td>Supabase</td></p>
+<p><td>Latest</td></p>
+<p><td>BaaS with PostgreSQL</td></p>
+</tr>
+<p><tr></p>
+<p><td><strong>Database</strong></td></p>
+<p><td>PostgreSQL</td></p>
+<p><td>15+</td></p>
+<p><td>Relational database with RLS</td></p>
+</tr>
+<p><tr></p>
+<p><td><strong>Edge Functions</strong></td></p>
+<p><td>Deno</td></p>
+<p><td>1.40+</td></p>
+<p><td>Serverless function runtime</td></p>
+</tr>
+<p><tr></p>
+<p><td><strong>Router OS</strong></td></p>
+<p><td>Mikrotik RouterOS</td></p>
+<p><td>7+</td></p>
+<p><td>Network access control</td></p>
+</tr>
+<p><tr></p>
+<p><td><strong>Payment API</strong></td></p>
+<p><td>M-Pesa Daraja</td></p>
+<p><td>Latest</td></p>
+<p><td>Payment processing</td></p>
+</tr>
+<p><tr></p>
+<p><td><strong>SMS API</strong></td></p>
+<p><td>Africa's Talking</td></p>
+<p><td>Latest</td></p>
+<p><td>SMS notifications</td></p>
+</tr>
+</table>
+
+
+<h3>3.3 Architecture Patterns</h3>
+
+<h4>3.3.1 Model-View-Controller (MVC)</h4>
+<ul><li><strong>Model:</strong> Database tables with RLS policies</li>
+<li><strong>View:</strong> React components with TypeScript</li>
+<li><strong>Controller:</strong> Edge functions and RPC procedures</li>
+</ul>
+<h4>3.3.2 Repository Pattern</h4>
+<ul><li>Database access abstracted through Supabase client</li>
+<li>Consistent data access patterns across components</li>
+<li>Centralized error handling and logging</li>
+</ul>
+<h4>3.3.3 Event-Driven Architecture</h4>
+<ul><li>M-Pesa callbacks trigger payment updates</li>
+<li>SMS events logged and tracked</li>
+<li>Session events monitored for security</li>
+</ul>
+<h3>3.4 System Flow Diagrams</h3>
+
+<h4>3.4.1 User Registration and Payment Flow</h4>
+
+<div class="diagram">┌─────────┐    ┌─────────┐    ┌─────────┐    ┌─────────┐    ┌─────────┐
+<p>│  User   │    │Frontend │    │  Edge   │    │  M-Pesa │    │Database │</p>
+<p>│  Device │    │ (React) │    │Function │    │   API   │    │         │</p>
+<p>└────┬────┘    └────┬────┘    └────┬────┘    └────┬────┘    └────┬────┘</p>
+<p>│              │              │              │              │</p>
+<p>│ 1. Connect   │              │              │              │</p>
+<p>│    to WiFi   │              │              │              │</p>
+<p>│─────────────▶│              │              │              │</p>
+<p>│              │              │              │              │</p>
+<p>│ 2. Redirect  │              │              │              │</p>
+<p>│    to Portal │              │              │              │</p>
+<p>│◀─────────────│              │              │              │</p>
+<p>│              │              │              │              │</p>
+<p>│ 3. Select    │              │              │              │</p>
+<p>│    Package   │              │              │              │</p>
+<p>│─────────────▶│              │              │              │</p>
+<p>│              │              │              │              │</p>
+<p>│ 4. Enter     │              │              │              │</p>
+<p>│    Phone     │              │              │              │</p>
+<p>│─────────────▶│              │              │              │</p>
+<p>│              │              │              │              │</p>
+<p>│              │ 5. STK Push  │              │              │</p>
+<p>│              │    Request   │              │              │</p>
+<p>│              │─────────────▶│              │              │</p>
+<p>│              │              │              │              │</p>
+<p>│              │              │ 6. STK Push  │              │</p>
+<p>│              │              │    to Phone  │              │</p>
+<p>│              │              │─────────────▶│              │</p>
+<p>│              │              │              │              │</p>
+<p>│ 7. Enter PIN │              │              │              │</p>
+<p>│◀───────────────────────────────────────────│              │</p>
+<p>│              │              │              │              │</p>
+<p>│              │              │ 8. Payment   │              │</p>
+<p>│              │              │    Processed │              │</p>
+<p>│              │              │◀─────────────│              │</p>
+<p>│              │              │              │              │</p>
+<p>│              │              │ 9. Callback  │              │</p>
+<p>│              │              │◀─────────────│              │</p>
+<p>│              │              │              │              │</p>
+<p>│              │              │ 10. Update   │              │</p>
+<p>│              │              │     Payment  │              │</p>
+<p>│              │              │────────────────────────────▶│</p>
+<p>│              │              │              │              │</p>
+<p>│              │ 11. Poll    │              │              │</p>
+<p>│              │     Status   │              │              │</p>
+<p>│              │──────────────────────────────────────────▶│</p>
+<p>│              │              │              │              │</p>
+<p>│ 12. Success  │              │              │              │</p>
+<p>│     Page     │              │              │              │</p>
+<p>│◀─────────────│              │              │              │</p>
+<p>│              │              │              │              │</p>
+</div>
+
+<h4>3.4.2 Authentication Flow</h4>
+
+<div class="diagram">┌─────────┐    ┌─────────┐    ┌─────────┐    ┌─────────┐
+<p>│  Admin  │    │Frontend │    │Supabase │    │Database │</p>
+<p>│  User   │    │ (React) │    │  Auth   │    │         │</p>
+<p>└────┬────┘    └────┬────┘    └────┬────┘    └────┬────┘</p>
+<p>│              │              │              │</p>
+<p>│ 1. Enter     │              │              │</p>
+<p>│    Credentials              │              │</p>
+<p>│─────────────▶│              │              │</p>
+<p>│              │              │              │</p>
+<p>│              │ 2. Query     │              │</p>
+<p>│              │    system_  │              │</p>
+<p>│              │    credentials             │</p>
+<p>│              │───────────────────────────▶│</p>
+<p>│              │              │              │</p>
+<p>│              │              │ 3. Verify    │</p>
+<p>│              │              │    Password  │</p>
+<p>│              │              │─────────────▶│</p>
+<p>│              │              │              │</p>
+<p>│              │              │ 4. Hash Match│</p>
+<p>│              │              │◀─────────────│</p>
+<p>│              │              │              │</p>
+<p>│              │ 5. Create    │              │</p>
+<p>│              │    Session   │              │</p>
+<p>│              │◀─────────────│              │</p>
+<p>│              │              │              │</p>
+<p>│ 6. Store     │              │              │</p>
+<p>│    Token     │              │              │</p>
+<p>│◀─────────────│              │              │</p>
+<p>│              │              │              │</p>
+<p>│ 7. Redirect  │              │              │</p>
+<p>│    to Dashboard            │              │</p>
+<p>│◀─────────────│              │              │</p>
+<p>│              │              │              │</p>
+</div>
+
+<hr>
+
+<h2>4. DATABASE DESIGN</h2>
+
+<h3>4.1 Database Schema Overview</h3>
+
+<div class="diagram">┌─────────────────────────────────────────────────────────────────┐
+<p>│                    DATABASE ER DIAGRAM                          │</p>
+<p>├─────────────────────────────────────────────────────────────────┤</p>
+<p>│                                                                 │</p>
+<p>│  ┌──────────────┐                                              │</p>
+<p>│  │system_       │1                                            │</p>
+<p>│  │credentials   │├────────────────────────┐                    │</p>
+<p>│  ├──────────────┤                         │                    │</p>
+<p>│  │id (PK)       │                         │                    │</p>
+<p>│  │username      │                         │                    │</p>
+<p>│  │password_hash │                         │                    │</p>
+<p>│  │role          │                         │                    │</p>
+<p>│  │admin_id (FK) │─────┐                   │                    │</p>
+<p>│  └──────────────┘     │                   │                    │</p>
+<p>│                       │                   │                    │</p>
+<p>│  ┌──────────────┐     │1                  │N                   │</p>
+<p>│  │admins        │1────┤                   │              ┌──────────────┐</p>
+<p>│  ├──────────────┤     │              ┌──────────────┐    │user_sessions │</p>
+<p>│  │id (PK)       │     │              │payments      │    ├──────────────┤</p>
+<p>│  │username      │     │              ├──────────────┤    │id (PK)       │</p>
+<p>│  │email         │     │              │id (PK)       │    │session_token │</p>
+<p>│  │phone         │     │              │admin_id (FK) │    │admin_id (FK) │</p>
+<p>│  │business_name │     │              │user_phone    │    │role          │</p>
+<p>│  └──────┬───────┘     │              │amount        │    │expires_at    │</p>
+<p>│         │             │              │status        │    └──────────────┘</p>
+<p>│         │1            │              │mpesa_receipt │</p>
+<p>│         │             │              └──────────────┘</p>
+<p>│         │N</p>
+<p>│         │             │              ┌──────────────┐</p>
+<p>│  ┌──────▼────────┐    │              │mikrotiks     │</p>
+<p>│  │packages       │    │1             ├──────────────┤</p>
+<p>│  ├───────────────┤    └─────────────▶│id (PK)       │</p>
+<p>│  │id (PK)        │                   │admin_id (FK) │</p>
+<p>│  │admin_id (FK)  │                   │name          │</p>
+<p>│  │name           │                   │ip_address    │</p>
+<p>│  │type           │                   │api_port      │</p>
+<p>│  │duration       │                   └──────┬───────┘</p>
+<p>│  │price          │                          │</p>
+<p>│  └───────────────┘                          │N</p>
+<p>│                                              │</p>
+<p>│  ┌──────────────┐                           │</p>
+<p>│  │wifi_users    │1──────────────────────────┘</p>
+<p>│  ├──────────────┤</p>
+<p>│  │id (PK)       │</p>
+<p>│  │admin_id (FK) │</p>
+<p>│  │username      │</p>
+<p>│  │password      │</p>
+<p>│  │package_id(FK)│</p>
+<p>│  │expires_at    │</p>
+<p>│  └──────────────┘</p>
+<p>│</p>
+<p>└─────────────────────────────────────────────────────────────────┘</p>
+</div>
+
+<h3>4.2 Table Specifications</h3>
+
+<h4>4.2.1 system_credentials</h4>
+
+<p>Stores admin authentication credentials with password hashing.</p>
+
+<table>
+<p><tr></p>
+<p><th>Column</th></p>
+<p><th>Type</th></p>
+<p><th>Constraints</th></p>
+<p><th>Description</th></p>
+</tr>
+<p><tr></p>
+<p><td>id</td></p>
+<p><td>UUID</td></p>
+<p><td>PRIMARY KEY, DEFAULT gen_random_uuid()</td></p>
+<p><td>Unique identifier</td></p>
+</tr>
+<p><tr></p>
+<p><td>username</td></p>
+<p><td>TEXT</td></p>
+<p><td>NOT NULL, UNIQUE</td></p>
+<p><td>Admin username</td></p>
+</tr>
+<p><tr></p>
+<p><td>password_hash</td></p>
+<p><td>TEXT</td></p>
+<p><td>NOT NULL</td></p>
+<p><td>Bcrypt hashed password</td></p>
+</tr>
+<p><tr></p>
+<p><td>role</td></p>
+<p><td>TEXT</td></p>
+<p><td>NOT NULL, DEFAULT 'admin'</td></p>
+<p><td>User role (admin)</td></p>
+</tr>
+<p><tr></p>
+<p><td>admin_id</td></p>
+<p><td>UUID</td></p>
+<p><td>FOREIGN KEY REFERENCES admins(id)</td></p>
+<p><td>Linked admin record</td></p>
+</tr>
+<p><tr></p>
+<p><td>is_active</td></p>
+<p><td>BOOLEAN</td></p>
+<p><td>DEFAULT true</td></p>
+<p><td>Account status</td></p>
+</tr>
+<p><tr></p>
+<p><td>created_at</td></p>
+<p><td>TIMESTAMPTZ</td></p>
+<p><td>DEFAULT NOW()</td></p>
+<p><td>Creation timestamp</td></p>
+</tr>
+<p><tr></p>
+<p><td>updated_at</td></p>
+<p><td>TIMESTAMPTZ</td></p>
+<p><td>DEFAULT NOW()</td></p>
+<p><td>Last update timestamp</td></p>
+</tr>
+</table>
+
+
+<p><strong>Triggers:</strong></p>
+<ul><li><span class="inline-code">trigger_hash_password_insert</span>: Hashes password on INSERT</li>
+<li><span class="inline-code">trigger_hash_password_update</span>: Hashes password on UPDATE</li>
+</ul>
+<p><strong>RLS Policies:</strong></p>
+<ul><li>SELECT: Authenticated users only</li>
+<li>INSERT: System only</li>
+<li>UPDATE: Admin or self</li>
+</ul>
+<h4>4.2.2 admins</h4>
+
+<p>Stores admin profile and business information.</p>
+
+<table>
+<p><tr></p>
+<p><th>Column</th></p>
+<p><th>Type</th></p>
+<p><th>Constraints</th></p>
+<p><th>Description</th></p>
+</tr>
+<p><tr></p>
+<p><td>id</td></p>
+<p><td>UUID</td></p>
+<p><td>PRIMARY KEY, DEFAULT gen_random_uuid()</td></p>
+<p><td>Unique identifier</td></p>
+</tr>
+<p><tr></p>
+<p><td>username</td></p>
+<p><td>TEXT</td></p>
+<p><td>NOT NULL, UNIQUE</td></p>
+<p><td>Admin username</td></p>
+</tr>
+<p><tr></p>
+<p><td>email</td></p>
+<p><td>TEXT</td></p>
+<p><td>UNIQUE</td></p>
+<p><td>Email address</td></p>
+</tr>
+<p><tr></p>
+<p><td>phone</td></p>
+<p><td>TEXT</td></p>
+<p><td>UNIQUE</td></p>
+<p><td>Phone number</td></p>
+</tr>
+<p><tr></p>
+<p><td>business_name</td></p>
+<p><td>TEXT</td></p>
+<p><td>Business name</td></p>
+</tr>
+<p><tr></p>
+<p><td>is_trial</td></p>
+<p><td>BOOLEAN</td></p>
+<p><td>DEFAULT false</td></p>
+<p><td>Trial account flag</td></p>
+</tr>
+<p><tr></p>
+<p><td>created_at</td></p>
+<p><td>TIMESTAMPTZ</td></p>
+<p><td>DEFAULT NOW()</td></p>
+<p><td>Creation timestamp</td></p>
+</tr>
+</table>
+
+
+<p><strong>RLS Policies:</strong></p>
+<ul><li>SELECT: Admin or self</li>
+<li>INSERT: Public (registration)</li>
+<li>UPDATE: Admin or self</li>
+</ul>
+<h4>4.2.3 user_sessions</h4>
+
+<p>Manages active user sessions for authentication.</p>
+
+<table>
+<p><tr></p>
+<p><th>Column</th></p>
+<p><th>Type</th></p>
+<p><th>Constraints</th></p>
+<p><th>Description</th></p>
+</tr>
+<p><tr></p>
+<p><td>id</td></p>
+<p><td>UUID</td></p>
+<p><td>PRIMARY KEY, DEFAULT gen_random_uuid()</td></p>
+<p><td>Unique identifier</td></p>
+</tr>
+<p><tr></p>
+<p><td>session_token</td></p>
+<p><td>TEXT</td></p>
+<p><td>NOT NULL, UNIQUE</td></p>
+<p><td>JWT session token</td></p>
+</tr>
+<p><tr></p>
+<p><td>admin_id</td></p>
+<p><td>UUID</td></p>
+<p><td>FOREIGN KEY REFERENCES admins(id)</td></p>
+<p><td>Session admin</td></p>
+</tr>
+<p><tr></p>
+<p><td>role</td></p>
+<p><td>TEXT</td></p>
+<p><td>NOT NULL</td></p>
+<p><td>User role</td></p>
+</tr>
+<p><tr></p>
+<p><td>expires_at</td></p>
+<p><td>TIMESTAMPTZ</td></p>
+<p><td>NOT NULL</td></p>
+<p><td>Session expiration</td></p>
+</tr>
+<p><tr></p>
+<p><td>is_active</td></p>
+<p><td>BOOLEAN</td></p>
+<p><td>DEFAULT true</td></p>
+<p><td>Session status</td></p>
+</tr>
+<p><tr></p>
+<p><td>created_at</td></p>
+<p><td>TIMESTAMPTZ</td></p>
+<p><td>DEFAULT NOW()</td></p>
+<p><td>Creation timestamp</td></p>
+</tr>
+</table>
+
+
+<p><strong>RLS Policies:</strong></p>
+<ul><li>SELECT: Authenticated users</li>
+<li>INSERT: System only</li>
+<li>UPDATE: System only</li>
+<li>DELETE: System or expired</li>
+</ul>
+<h4>4.2.4 mikrotiks</h4>
+
+<p>Stores Mikrotik router configuration.</p>
+
+<table>
+<p><tr></p>
+<p><th>Column</th></p>
+<p><th>Type</th></p>
+<p><th>Constraints</th></p>
+<p><th>Description</th></p>
+</tr>
+<p><tr></p>
+<p><td>id</td></p>
+<p><td>UUID</td></p>
+<p><td>PRIMARY KEY, DEFAULT gen_random_uuid()</td></p>
+<p><td>Unique identifier</td></p>
+</tr>
+<p><tr></p>
+<p><td>admin_id</td></p>
+<p><td>UUID</td></p>
+<p><td>FOREIGN KEY REFERENCES admins(id)</td></p>
+<p><td>Router admin</td></p>
+</tr>
+<p><tr></p>
+<p><td>name</td></p>
+<p><td>TEXT</td></p>
+<p><td>NOT NULL</td></p>
+<p><td>Router name</td></p>
+</tr>
+<p><tr></p>
+<p><td>router_id</td></p>
+<p><td>TEXT</td></p>
+<p><td>Router identifier</td></p>
+</tr>
+<p><tr></p>
+<p><td>ip_address</td></p>
+<p><td>TEXT</td></p>
+<p><td>NOT NULL</td></p>
+<p><td>Router IP address</td></p>
+</tr>
+<p><tr></p>
+<p><td>api_port</td></p>
+<p><td>INTEGER</td></p>
+<p><td>DEFAULT 8728</td></p>
+<p><td>API port</td></p>
+</tr>
+<p><tr></p>
+<p><td>api_user</td></p>
+<p><td>TEXT</td></p>
+<p><td>API username</td></p>
+</tr>
+<p><tr></p>
+<p><td>api_password</td></p>
+<p><td>TEXT</td></p>
+<p><td>API password</td></p>
+</tr>
+<p><tr></p>
+<p><td>mpesa_type</td></p>
+<p><td>TEXT</td></p>
+<p><td>DEFAULT 'paybill'</td></p>
+<p><td>Payment type</td></p>
+</tr>
+<p><tr></p>
+<p><td>mpesa_number</td></p>
+<p><td>TEXT</td></p>
+<p><td>M-Pesa number</td></p>
+</tr>
+<p><tr></p>
+<p><td>is_active</td></p>
+<p><td>BOOLEAN</td></p>
+<p><td>DEFAULT true</td></p>
+<p><td>Router status</td></p>
+</tr>
+<p><tr></p>
+<p><td>created_at</td></p>
+<p><td>TIMESTAMPTZ</td></p>
+<p><td>DEFAULT NOW()</td></p>
+<p><td>Creation timestamp</td></p>
+</tr>
+</table>
+
+
+<p><strong>RLS Policies:</strong></p>
+<ul><li>SELECT: Admin</li>
+<li>INSERT: Admin</li>
+<li>UPDATE: Admin</li>
+<li>DELETE: Admin</li>
+</ul>
+<h4>4.2.5 packages</h4>
+
+<p>Defines internet package offerings.</p>
+
+<table>
+<p><tr></p>
+<p><th>Column</th></p>
+<p><th>Type</th></p>
+<p><th>Constraints</th></p>
+<p><th>Description</th></p>
+</tr>
+<p><tr></p>
+<p><td>id</td></p>
+<p><td>UUID</td></p>
+<p><td>PRIMARY KEY, DEFAULT gen_random_uuid()</td></p>
+<p><td>Unique identifier</td></p>
+</tr>
+<p><tr></p>
+<p><td>admin_id</td></p>
+<p><td>UUID</td></p>
+<p><td>FOREIGN KEY REFERENCES admins(id)</td></p>
+<p><td>Package admin</td></p>
+</tr>
+<p><tr></p>
+<p><td>name</td></p>
+<p><td>TEXT</td></p>
+<p><td>NOT NULL</td></p>
+<p><td>Package name</td></p>
+</tr>
+<p><tr></p>
+<p><td>type</td></p>
+<p><td>TEXT</td></p>
+<p><td>NOT NULL</td></p>
+<p><td>Package type (time/data)</td></p>
+</tr>
+<p><tr></p>
+<p><td>duration</td></p>
+<p><td>INTEGER</td></p>
+<p><td>NOT NULL</td></p>
+<p><td>Duration in minutes</td></p>
+</tr>
+<p><tr></p>
+<p><td>price</td></p>
+<p><td>DECIMAL(10,2)</td></p>
+<p><td>NOT NULL</td></p>
+<p><td>Price in KES</td></p>
+</tr>
+<p><tr></p>
+<p><td>is_active</td></p>
+<p><td>BOOLEAN</td></p>
+<p><td>DEFAULT true</td></p>
+<p><td>Package status</td></p>
+</tr>
+<p><tr></p>
+<p><td>created_at</td></p>
+<p><td>TIMESTAMPTZ</td></p>
+<p><td>DEFAULT NOW()</td></p>
+<p><td>Creation timestamp</td></p>
+</tr>
+</table>
+
+
+<p><strong>RLS Policies:</strong></p>
+<ul><li>SELECT: Public</li>
+<li>INSERT: Admin</li>
+<li>UPDATE: Admin</li>
+<li>DELETE: Admin</li>
+</ul>
+<h4>4.2.6 payments</h4>
+
+<p>Records all payment transactions.</p>
+
+<table>
+<p><tr></p>
+<p><th>Column</th></p>
+<p><th>Type</th></p>
+<p><th>Constraints</th></p>
+<p><th>Description</th></p>
+</tr>
+<p><tr></p>
+<p><td>id</td></p>
+<p><td>UUID</td></p>
+<p><td>PRIMARY KEY, DEFAULT gen_random_uuid()</td></p>
+<p><td>Unique identifier</td></p>
+</tr>
+<p><tr></p>
+<p><td>admin_id</td></p>
+<p><td>UUID</td></p>
+<p><td>FOREIGN KEY REFERENCES admins(id)</td></p>
+<p><td>Payment admin</td></p>
+</tr>
+<p><tr></p>
+<p><td>mikrotik_id</td></p>
+<p><td>UUID</td></p>
+<p><td>FOREIGN KEY REFERENCES mikrotiks(id)</td></p>
+<p><td>Associated router</td></p>
+</tr>
+<p><tr></p>
+<p><td>user_phone</td></p>
+<p><td>TEXT</td></p>
+<p><td>NOT NULL</td></p>
+<p><td>User phone number</td></p>
+</tr>
+<p><tr></p>
+<p><td>amount</td></p>
+<p><td>DECIMAL(10,2)</td></p>
+<p><td>NOT NULL</td></p>
+<p><td>Payment amount</td></p>
+</tr>
+<p><tr></p>
+<p><td>status</td></p>
+<p><td>TEXT</td></p>
+<p><td>DEFAULT 'pending'</td></p>
+<p><td>Payment status</td></p>
+</tr>
+<p><tr></p>
+<p><td>transaction_id</td></p>
+<p><td>TEXT</td></p>
+<p><td>UNIQUE</td></p>
+<p><td>M-Pesa transaction ID</td></p>
+</tr>
+<p><tr></p>
+<p><td>mpesa_receipt_number</td></p>
+<p><td>TEXT</td></p>
+<p><td>M-Pesa receipt</td></p>
+</tr>
+<p><tr></p>
+<p><td>package_name</td></p>
+<p><td>TEXT</td></p>
+<p><td>Purchased package</td></p>
+</tr>
+<p><tr></p>
+<p><td>created_at</td></p>
+<p><td>TIMESTAMPTZ</td></p>
+<p><td>DEFAULT NOW()</td></p>
+<p><td>Creation timestamp</td></p>
+</tr>
+<p><tr></p>
+<p><td>updated_at</td></p>
+<p><td>TIMESTAMPTZ</td></p>
+<p><td>DEFAULT NOW()</td></p>
+<p><td>Last update timestamp</td></p>
+</tr>
+</table>
+
+
+<p><strong>Indexes:</strong></p>
+<ul><li><span class="inline-code">idx_payments_transaction_id</span>: For M-Pesa callback lookups</li>
+<li><span class="inline-code">idx_payments_mikrotik</span>: For router-based queries</li>
+</ul>
+<p><strong>RLS Policies:</strong></p>
+<ul><li>SELECT: Admin</li>
+<li>INSERT: System only</li>
+<li>UPDATE: System only</li>
+</ul>
+<h4>4.2.7 wifi_users</h4>
+
+<p>Stores WiFi user accounts.</p>
+
+<table>
+<p><tr></p>
+<p><th>Column</th></p>
+<p><th>Type</th></p>
+<p><th>Constraints</th></p>
+<p><th>Description</th></p>
+</tr>
+<p><tr></p>
+<p><td>id</td></p>
+<p><td>UUID</td></p>
+<p><td>PRIMARY KEY, DEFAULT gen_random_uuid()</td></p>
+<p><td>Unique identifier</td></p>
+</tr>
+<p><tr></p>
+<p><td>admin_id</td></p>
+<p><td>UUID</td></p>
+<p><td>FOREIGN KEY REFERENCES admins(id)</td></p>
+<p><td>User admin</td></p>
+</tr>
+<p><tr></p>
+<p><td>username</td></p>
+<p><td>TEXT</td></p>
+<p><td>NOT NULL, UNIQUE</td></p>
+<p><td>Username (phone)</td></p>
+</tr>
+<p><tr></p>
+<p><td>password</td></p>
+<p><td>TEXT</td></p>
+<p><td>NOT NULL</td></p>
+<p><td>Password</td></p>
+</tr>
+<p><tr></p>
+<p><td>package_id</td></p>
+<p><td>UUID</td></p>
+<p><td>FOREIGN KEY REFERENCES packages(id)</td></p>
+<p><td>Active package</td></p>
+</tr>
+<p><tr></p>
+<p><td>expires_at</td></p>
+<p><td>TIMESTAMPTZ</td></p>
+<p><td>Account expiration</td></p>
+</tr>
+<p><tr></p>
+<p><td>is_active</td></p>
+<p><td>BOOLEAN</td></p>
+<p><td>DEFAULT true</td></p>
+<p><td>Account status</td></p>
+</tr>
+<p><tr></p>
+<p><td>created_at</td></p>
+<p><td>TIMESTAMPTZ</td></p>
+<p><td>DEFAULT NOW()</td></p>
+<p><td>Creation timestamp</td></p>
+</tr>
+</table>
+
+
+<p><strong>RLS Policies:</strong></p>
+<ul><li>SELECT: Admin</li>
+<li>INSERT: System only</li>
+<li>UPDATE: System only</li>
+<li>DELETE: System only</li>
+</ul>
+<h3>4.3 Database Functions (RPC)</h3>
+
+<h4>4.3.1 create_admin_account</h4>
+
+<p>Creates a new admin account with credentials.</p>
+
+<div class="code-block">CREATE FUNCTION create_admin_account(
+<p>p_username TEXT,</p>
+<p>p_email TEXT,</p>
+<p>p_phone TEXT,</p>
+<p>p_password TEXT,</p>
+<p>p_business_name TEXT DEFAULT NULL</p>
+<p>) RETURNS UUID;</p>
+</div>
+
+<p><strong>Parameters:</strong></p>
+<ul><li><span class="inline-code">p_username</span>: Admin username</li>
+<li><span class="inline-code">p_email</span>: Email address</li>
+<li><span class="inline-code">p_phone</span>: Phone number</li>
+<li><span class="inline-code">p_password</span>: Plain text password (hashed internally)</li>
+<li><span class="inline-code">p_business_name</span>: Optional business name</li>
+</ul>
+<p><strong>Returns:</strong> UUID of created admin record</p>
+
+<h4>4.3.2 authenticate_wifi_user</h4>
+
+<p>Authenticates WiFi user credentials.</p>
+
+<div class="code-block">CREATE FUNCTION authenticate_wifi_user(
+<p>p_username TEXT,</p>
+<p>p_password TEXT</p>
+<p>) RETURNS TABLE (</p>
+<p>is_valid BOOLEAN,</p>
+<p>user_id UUID,</p>
+<p>expires_at TIMESTAMPTZ</p>
+<p>);</p>
+</div>
+
+<p><strong>Parameters:</strong></p>
+<ul><li><span class="inline-code">p_username</span>: User's username</li>
+<li><span class="inline-code">p_password</span>: User's password</li>
+</ul>
+<p><strong>Returns:</strong> Validation status and user details</p>
+
+<h4>4.3.3 validate_session</h4>
+
+<p>Validates admin session token.</p>
+
+<div class="code-block">CREATE FUNCTION validate_session(
+<p>p_session_token TEXT</p>
+<p>) RETURNS UUID;</p>
+</div>
+
+<p><strong>Parameters:</strong></p>
+<ul><li><span class="inline-code">p_session_token</span>: JWT session token</li>
+</ul>
+<p><strong>Returns:</strong> admin_id if valid, NULL otherwise</p>
+
+<h4>4.3.4 get_client_portal_data_by_username</h4>
+
+<p>Retrieves client portal data.</p>
+
+<div class="code-block">CREATE FUNCTION get_client_portal_data_by_username(
+<p>p_username TEXT</p>
+<p>) RETURNS TABLE (</p>
+<p>user_id UUID,</p>
+<p>package_name TEXT,</p>
+<p>expires_at TIMESTAMPTZ,</p>
+<p>is_active BOOLEAN</p>
+<p>);</p>
+</div>
+
+<h3>4.4 Data Integrity Constraints</h3>
+
+<h4>4.4.1 Unique Constraints</h4>
+<ul><li><span class="inline-code">system_credentials.username</span>: Prevents duplicate usernames</li>
+<li><span class="inline-code">admins.email</span>: Prevents duplicate email addresses</li>
+<li><span class="inline-code">admins.phone</span>: Prevents duplicate phone numbers</li>
+<li><span class="inline-code">payments.transaction_id</span>: Prevents duplicate transactions</li>
+<li><span class="inline-code">wifi_users.username</span>: Prevents duplicate user accounts</li>
+</ul>
+<h4>4.4.2 Foreign Key Constraints</h4>
+<ul><li>All <span class="inline-code">admin_id</span> references cascade on DELETE</li>
+<li>All <span class="inline-code">package_id</span> references restrict DELETE</li>
+<li>All <span class="inline-code">mikrotik_id</span> references set NULL on DELETE</li>
+</ul>
+<h4>4.4.3 Check Constraints</h4>
+<ul><li><span class="inline-code">packages.price >= 0</span>: Prevents negative pricing</li>
+<li><span class="inline-code">packages.duration > 0</span>: Ensures valid duration</li>
+<li><span class="inline-code">payments.amount > 0</span>: Validates payment amounts</li>
+</ul>
+<hr>
+
+<h2>5. INTERFACE DESIGN</h2>
+
+<h3>5.1 User Interfaces</h3>
+
+<h4>5.1.1 Admin Dashboard</h4>
+
+<p><strong>URL:</strong> <span class="inline-code">/admin/dashboard</span></p>
+
+<p><strong>Purpose:</strong> Primary interface for admin users to manage WiFi billing operations.</p>
+
+<p><strong>Components:</strong></p>
+<ul><li>Sidebar navigation</li>
+<li>Revenue analytics graphs</li>
+<li>User management tables</li>
+<li>Package configuration forms</li>
+<li>Router status indicators</li>
+<li>Payment history logs</li>
+</ul>
+<p><strong>Key Features:</strong></p>
+<ul><li>Real-time dashboard metrics</li>
+<li>CRUD operations for all entities</li>
+<li>Export functionality (CSV/PDF)</li>
+<li>Responsive design for mobile/tablet</li>
+</ul>
+<h4>5.1.2 Payment Portal</h4>
+
+<p><strong>URL:</strong> <span class="inline-code">/portal/{admin_username}</span></p>
+
+<p><strong>Purpose:</strong> Customer-facing interface for purchasing internet packages.</p>
+
+<p><strong>Components:</strong></p>
+<ul><li>Package selection cards</li>
+<li>M-Pesa payment form</li>
+<li>Phone number input with validation</li>
+<li>Payment status indicator</li>
+<li>Success/failure modals</li>
+</ul>
+<p><strong>Key Features:</strong></p>
+<ul><li>Dynamic package loading</li>
+<li>Real-time STK Push status</li>
+<li>Automatic session creation</li>
+<li>SMS credential delivery</li>
+</ul>
+<h4>5.1.3 User Portal</h4>
+
+<p><strong>URL:</strong> <span class="inline-code">/user/login</span></p>
+
+<p><strong>Purpose:</strong> WiFi user self-service portal.</p>
+
+<p><strong>Components:</strong></p>
+<ul><li>Login form</li>
+<li>Session status display</li>
+<li>Usage statistics</li>
+<li>Package renewal options</li>
+<li>Logout functionality</li>
+</ul>
+<p><strong>Key Features:</strong></p>
+<ul><li>Session timeout warnings</li>
+<li>Usage history graphs</li>
+<li>One-click renewal</li>
+<li>Password change capability</li>
+</ul>
+<h4>5.1.4 Admin Analytics Dashboard</h4>
+
+<p><strong>URL:</strong> <span class="inline-code">/admin/analytics</span></p>
+
+<p><strong>Purpose:</strong> System-wide analytics and reporting for administrators.</p>
+
+<p><strong>Components:</strong></p>
+<ul><li>Revenue analytics and charts</li>
+<li>User growth metrics</li>
+<li>Payment history reports</li>
+<li>Router performance monitoring</li>
+<li>Export functionality (CSV/PDF)</li>
+</ul>
+<p><strong>Key Features:</strong></p>
+<ul><li>Real-time revenue tracking</li>
+<li>Historical data analysis</li>
+<li>Multi-router comparison</li>
+<li>Custom date range selection</li>
+</ul>
+<h3>5.2 API Interfaces</h3>
+
+<h4>5.2.1 Supabase Client API</h4>
+
+<p><strong>Base URL:</strong> <span class="inline-code">https://{project-ref}.supabase.co/rest/v1</span></p>
+
+<p><strong>Authentication:</strong> Bearer token (anon key or service role)</p>
+
+<p><strong>Endpoints:</strong></p>
+
+<table>
+<p><tr></p>
+<p><th>Method</th></p>
+<p><th>Endpoint</th></p>
+<p><th>Description</th></p>
+</tr>
+<p><tr></p>
+<p><td>GET</td></p>
+<p><td><span class="inline-code">/rest/v1/admins</span></td></p>
+<p><td>List admins</td></p>
+</tr>
+<p><tr></p>
+<p><td>POST</td></p>
+<p><td><span class="inline-code">/rest/v1/admins</span></td></p>
+<p><td>Create admin</td></p>
+</tr>
+<p><tr></p>
+<p><td>GET</td></p>
+<p><td><span class="inline-code">/rest/v1/packages</span></td></p>
+<p><td>List packages</td></p>
+</tr>
+<p><tr></p>
+<p><td>POST</td></p>
+<p><td><span class="inline-code">/rest/v1/packages</span></td></p>
+<p><td>Create package</td></p>
+</tr>
+<p><tr></p>
+<p><td>GET</td></p>
+<p><td><span class="inline-code">/rest/v1/payments</span></td></p>
+<p><td>List payments</td></p>
+</tr>
+<p><tr></p>
+<p><td>POST</td></p>
+<p><td><span class="inline-code">/rest/v1/wifi_users</span></td></p>
+<p><td>Create user</td></p>
+</tr>
+<p><tr></p>
+<p><td>POST</td></p>
+<p><td><span class="inline-code">/rest/v1/rpc/validate_session</span></td></p>
+<p><td>Validate session</td></p>
+</tr>
+<p><tr></p>
+<p><td>POST</td></p>
+<p><td><span class="inline-code">/rest/v1/rpc/create_admin_account</span></td></p>
+<p><td>Create admin</td></p>
+</tr>
+</table>
+
+
+<h4>5.2.2 Edge Functions API</h4>
+
+<p><strong>Base URL:</strong> <span class="inline-code">https://{project-ref}.supabase.co/functions/v1</span></p>
+
+<p><strong>Authentication:</strong> JWT session token in headers</p>
+
+<p><strong>Endpoints:</strong></p>
+
+<table>
+<p><tr></p>
+<p><th>Function</th></p>
+<p><th>Method</th></p>
+<p><th>Description</th></p>
+</tr>
+<p><tr></p>
+<p><td><span class="inline-code">/mpesa-stk-push</span></td></p>
+<p><td>POST</td></p>
+<p><td>Initiate M-Pesa payment</td></p>
+</tr>
+<p><tr></p>
+<p><td><span class="inline-code">/mpesa-callback</span></td></p>
+<p><td>POST</td></p>
+<p><td>Receive M-Pesa callback</td></p>
+</tr>
+<p><tr></p>
+<p><td><span class="inline-code">/check-stk-status</span></td></p>
+<p><td>POST</td></p>
+<p><td>Query STK Push status</td></p>
+</tr>
+<p><tr></p>
+<p><td><span class="inline-code">/send-sms</span></td></p>
+<p><td>POST</td></p>
+<p><td>Send SMS notification</td></p>
+</tr>
+<p><tr></p>
+<p><td><span class="inline-code">/send-otp-email</span></td></p>
+<p><td>POST</td></p>
+<p><td>Send OTP email</td></p>
+</tr>
+</table>
+
+
+<p><strong>Request Format:</strong></p>
+<div class="code-block">{
+<p>&quot;phone&quot;: &quot;0708374149&quot;,</p>
+<p>&quot;amount&quot;: 100,</p>
+<p>&quot;account_number&quot;: &quot;PKG001&quot;</p>
+<p>}</p>
+</div>
+
+<p><strong>Response Format:</strong></p>
+<div class="code-block">{
+<p>&quot;success&quot;: true,</p>
+<p>&quot;data&quot;: {</p>
+<p>&quot;transaction_id&quot;: &quot;ws_CO_123456789&quot;,</p>
+<p>&quot;checkout_request_id&quot;: &quot;ws_123456&quot;,</p>
+<p>&quot;message&quot;: &quot;STK push sent&quot;</p>
+<p>}</p>
+<p>}</p>
+</div>
+
+<h4>5.2.3 M-Pesa Daraja API</h4>
+
+<p><strong>Base URL:</strong> <span class="inline-code">https://sandbox.safaricom.co.ke</span> (Sandbox)</p>
+<p><strong>Base URL:</strong> <span class="inline-code">https://api.safaricom.co.ke</span> (Production)</p>
+
+<p><strong>Authentication:</strong> OAuth 2.0 Bearer Token</p>
+
+<p><strong>Endpoints:</strong></p>
+
+<table>
+<p><tr></p>
+<p><th>Method</th></p>
+<p><th>Endpoint</th></p>
+<p><th>Description</th></p>
+</tr>
+<p><tr></p>
+<p><td>POST</td></p>
+<p><td><span class="inline-code">/oauth/v1/generate</span></td></p>
+<p><td>Generate access token</td></p>
+</tr>
+<p><tr></p>
+<p><td>POST</td></p>
+<p><td><span class="inline-code">/mpesa/stkpush/v1/processrequest</span></td></p>
+<p><td>STK Push</td></p>
+</tr>
+<p><tr></p>
+<p><td>POST</td></p>
+<p><td><span class="inline-code">/mpesa/stkpushquery/v1/query</span></td></p>
+<p><td>Query STK status</td></p>
+</tr>
+<p><tr></p>
+<p><td>POST</td></p>
+<p><td><span class="inline-code">/mpesa/c2b/v1/registerurl</span></td></p>
+<p><td>Register callback</td></p>
+</tr>
+</table>
+
+
+<h3>5.3 Hardware Interfaces</h3>
+
+<h4>5.3.1 Mikrotik Router Integration</h4>
+
+<p><strong>Protocol:</strong> REST API over HTTPS</p>
+
+<p><strong>Port:</strong> 8728 (HTTP), 8729 (HTTPS)</p>
+
+<p><strong>Authentication:</strong> Basic Auth (username/password)</p>
+
+<p><strong>Operations:</strong></p>
+
+<table>
+<p><tr></p>
+<p><th>Operation</th></p>
+<p><th>API Endpoint</th></p>
+<p><th>Description</th></p>
+</tr>
+<p><tr></p>
+<p><td>Create User</td></p>
+<p><td><span class="inline-code">/rest/ip/hotspot/user</span></td></p>
+<p><td>Add hotspot user</td></p>
+</tr>
+<p><tr></p>
+<p><td>Remove User</td></p>
+<p><td><span class="inline-code">/rest/ip/hotspot/user/:id</span></td></p>
+<p><td>Remove hotspot user</td></p>
+</tr>
+<p><tr></p>
+<p><td>List Users</td></p>
+<p><td><span class="inline-code">/rest/ip/hotspot/user</span></td></p>
+<p><td>List all users</td></p>
+</tr>
+<p><tr></p>
+<p><td>Create Profile</td></p>
+<p><td><span class="inline-code">/rest/ip/hotspot/user/profile</span></td></p>
+<p><td>Create rate profile</td></p>
+</tr>
+<p><tr></p>
+<p><td>List Profiles</td></p>
+<p><td><span class="inline-code">/rest/ip/hotspot/user/profile</span></td></p>
+<p><td>List profiles</td></p>
+</tr>
+</table>
+
+
+<p><strong>Request Example:</strong></p>
+<div class="code-block">POST /rest/ip/hotspot/user HTTP/1.1
+<p>Host: 192.168.88.1:8729</p>
+<p>Authorization: Basic dXNlcm5hbWU6cGFzc3dvcmQ=</p>
+<p>Content-Type: application/json</p>
+
+<p>{</p>
+<p>&quot;name&quot;: &quot;0708374149&quot;,</p>
+<p>&quot;password&quot;: &quot;TXN123456&quot;,</p>
+<p>&quot;profile&quot;: &quot;default&quot;</p>
+<p>}</p>
+</div>
+
+<h3>5.4 Communication Interfaces</h3>
+
+<h4>5.4.1 SMS Gateway (Africa's Talking)</h4>
+
+<p><strong>Base URL:</strong> <span class="inline-code">https://api.africastalking.com</span></p>
+
+<p><strong>Authentication:</strong> API Key in headers</p>
+
+<p><strong>Endpoint:</strong> <span class="inline-code">/messaging</span></p>
+
+<p><strong>Request Format:</strong></p>
+<div class="code-block">{
+<p>&quot;to&quot;: &quot;+254708374149&quot;,</p>
+<p>&quot;message&quot;: &quot;Your WiFi credentials: Username: 0708374149, Password: TXN123456&quot;</p>
+<p>}</p>
+</div>
+
+<p><strong>Response Format:</strong></p>
+<div class="code-block">{
+<p>&quot;status&quot;: &quot;success&quot;,</p>
+<p>&quot;messageId&quot;: &quot;SMS_123456&quot;,</p>
+<p>&quot;recipientCount&quot;: 1</p>
+<p>}</p>
+</div>
+
+<h4>5.4.2 Email Service (SMTP)</h4>
+
+<p><strong>Protocol:</strong> SMTP with TLS</p>
+
+<p><strong>Port:</strong> 587 (TLS), 465 (SSL)</p>
+
+<p><strong>Authentication:</strong> Username/Password</p>
+
+<p><strong>Features:</strong></p>
+<ul><li>OTP email delivery</li>
+<li>Password reset emails</li>
+<li>Account notifications</li>
+</ul>
+<hr>
+
+<h2>6. COMPONENT DESIGN</h2>
+
+<h3>6.1 Frontend Components</h3>
+
+<h4>6.1.1 App Component (App.tsx)</h4>
+
+<p><strong>Purpose:</strong> Root component with routing configuration.</p>
+
+<p><strong>Props:</strong> None</p>
+
+<p><strong>State:</strong></p>
+<ul><li><span class="inline-code">isAdminAuthenticated</span>: boolean</li>
+<li><span class="inline-code">adminId</span>: UUID | null</li>
+<li><span class="inline-code">role</span>: string | null</li>
+</ul>
+<p><strong>Dependencies:</strong></p>
+<ul><li>React Router DOM</li>
+<li>AuthContext</li>
+<li>AdminSidebar component</li>
+</ul>
+<p><strong>Code Location:</strong> <span class="inline-code">config/src/App.tsx</span></p>
+
+<h4>6.1.2 AuthContext</h4>
+
+<p><strong>Purpose:</strong> Manages authentication state and session validation.</p>
+
+<p><strong>Methods:</strong></p>
+<ul><li><span class="inline-code">login(username, password)</span>: Authenticate admin</li>
+<li><span class="inline-code">logout()</span>: Clear session and redirect</li>
+<li><span class="inline-code">validateSession()</span>: Check token validity</li>
+<li><span class="inline-code">refreshToken()</span>: Refresh expired token</li>
+</ul>
+<p><strong>State:</strong></p>
+<ul><li><span class="inline-code">sessionToken</span>: string | null</li>
+<li><span class="inline-code">adminId</span>: UUID | null</li>
+<li><span class="inline-code">role</span>: string | null</li>
+</ul>
+<p><strong>Code Location:</strong> <span class="inline-code">config/src/contexts/AuthContext.tsx</span></p>
+
+<h4>6.1.3 AdminDashboard</h4>
+
+<p><strong>Purpose:</strong> Main admin interface with analytics and navigation.</p>
+
+<p><strong>Props:</strong> None</p>
+
+<p><strong>Components:</strong></p>
+<ul><li>AdminSidebar</li>
+<li>GraphDashboard</li>
+<li>QuickStats cards</li>
+</ul>
+<p><strong>Code Location:</strong> <span class="inline-code">config/src/pages/AdminDashboard.tsx</span></p>
+
+<h4>6.1.4 PaymentPortal</h4>
+
+<p><strong>Purpose:</strong> Customer-facing payment interface.</p>
+
+<p><strong>Props:</strong></p>
+<ul><li><span class="inline-code">adminUsername</span>: string (from URL parameter)</li>
+</ul>
+<p><strong>State:</strong></p>
+<ul><li><span class="inline-code">selectedPackage</span>: Package | null</li>
+<li><span class="inline-code">phoneNumber</span>: string</li>
+<li><span class="inline-code">paymentStatus</span>: 'pending' | 'processing' | 'completed' | 'failed'</li>
+<li><span class="inline-code">transactionId</span>: string | null</li>
+</ul>
+<p><strong>Methods:</strong></p>
+<ul><li><span class="inline-code">initiateStkPush()</span>: Start payment flow</li>
+<li><span class="inline-code">pollPaymentStatus()</span>: Check payment status</li>
+<li><span class="inline-code">verifyPayment()</span>: Manual verification</li>
+</ul>
+<p><strong>Code Location:</strong> <span class="inline-code">config/src/pages/PaymentPortal.tsx</span></p>
+
+<h4>6.1.5 PackageCards</h4>
+
+<p><strong>Purpose:</strong> Display available packages in grid layout.</p>
+
+<p><strong>Props:</strong></p>
+<ul><li><span class="inline-code">packages</span>: Package[]</li>
+<li><span class="inline-code">onSelectPackage</span>: (pkg: Package) => void</li>
+</ul>
+<p><strong>Code Location:</strong> <span class="inline-code">config/src/components/shared/PackageCards.tsx</span></p>
+
+<h4>6.1.6 MikrotikManager</h4>
+
+<p><strong>Purpose:</strong> Manage Mikrotik router configurations.</p>
+
+<p><strong>Props:</strong> None</p>
+
+<p><strong>State:</strong></p>
+<ul><li><span class="inline-code">routers</span>: Mikrotik[]</li>
+<li><span class="inline-code">isLoading</span>: boolean</li>
+<li><span class="inline-code">error</span>: string | null</li>
+</ul>
+<p><strong>Methods:</strong></p>
+<ul><li><span class="inline-code">addRouter()</span>: Create new router</li>
+<li><span class="inline-code">updateRouter()</span>: Modify router config</li>
+<li><span class="inline-code">deleteRouter()</span>: Remove router</li>
+<li><span class="inline-code">testConnection()</span>: Verify router connectivity</li>
+</ul>
+<p><strong>Code Location:</strong> <span class="inline-code">config/src/pages/AdminMikrotikMgr.tsx</span></p>
+
+<h3>6.2 Backend Components (Edge Functions)</h3>
+
+<h4>6.2.1 mpesa-stk-push</h4>
+
+<p><strong>Purpose:</strong> Initiate M-Pesa STK Push payment.</p>
+
+<p><strong>Location:</strong> <span class="inline-code">supabase/functions/mpesa-stk-push/index.ts</span></p>
+
+<p><strong>Input:</strong></p>
+<div class="code-block">{
+<p>phone: string;</p>
+<p>amount: number;</p>
+<p>account_number: string;</p>
+<p>}</p>
+</div>
+
+<p><strong>Output:</strong></p>
+<div class="code-block">{
+<p>success: boolean;</p>
+<p>data: {</p>
+<p>transaction_id: string;</p>
+<p>checkout_request_id: string;</p>
+<p>};</p>
+<p>}</p>
+</div>
+
+<p><strong>Dependencies:</strong></p>
+<ul><li>M-Pesa OAuth token</li>
+<li>Mikrotik configuration</li>
+<li>Payments table</li>
+</ul>
+<p><strong>Error Handling:</strong></p>
+<ul><li>Invalid phone format</li>
+<li>Insufficient M-Pesa balance</li>
+<li>Network timeouts</li>
+<li>API rate limits</li>
+</ul>
+<h4>6.2.2 mpesa-callback</h4>
+
+<p><strong>Purpose:</strong> Receive and process M-Pesa payment callbacks.</p>
+
+<p><strong>Location:</strong> <span class="inline-code">supabase/functions/mpesa-callback/index.ts</span></p>
+
+<p><strong>Input:</strong> M-Pesa callback payload</p>
+
+<p><strong>Processing:</strong></p>
+<li>Validate callback authenticity</li>
+<li>Parse transaction result</li>
+<li>Update payment status</li>
+<li>Create WiFi user account</li>
+<li>Log transaction</li>
+
+<p><strong>Output:</strong></p>
+<div class="code-block">{
+<p>ResultCode: &quot;0&quot;,</p>
+<p>ResultDesc: &quot;Accepted&quot;</p>
+<p>}</p>
+</div>
+
+<p><strong>Security:</strong></p>
+<ul><li>Idempotency check (prevent duplicate processing)</li>
+<li>Signature verification</li>
+<li>CheckoutRequestID validation</li>
+</ul>
+<h4>6.2.3 check-stk-status</h4>
+
+<p><strong>Purpose:</strong> Query M-Pesa for STK Push status.</p>
+
+<p><strong>Location:</strong> <span class="inline-code">supabase/functions/check-stk-status/index.ts</span></p>
+
+<p><strong>Input:</strong></p>
+<div class="code-block">{
+<p>transaction_id: string;</p>
+<p>shortcode: string;</p>
+<p>}</p>
+</div>
+
+<p><strong>Output:</strong></p>
+<div class="code-block">{
+<p>status: &quot;completed&quot; | &quot;pending&quot; | &quot;failed&quot;,</p>
+<p>receipt_number?: string</p>
+<p>}</p>
+</div>
+
+<p><strong>Use Case:</strong> Fallback when callback fails or is delayed</p>
+
+<h4>6.2.4 send-sms</h4>
+
+<p><strong>Purpose:</strong> Send SMS notifications via Africa's Talking.</p>
+
+<p><strong>Location:</strong> <span class="inline-code">supabase/functions/send-sms/index.ts</span></p>
+
+<p><strong>Input:</strong></p>
+<div class="code-block">{
+<p>recipient: string;</p>
+<p>message: string;</p>
+<p>}</p>
+</div>
+
+<p><strong>Output:</strong></p>
+<div class="code-block">{
+<p>success: boolean,</p>
+<p>messageId: string</p>
+<p>}</p>
+</div>
+
+<h3>6.3 Utility Components</h3>
+
+<h4>6.3.1 Validators (validators.ts)</h4>
+
+<p><strong>Location:</strong> <span class="inline-code">config/src/lib/validators.ts</span></p>
+
+<p><strong>Functions:</strong></p>
+<ul><li><span class="inline-code">validateEmail(email: string): boolean</span></li>
+<li><span class="inline-code">validatePhone(phone: string): boolean</span></li>
+<li><span class="inline-code">validateAmount(amount: number): boolean</span></li>
+<li><span class="inline-code">sanitizeInput(input: string): string</span></li>
+</ul>
+<h4>6.3.2 M-Pesa Utilities (mpesa.ts)</h4>
+
+<p><strong>Location:</strong> <span class="inline-code">config/src/lib/mpesa.ts</span></p>
+
+<p><strong>Functions:</strong></p>
+<ul><li><span class="inline-code">formatPhoneNumber(phone: string): string</span></li>
+<li><span class="inline-code">generateAccountNumber(): string</span></li>
+<li><span class="inline-code">parseCallback(xml: string): object</span></li>
+</ul>
+<h4>6.3.3 Session Storage (session.ts)</h4>
+
+<p><strong>Location:</strong> <span class="inline-code">config/src/lib/session.ts</span></p>
+
+<p><strong>Functions:</strong></p>
+<ul><li><span class="inline-code">setSessionToken(token: string): void</span></li>
+<li><span class="inline-code">getSessionToken(): string | null</span></li>
+<li><span class="inline-code">clearSession(): void</span></li>
+<li><span class="inline-code">isTokenExpired(token: string): boolean</span></li>
+</ul>
+<hr>
+
+<h2>7. SECURITY DESIGN</h2>
+
+<h3>7.1 Authentication Security</h3>
+
+<h4>7.1.1 Password Management</h4>
+
+<p><strong>Hashing Algorithm:</strong> bcrypt</p>
+<p><strong>Cost Factor:</strong> 10</p>
+<p><strong>Storage:</strong> password_hash column (never plain text)</p>
+
+<p><strong>Implementation:</strong></p>
+<div class="code-block">CREATE OR REPLACE FUNCTION hash_password()
+<p>RETURNS TRIGGER AS $$</p>
+<p>BEGIN</p>
+<p>IF NEW.password_hash IS NOT NULL THEN</p>
+<p>NEW.password_hash := crypt(NEW.password_hash, gen_salt(&#039;bf&#039;, 10));</p>
+<p>END IF;</p>
+<p>RETURN NEW;</p>
+<p>END;</p>
+<p>$$ LANGUAGE plpgsql SECURITY DEFINER;</p>
+</div>
+
+<h4>7.1.2 Session Management</h4>
+
+<p><strong>Token Format:</strong> JWT (JSON Web Token)</p>
+<p><strong>Expiration:</strong> 24 hours</p>
+<p><strong>Storage:</strong> sessionStorage (client-side)</p>
+<p><strong>Validation:</strong> RPC function <span class="inline-code">validate_session</span></p>
+
+<p><strong>Token Structure:</strong></p>
+<div class="code-block">{
+<p>&quot;admin_id&quot;: &quot;uuid&quot;,</p>
+<p>&quot;role&quot;: &quot;admin&quot;,</p>
+<p>&quot;exp&quot;: 1234567890,</p>
+<p>&quot;iat&quot;: 1234564290</p>
+<p>}</p>
+</div>
+
+<h4>7.1.3 Rate Limiting</h4>
+
+<p><strong>Login Attempts:</strong> Maximum 5 per 15 minutes</p>
+<p><strong>Lockout Duration:</strong> 30 minutes</p>
+<p><strong>Tracking:</strong> <span class="inline-code">login_attempts</span> table</p>
+
+<p><strong>Implementation:</strong></p>
+<div class="code-block">CREATE TABLE login_attempts (
+<p>id UUID PRIMARY KEY,</p>
+<p>username TEXT NOT NULL,</p>
+<p>attempts INTEGER DEFAULT 0,</p>
+<p>locked_until TIMESTAMPTZ,</p>
+<p>created_at TIMESTAMPTZ DEFAULT NOW()</p>
+<p>);</p>
+</div>
+
+<h3>7.2 Authorization Security</h3>
+
+<h4>7.2.1 Row Level Security (RLS)</h4>
+
+<p>All tables implement RLS policies to restrict data access.</p>
+
+<p><strong>Example Policy:</strong></p>
+<div class="code-block">CREATE POLICY &quot;Admins can view own data&quot;
+<p>ON payments</p>
+<p>FOR SELECT</p>
+<p>USING (</p>
+<p>auth.uid() IN (</p>
+<p>SELECT admin_id FROM admins WHERE id = auth.uid()</p>
+<p>)</p>
+<p>);</p>
+</div>
+
+<h4>7.2.2 Role-Based Access Control</h4>
+
+<table>
+<p><tr></p>
+<p><th>Role</th></p>
+<p><th>Permissions</th></p>
+</tr>
+<p><tr></p>
+<p><td><strong>WiFi User</strong></td></p>
+<p><td>View own sessions, purchase packages</td></p>
+</tr>
+<p><tr></p>
+<p><td><strong>Admin</strong></td></p>
+<p><td>Full system access: manage routers, users, packages, payments, view analytics</td></p>
+</tr>
+</table>
+
+
+<h4>7.2.3 Function Security</h4>
+
+<p>All RPC functions use <span class="inline-code">SECURITY DEFINER</span> to execute with elevated privileges.</p>
+
+<p><strong>Example:</strong></p>
+<div class="code-block">CREATE FUNCTION create_admin_account(...)
+<p>RETURNS UUID</p>
+<p>LANGUAGE plpgsql</p>
+<p>SECURITY DEFINER  -- Executes with definer&#039;s privileges</p>
+<p>AS $$</p>
+<p>...</p>
+<p>$$;</p>
+</div>
+
+<h3>7.3 Data Protection</h3>
+
+<h4>7.3.1 Encryption at Rest</h4>
+<ul><li><strong>Database:</strong> Supabase-managed encryption</li>
+<li><strong>Passwords:</strong> bcrypt hashing</li>
+<li><strong>API Keys:</strong> Environment variables (never in code)</li>
+</ul>
+<h4>7.3.2 Encryption in Transit</h4>
+<ul><li><strong>HTTPS/TLS:</strong> All API communications</li>
+<li><strong>WSS:</strong> WebSocket connections for real-time updates</li>
+<li><strong>Certificate Validation:</strong> Strict SSL verification</li>
+</ul>
+<h4>7.3.3 Input Validation</h4>
+
+<p><strong>Client-Side:</strong></p>
+<div class="code-block">function validatePaymentInput(input: PaymentInput): boolean {
+<p>if (!isValidPhone(input.phone)) return false;</p>
+<p>if (input.amount &lt;= 0) return false;</p>
+<p>if (input.amount &gt; 100000) return false;</p>
+<p>return true;</p>
+<p>}</p>
+</div>
+
+<p><strong>Server-Side:</strong></p>
+<div class="code-block">// Edge function validation
+<p>if (!phone || !amount) {</p>
+<p>return new Response(JSON.stringify({ error: &#039;Missing fields&#039; }), { status: 400 });</p>
+<p>}</p>
+</div>
+
+<h3>7.4 API Security</h3>
+
+<h4>7.4.1 CORS Policy</h4>
+
+<p><strong>Allowed Origins:</strong></p>
+<ul><li><span class="inline-code">http://localhost:5173</span> (development)</li>
+<li><span class="inline-code">https://billing.kingstone.com</span> (production)</li>
+</ul>
+<p><strong>Headers:</strong></p>
+<ul><li><span class="inline-code">Content-Type</span></li>
+<li><span class="inline-code">Authorization</span></li>
+<li><span class="inline-code">X-Session-Token</span></li>
+</ul>
+<h4>7.4.2 M-Pesa Callback Security</h4>
+
+<p><strong>Authentication:</strong></p>
+<li>Verify callback source IP (Safaricom IPs)</li>
+<li>Validate CheckoutRequestID format</li>
+<li>Check transaction_id uniqueness (idempotency)</li>
+<li>Verify signature (if available)</li>
+
+<p><strong>Implementation:</strong></p>
+<div class="code-block">// Idempotency check
+<p>const existing = await supabase</p>
+<p>.from(&#039;payments&#039;)</p>
+<p>.select(&#039;id&#039;)</p>
+<p>.eq(&#039;transaction_id&#039;, transactionId)</p>
+<p>.single();</p>
+
+<p>if (existing &amp;&amp; existing.status === &#039;completed&#039;) {</p>
+<p>return; // Already processed</p>
+<p>}</p>
+</div>
+
+<h4>7.4.3 API Key Management</h4>
+
+<p><strong>Storage:</strong> Supabase Secrets (never in code)</p>
+
+<p><strong>Deployment:</strong></p>
+<div class="code-block">supabase secrets set MPESA_CONSUMER_KEY=&quot;your-key&quot;
+<p>supabase secrets set MPESA_CONSUMER_SECRET=&quot;your-secret&quot;</p>
+</div>
+
+<p><strong>Usage in Edge Functions:</strong></p>
+<div class="code-block">const consumerKey = Deno.env.get(&#039;MPESA_CONSUMER_KEY&#039;);
+</div>
+
+<h3>7.5 Audit Logging</h3>
+
+<h4>7.5.1 Logged Events</h4>
+<ul><li>Admin login/logout</li>
+<li>Payment transactions</li>
+<li>User creation/deletion</li>
+<li>Package modifications</li>
+<li>Router configuration changes</li>
+<li>SMS sent</li>
+</ul>
+<h4>7.5.2 Log Retention</h4>
+<ul><li><strong>Payment logs:</strong> 7 years (regulatory)</li>
+<li><strong>Session logs:</strong> 90 days</li>
+<li><strong>Audit logs:</strong> 2 years</li>
+</ul>
+<h4>7.5.3 Log Query Example</h4>
+
+<div class="code-block">SELECT * FROM payments
+<p>WHERE admin_id = &#039;uuid&#039;</p>
+<p>AND created_at &gt; NOW() - INTERVAL &#039;7 days&#039;</p>
+<p>ORDER BY created_at DESC;</p>
+</div>
+
+<hr>
+
+<h2>8. INTEGRATION DESIGN</h2>
+
+<h3>8.1 M-Pesa Integration</h3>
+
+<h4>8.1.1 OAuth Authentication</h4>
+
+<p><strong>Endpoint:</strong> <span class="inline-code">/oauth/v1/generate</span></p>
+
+<p><strong>Request:</strong></p>
+<div class="code-block">POST /oauth/v1/generate
+<p>Authorization: Basic base64(consumer_key:consumer_secret)</p>
+</div>
+
+<p><strong>Response:</strong></p>
+<div class="code-block">{
+<p>&quot;access_token&quot;: &quot;eyJhbGciOiJIUzI1NiIs...&quot;,</p>
+<p>&quot;expires_in&quot;: &quot;3599&quot;</p>
+<p>}</p>
+</div>
+
+<h4>8.1.2 STK Push Request</h4>
+
+<p><strong>Endpoint:</strong> <span class="inline-code">/mpesa/stkpush/v1/processrequest</span></p>
+
+<p><strong>Request:</strong></p>
+<div class="code-block">{
+<p>&quot;BusinessShortCode&quot;: &quot;174379&quot;,</p>
+<p>&quot;Password&quot;: &quot;base64_encoded_password&quot;,</p>
+<p>&quot;Timestamp&quot;: &quot;20240331120000&quot;,</p>
+<p>&quot;TransactionType&quot;: &quot;CustomerPayBillOnline&quot;,</p>
+<p>&quot;Amount&quot;: 100,</p>
+<p>&quot;PartyA&quot;: &quot;254708374149&quot;,</p>
+<p>&quot;PartyB&quot;: &quot;174379&quot;,</p>
+<p>&quot;PhoneNumber&quot;: &quot;254708374149&quot;,</p>
+<p>&quot;CallBackURL&quot;: &quot;https://api.kingstone.com/functions/v1/mpesa-callback&quot;,</p>
+<p>&quot;AccountReference&quot;: &quot;PKG001&quot;,</p>
+<p>&quot;TransactionDesc&quot;: &quot;Internet Package&quot;</p>
+<p>}</p>
+</div>
+
+<h4>8.1.3 Callback Processing</h4>
+
+<p><strong>Callback Payload:</strong></p>
+<div class="code-block">{
+<p>&quot;Body&quot;: {</p>
+<p>&quot;stkCallback&quot;: {</p>
+<p>&quot;MerchantRequestID&quot;: &quot;12345&quot;,</p>
+<p>&quot;CheckoutRequestID&quot;: &quot;ws_123456&quot;,</p>
+<p>&quot;ResultCode&quot;: 0,</p>
+<p>&quot;ResultDesc&quot;: &quot;Accepted&quot;,</p>
+<p>&quot;CallbackMetadata&quot;: {</p>
+<p>&quot;Item&quot;: [</p>
+<p>{&quot;Name&quot;: &quot;MpesaReceiptNumber&quot;, &quot;Value&quot;: &quot;QGH123456&quot;},</p>
+<p>{&quot;Name&quot;: &quot;Amount&quot;, &quot;Value&quot;: 100},</p>
+<p>{&quot;Name&quot;: &quot;TransactionId&quot;, &quot;Value&quot;: &quot;TXN123456&quot;},</p>
+<p>{&quot;Name&quot;: &quot;PhoneNumber&quot;, &quot;Value&quot;: &quot;254708374149&quot;}</p>
+<p>]</p>
+<p>}</p>
+<p>}</p>
+<p>}</p>
+<p>}</p>
+</div>
+
+<h3>8.2 Mikrotik Integration</h3>
+
+<h4>8.2.1 Router Authentication</h4>
+
+<p><strong>Method:</strong> Basic Auth over HTTPS</p>
+
+<p><strong>Configuration:</strong></p>
+<div class="code-block">const routerConfig = {
+<p>host: &#039;192.168.88.1&#039;,</p>
+<p>port: 8729,</p>
+<p>username: &#039;api_user&#039;,</p>
+<p>password: &#039;api_password&#039;</p>
+<p>};</p>
+</div>
+
+<h4>8.2.2 User Creation</h4>
+
+<p><strong>Endpoint:</strong> <span class="inline-code">/rest/ip/hotspot/user</span></p>
+
+<p><strong>Request:</strong></p>
+<div class="code-block">POST /rest/ip/hotspot/user HTTP/1.1
+<p>Host: 192.168.88.1:8729</p>
+<p>Authorization: Basic dXNlcm5hbWU6cGFzc3dvcmQ=</p>
+<p>Content-Type: application/json</p>
+
+<p>{</p>
+<p>&quot;name&quot;: &quot;0708374149&quot;,</p>
+<p>&quot;password&quot;: &quot;TXN123456&quot;,</p>
+<p>&quot;profile&quot;: &quot;default&quot;,</p>
+<p>&quot;comment&quot;: &quot;Package: 1 Hour&quot;</p>
+<p>}</p>
+</div>
+
+<p><strong>Response:</strong></p>
+<div class="code-block">[
+<p>{</p>
+<p>&quot;ret&quot;: &quot;.id=*12345&quot;</p>
+<p>}</p>
+<p>]</p>
+</div>
+
+<h4>8.2.3 User Removal</h4>
+
+<p><strong>Endpoint:</strong> <span class="inline-code">/rest/ip/hotspot/user/*12345</span></p>
+
+<p><strong>Request:</strong></p>
+<div class="code-block">DELETE /rest/ip/hotspot/user/*12345 HTTP/1.1
+<p>Host: 192.168.88.1:8729</p>
+<p>Authorization: Basic dXNlcm5hbWU6cGFzc3dvcmQ=</p>
+</div>
+
+<h3>8.3 SMS Gateway Integration</h3>
+
+<h4>8.3.1 Africa's Talking API</h4>
+
+<p><strong>Endpoint:</strong> <span class="inline-code">/messaging</span></p>
+
+<p><strong>Request:</strong></p>
+<div class="code-block">POST /messaging HTTP/1.1
+<p>Host: api.africastalking.com</p>
+<p>Content-Type: application/json</p>
+<p>apiKey: your_api_key</p>
+
+<p>{</p>
+<p>&quot;username&quot;: &quot;your_username&quot;,</p>
+<p>&quot;to&quot;: &quot;+254708374149&quot;,</p>
+<p>&quot;message&quot;: &quot;Your WiFi credentials: Username: 0708374149, Password: TXN123456&quot;</p>
+<p>}</p>
+</div>
+
+<p><strong>Response:</strong></p>
+<div class="code-block">{
+<p>&quot;status&quot;: &quot;success&quot;,</p>
+<p>&quot;message&quot;: &quot;Message sent successfully&quot;,</p>
+<p>&quot;messageId&quot;: &quot;SMS_123456&quot;,</p>
+<p>&quot;recipientCount&quot;: 1</p>
+<p>}</p>
+</div>
+
+<h3>8.4 Integration Error Handling</h3>
+
+<h4>8.4.1 Retry Logic</h4>
+
+<p><strong>M-Pesa API:</strong></p>
+<ul><li>Maximum retries: 3</li>
+<li>Backoff: Exponential (1s, 2s, 4s)</li>
+<li>Timeout: 30 seconds per attempt</li>
+</ul>
+<p><strong>Mikrotik API:</strong></p>
+<ul><li>Maximum retries: 2</li>
+<li>Backoff: Linear (1s, 2s)</li>
+<li>Timeout: 10 seconds per attempt</li>
+</ul>
+<h4>8.4.2 Fallback Strategies</h4>
+
+<p><strong>M-Pesa Callback Failure:</strong></p>
+<li>Poll STK status every 5 seconds</li>
+<li>After 3 failed polls, query M-Pesa API directly</li>
+<li>Show manual verification button to user</li>
+<li>Log error for admin review</li>
+
+<p><strong>Mikrotik Connection Failure:</strong></p>
+<li>Retry connection twice</li>
+<li>Mark router as offline</li>
+<li>Queue user creation for retry</li>
+<li>Notify admin via dashboard alert</li>
+
+<hr>
+
+<h2>9. DEPLOYMENT DESIGN</h2>
+
+<h3>9.1 Deployment Architecture</h3>
+
+<div class="diagram">┌─────────────────────────────────────────────────────────────────┐
+<p>│                    PRODUCTION ENVIRONMENT                       │</p>
+<p>├─────────────────────────────────────────────────────────────────┤</p>
+<p>│                                                                 │</p>
+<p>│  ┌─────────────────────────────────────────────────────────┐   │</p>
+<p>│  │              Supabase Cloud Platform                    │   │</p>
+<p>│  │  ┌──────────┐  ┌──────────┐  ┌──────────┐              │   │</p>
+<p>│  │  │PostgreSQL│  │Edge Func.│  │   Auth   │              │   │</p>
+<p>│  │  │ Database │  │  (Deno)  │  │  Service │              │   │</p>
+<p>│  │  └──────────┘  └──────────┘  └──────────┘              │   │</p>
+<p>│  └─────────────────────────────────────────────────────────┘   │</p>
+<p>│                                                                 │</p>
+<p>│  ┌─────────────────────────────────────────────────────────┐   │</p>
+<p>│  │              Frontend Hosting (Vercel/Netlify)          │   │</p>
+<p>│  │  ┌──────────────────────────────────────────┐           │   │</p>
+<p>│  │  │         React SPA (Static Files)         │           │   │</p>
+<p>│  │  └──────────────────────────────────────────┘           │   │</p>
+<p>│  └─────────────────────────────────────────────────────────┘   │</p>
+<p>│                                                                 │</p>
+<p>│  ┌─────────────────────────────────────────────────────────┐   │</p>
+<p>│  │              External Services                          │   │</p>
+<p>│  │  ┌──────────┐  ┌──────────┐  ┌──────────┐              │   │</p>
+<p>│  │  │  M-Pesa  │  │  Mikrotik│  │   SMS    │              │   │</p>
+<p>│  │  │  Daraja  │  │ Routers  │  │ Gateway  │              │   │</p>
+<p>│  │  └──────────┘  └──────────┘  └──────────┘              │   │</p>
+<p>│  └─────────────────────────────────────────────────────────┘   │</p>
+<p>│                                                                 │</p>
+<p>└─────────────────────────────────────────────────────────────────┘</p>
+</div>
+
+<h3>9.2 Environment Configuration</h3>
+
+<h4>9.2.1 Environment Variables</h4>
+
+<p><strong>Frontend (.env):</strong></p>
+<div class="code-block">VITE_SUPABASE_URL=https://mpjezwlweapgltrimtqy.supabase.co
+<p>VITE_SUPABASE_ANON_KEY=your-anon-key</p>
+<p>VITE_PORTAL_URL=https://billing.kingstone.com</p>
+<p>VITE_MOCK_PAYMENT_MODE=false</p>
+</div>
+
+<p><strong>Edge Functions (Supabase Secrets):</strong></p>
+<div class="code-block">MPESA_CONSUMER_KEY=your_consumer_key
+<p>MPESA_CONSUMER_SECRET=your_consumer_secret</p>
+<p>MPESA_SHORTCODE=174379</p>
+<p>MPESA_PASSKEY=your_passkey</p>
+<p>MPESA_CALLBACK_URL=https://mpjezwlweapgltrimtqy.supabase.co/functions/v1/mpesa-callback</p>
+<p>AFRICAS_TALKING_USERNAME=your_username</p>
+<p>AFRICAS_TALKING_API_KEY=your_api_key</p>
+</div>
+
+<h4>9.2.2 Database Configuration</h4>
+
+<p><strong>Connection String:</strong></p>
+<div class="code-block">postgresql://postgres:[PASSWORD]@db.mpjezwlweapgltrimtqy.supabase.co:5432/postgres
+</div>
+
+<p><strong>Migration Order:</strong></p>
+<li><span class="inline-code">database/01_FIX_PAYMENTS.sql</span></li>
+<li><span class="inline-code">database/02_FIX_MIKROTIKS.sql</span></li>
+<li><span class="inline-code">database/03_FIX_PASSWORD_TRIGGERS.sql</span></li>
+<li><span class="inline-code">database/04_CREATE_RPC_FUNCTIONS.sql</span></li>
+<li><span class="inline-code">database/05_ADD_CONSTRAINTS_INDEXES.sql</span></li>
+
+<h3>9.3 Deployment Steps</h3>
+
+<h4>9.3.1 Database Deployment</h4>
+
+<div class="code-block">&lt;h1&gt;1. Connect to Supabase SQL Editor&lt;/h1&gt;
+<p>&lt;h1&gt;2. Run migrations in order&lt;/h1&gt;</p>
+<p>psql -h db.mpjezwlweapgltrimtqy.supabase.co \</p>
+<p>-U postgres \</p>
+<p>-d postgres \</p>
+<p>-f database/01_FIX_PAYMENTS.sql</p>
+
+<p>psql -h db.mpjezwlweapgltrimtqy.supabase.co \</p>
+<p>-U postgres \</p>
+<p>-d postgres \</p>
+<p>-f database/02_FIX_MIKROTIKS.sql</p>
+
+<p>&lt;h1&gt;... repeat for all migrations&lt;/h1&gt;</p>
+</div>
+
+<h4>9.3.2 Edge Functions Deployment</h4>
+
+<div class="code-block">&lt;h1&gt;Login to Supabase&lt;/h1&gt;
+<p>supabase login</p>
+
+<p>&lt;h1&gt;Link project&lt;/h1&gt;</p>
+<p>supabase link --project-ref mpjezwlweapgltrimtqy</p>
+
+<p>&lt;h1&gt;Set secrets&lt;/h1&gt;</p>
+<p>supabase secrets set MPESA_CONSUMER_KEY=&quot;your_key&quot;</p>
+<p>supabase secrets set MPESA_CONSUMER_SECRET=&quot;your_secret&quot;</p>
+
+<p>&lt;h1&gt;Deploy functions&lt;/h1&gt;</p>
+<p>supabase functions deploy mpesa-stk-push</p>
+<p>supabase functions deploy mpesa-callback</p>
+<p>supabase functions deploy check-stk-status</p>
+<p>supabase functions deploy send-sms</p>
+<p>supabase functions deploy send-otp-email</p>
+</div>
+
+<h4>9.3.3 Frontend Deployment</h4>
+
+<div class="code-block">&lt;h1&gt;Navigate to frontend directory&lt;/h1&gt;
+<p>cd config</p>
+
+<p>&lt;h1&gt;Install dependencies&lt;/h1&gt;</p>
+<p>npm install</p>
+
+<p>&lt;h1&gt;Build for production&lt;/h1&gt;</p>
+<p>npm run build</p>
+
+<p>&lt;h1&gt;Deploy to Vercel&lt;/h1&gt;</p>
+<p>vercel --prod</p>
+
+<p>&lt;h1&gt;Or deploy to Netlify&lt;/h1&gt;</p>
+<p>netlify deploy --prod</p>
+</div>
+
+<h3>9.4 CI/CD Pipeline</h3>
+
+<h4>9.4.1 GitHub Actions Workflow</h4>
+
+<div class="code-block">name: Deploy
+
+<p>on:</p>
+<p>push:</p>
+<p>branches: [main]</p>
+
+<p>jobs:</p>
+<p>deploy:</p>
+<p>runs-on: ubuntu-latest</p>
+    
+<p>steps:</p>
+<ul><li>uses: actions/checkout@v3</li>
+<li>name: Setup Node.js</li>
+</ul>        uses: actions/setup-node@v3
+<p>with:</p>
+<p>node-version: &#039;18&#039;</p>
+<ul><li>name: Install dependencies</li>
+</ul>        run: npm install
+<p>working-directory: ./config</p>
+<ul><li>name: Build</li>
+</ul>        run: npm run build
+<p>working-directory: ./config</p>
+<ul><li>name: Deploy to Supabase</li>
+</ul>        uses: supabase/setup-cli@v1
+<p>with:</p>
+<p>project-ref: mpjezwlweapgltrimtqy</p>
+<ul><li>name: Deploy Edge Functions</li>
+</ul>        run: |
+<p>supabase functions deploy mpesa-stk-push</p>
+<p>supabase functions deploy mpesa-callback</p>
+</div>
+
+<h3>9.5 Monitoring and Logging</h3>
+
+<h4>9.5.1 Supabase Logs</h4>
+
+<div class="code-block">&lt;h1&gt;View function logs&lt;/h1&gt;
+<p>supabase functions logs mpesa-stk-push</p>
+
+<p>&lt;h1&gt;Stream logs in real-time&lt;/h1&gt;</p>
+<p>supabase functions logs mpesa-callback --tail</p>
+</div>
+
+<h4>9.5.2 Database Monitoring</h4>
+
+<p><strong>Key Metrics:</strong></p>
+<ul><li>Active sessions count</li>
+<li>Payment success rate</li>
+<li>Average response time</li>
+<li>Error rate by function</li>
+</ul>
+<p><strong>Dashboard Query:</strong></p>
+<div class="code-block">SELECT 
+<p>DATE(created_at) as date,</p>
+<p>COUNT(*) as total_payments,</p>
+<p>SUM(CASE WHEN status = &#039;completed&#039; THEN 1 ELSE 0 END) as successful,</p>
+<p>SUM(CASE WHEN status = &#039;failed&#039; THEN 1 ELSE 0 END) as failed</p>
+<p>FROM payments</p>
+<p>WHERE created_at &gt; NOW() - INTERVAL &#039;30 days&#039;</p>
+<p>GROUP BY DATE(created_at)</p>
+<p>ORDER BY date DESC;</p>
+</div>
+
+<h4>9.5.3 Alerting</h4>
+
+<p><strong>Critical Alerts:</strong></p>
+<ul><li>M-Pesa callback failures > 10/hour</li>
+<li>Payment success rate < 90%</li>
+<li>Database connection errors</li>
+<li>Router offline status</li>
+</ul>
+<p><strong>Notification Channels:</strong></p>
+<ul><li>Email (admin)</li>
+<li>SMS (urgent)</li>
+<li>Dashboard alerts</li>
+</ul>
+<hr>
+
+<h2>10. TESTING STRATEGY</h2>
+
+<h3>10.1 Testing Levels</h3>
+
+<h4>10.1.1 Unit Testing</h4>
+
+<p><strong>Scope:</strong> Individual functions and components</p>
+
+<p><strong>Tools:</strong></p>
+<ul><li>Jest (frontend)</li>
+<li>Deno test (edge functions)</li>
+<li>pgTAP (database)</li>
+</ul>
+<p><strong>Example:</strong></p>
+<div class="code-block">// Test payment validation
+<p>describe(&#039;validatePaymentInput&#039;, () =&gt; {</p>
+<p>it(&#039;should accept valid phone number&#039;, () =&gt; {</p>
+<p>expect(validatePaymentInput({</p>
+<p>phone: &#039;0708374149&#039;,</p>
+<p>amount: 100</p>
+<p>})).toBe(true);</p>
+<p>});</p>
+
+<p>it(&#039;should reject invalid amount&#039;, () =&gt; {</p>
+<p>expect(validatePaymentInput({</p>
+<p>phone: &#039;0708374149&#039;,</p>
+<p>amount: -50</p>
+<p>})).toBe(false);</p>
+<p>});</p>
+<p>});</p>
+</div>
+
+<h4>10.1.2 Integration Testing</h4>
+
+<p><strong>Scope:</strong> Component interactions</p>
+
+<p><strong>Test Cases:</strong></p>
+<ul><li>STK Push → M-Pesa → Callback → Database update</li>
+<li>User registration → WiFi user creation → Mikrotik sync</li>
+<li>Admin login → Session creation → Dashboard access</li>
+</ul>
+<p><strong>Example:</strong></p>
+<div class="code-block">// Test payment flow
+<p>describe(&#039;Payment Flow Integration&#039;, () =&gt; {</p>
+<p>it(&#039;should complete payment end-to-end&#039;, async () =&gt; {</p>
+<p>// Initiate STK push</p>
+<p>const response = await initiateStkPush({</p>
+<p>phone: &#039;0708374149&#039;,</p>
+<p>amount: 100</p>
+<p>});</p>
+
+<p>// Verify transaction created</p>
+<p>expect(response.transaction_id).toBeDefined();</p>
+
+<p>// Simulate callback</p>
+<p>await simulateCallback({</p>
+<p>transaction_id: response.transaction_id,</p>
+<p>status: &#039;completed&#039;</p>
+<p>});</p>
+
+<p>// Verify database update</p>
+<p>const payment = await getPayment(response.transaction_id);</p>
+<p>expect(payment.status).toBe(&#039;completed&#039;);</p>
+<p>});</p>
+<p>});</p>
+</div>
+
+<h4>10.1.3 System Testing</h4>
+
+<p><strong>Scope:</strong> Complete system workflows</p>
+
+<p><strong>Test Scenarios:</strong></p>
+<li>User connects to WiFi → Payment → Internet access</li>
+<li>Admin creates package → User purchases → Revenue tracking</li>
+<li>Router offline → Queue → Retry → Success</li>
+
+<h4>10.1.4 Acceptance Testing</h4>
+
+<p><strong>Scope:</strong> User acceptance criteria</p>
+
+<p><strong>Checklist:</strong></p>
+<ul><li>[ ] Payment completes within 30 seconds</li>
+<li>[ ] Credentials delivered via SMS</li>
+<li>[ ] Internet access granted immediately</li>
+<li>[ ] Dashboard shows real-time metrics</li>
+<li>[ ] Admin can manage all entities</li>
+</ul>
+<h3>10.2 Test Data Management</h3>
+
+<h4>10.2.1 Test Accounts</h4>
+
+<p><strong>Admin:</strong></p>
+<ul><li>Username: <span class="inline-code">testadmin</span></li>
+<li>Password: <span class="inline-code">Test123!</span></li>
+<li>Email: <span class="inline-code">test@kingstone.com</span></li>
+</ul>
+<p><strong>WiFi User:</strong></p>
+<ul><li>Username: <span class="inline-code">0708374149</span></li>
+<li>Password: <span class="inline-code">TXN123456</span></li>
+</ul>
+<h4>10.2.2 Test M-Pesa Numbers</h4>
+
+<p><strong>Sandbox:</strong></p>
+<ul><li>Phone: <span class="inline-code">0708374149</span></li>
+<li>PIN: <span class="inline-code">1234</span></li>
+</ul>
+<p><strong>Production:</strong></p>
+<ul><li>Use real M-Pesa accounts only</li>
+</ul>
+<h3>10.3 Performance Testing</h3>
+
+<h4>10.3.1 Load Testing</h4>
+
+<p><strong>Tools:</strong> k6, Apache JMeter</p>
+
+<p><strong>Scenarios:</strong></p>
+<ul><li>100 concurrent users purchasing packages</li>
+<li>1000 concurrent session validations</li>
+<li>50 concurrent M-Pesa callbacks</li>
+</ul>
+<p><strong>Metrics:</strong></p>
+<ul><li>Response time < 2 seconds</li>
+<li>Error rate < 1%</li>
+<li>Throughput > 100 requests/second</li>
+</ul>
+<h4>10.3.2 Stress Testing</h4>
+
+<p><strong>Break Points:</strong></p>
+<ul><li>Database connection pool exhaustion</li>
+<li>M-Pesa API rate limits</li>
+<li>Mikrotik router capacity</li>
+</ul>
+<h3>10.4 Security Testing</h3>
+
+<h4>10.4.1 Penetration Testing</h4>
+
+<p><strong>Areas:</strong></p>
+<ul><li>SQL injection prevention</li>
+<li>XSS vulnerability assessment</li>
+<li>CSRF token validation</li>
+<li>Authentication bypass attempts</li>
+</ul>
+<h4>10.4.2 Vulnerability Scanning</h4>
+
+<p><strong>Tools:</strong></p>
+<ul><li>OWASP ZAP</li>
+<li>Burp Suite</li>
+<li>npm audit</li>
+</ul>
+<p><strong>Frequency:</strong> Monthly</p>
+
+<h3>10.5 Test Coverage Goals</h3>
+
+<table>
+<p><tr></p>
+<p><th>Component</th></p>
+<p><th>Target Coverage</th></p>
+</tr>
+<p><tr></p>
+<p><td>Frontend Components</td></p>
+<p><td>80%</td></p>
+</tr>
+<p><tr></p>
+<p><td>Edge Functions</td></p>
+<p><td>90%</td></p>
+</tr>
+<p><tr></p>
+<p><td>Database Functions</td></p>
+<p><td>85%</td></p>
+</tr>
+<p><tr></p>
+<p><td>API Endpoints</td></p>
+<p><td>95%</td></p>
+</tr>
+<p><tr></p>
+<p><td><strong>Overall</strong></td></p>
+<p><td><strong>85%</strong></td></p>
+</tr>
+</table>
+
+
+<hr>
+
+<h2>11. APPENDICES</h2>
+
+<h3>Appendix A: Database Migration Scripts</h3>
+
+<p><strong>Location:</strong> <span class="inline-code">database/</span> directory</p>
+
+<p><strong>Files:</strong></p>
+<li><span class="inline-code">01_FIX_PAYMENTS.sql</span> - Add missing payment columns</li>
+<li><span class="inline-code">02_FIX_MIKROTIKS.sql</span> - Add name column to mikrotiks</li>
+<li><span class="inline-code">03_FIX_PASSWORD_TRIGGERS.sql</span> - Password hashing triggers</li>
+<li><span class="inline-code">04_CREATE_RPC_FUNCTIONS.sql</span> - RPC function definitions</li>
+<li><span class="inline-code">05_ADD_CONSTRAINTS_INDEXES.sql</span> - Constraints and indexes</li>
+
+<h3>Appendix B: Edge Function Code</h3>
+
+<p><strong>Location:</strong> <span class="inline-code">supabase/functions/</span> directory</p>
+
+<p><strong>Functions:</strong></p>
+<ul><li><span class="inline-code">mpesa-stk-push/index.ts</span></li>
+<li><span class="inline-code">mpesa-callback/index.ts</span></li>
+<li><span class="inline-code">check-stk-status/index.ts</span></li>
+<li><span class="inline-code">send-sms/index.ts</span></li>
+<li><span class="inline-code">send-otp-email/index.ts</span></li>
+</ul>
+<h3>Appendix C: API Reference</h3>
+
+<p><strong>Complete API documentation available at:</strong></p>
+<ul><li>Supabase Dashboard: https://supabase.com/dashboard/project/mpjezwlweapgltrimtqy</li>
+<li>M-Pesa Daraja: https://developer.safaricom.co.ke/APIs/</li>
+<li>Mikrotik REST API: https://help.mikrotik.com/docs/display/ROS/REST+API</li>
+</ul>
+<h3>Appendix D: Troubleshooting Guide</h3>
+
+<p><strong>Common Issues:</strong></p>
+
+<table>
+<p><tr></p>
+<p><th>Issue</th></p>
+<p><th>Cause</th></p>
+<p><th>Solution</th></p>
+</tr>
+<p><tr></p>
+<p><td>M-Pesa callback fails</td></p>
+<p><td>Incorrect callback URL</td></p>
+<p><td>Update in Supabase secrets</td></p>
+</tr>
+<p><tr></p>
+<p><td>Session validation fails</td></p>
+<p><td>Expired token</td></p>
+<p><td>Implement token refresh</td></p>
+</tr>
+<p><tr></p>
+<p><td>Mikrotik connection timeout</td></p>
+<p><td>Firewall blocking</td></p>
+<p><td>Allow port 8729</td></p>
+</tr>
+<p><tr></p>
+<p><td>Payment stuck in pending</td></p>
+<p><td>Callback not received</td></p>
+<p><td>Use manual verification</td></p>
+</tr>
+</table>
+
+
+<h3>Appendix E: Glossary</h3>
+
+<table>
+<p><tr></p>
+<p><th>Term</th></p>
+<p><th>Definition</th></p>
+</tr>
+<p><tr></p>
+<p><td><strong>Hotspot</strong></td></p>
+<p><td>WiFi access point with authentication</td></p>
+</tr>
+<p><tr></p>
+<p><td><strong>Voucher</strong></td></p>
+<p><td>Pre-paid access code</td></p>
+</tr>
+<p><tr></p>
+<p><td><strong>STK Push</strong></td></p>
+<p><td>M-Pesa payment prompt on phone</td></p>
+</tr>
+<p><tr></p>
+<p><td><strong>Callback</strong></td></p>
+<p><td>M-Pesa server-to-server notification</td></p>
+</tr>
+<p><tr></p>
+<p><td><strong>CheckoutRequestID</strong></td></p>
+<p><td>Unique M-Pesa transaction identifier</td></p>
+</tr>
+<p><tr></p>
+<p><td><strong>RLS</strong></td></p>
+<p><td>Row Level Security - database access control</td></p>
+</tr>
+<p><tr></p>
+<p><td><strong>Edge Function</strong></td></p>
+<p><td>Serverless function running at edge</td></p>
+</tr>
+</table>
+
+
+<h3>Appendix F: Revision History</h3>
+
+<table>
+<p><tr></p>
+<p><th>Version</th></p>
+<p><th>Date</th></p>
+<p><th>Author</th></p>
+<p><th>Changes</th></p>
+</tr>
+<p><tr></p>
+<p><td>1.0.0</td></p>
+<p><td>2026-03-31</td></p>
+<p><td>Development Team</td></p>
+<p><td>Initial release</td></p>
+</tr>
+</table>
+
+
+<hr>
+
+<h2>DOCUMENT APPROVAL</h2>
+
+<table>
+<p><tr></p>
+<p><th>Role</th></p>
+<p><th>Name</th></p>
+<p><th>Signature</th></p>
+<p><th>Date</th></p>
+</tr>
+<p><tr></p>
+<p><td><strong>Project Manager</strong></td></p>
+</tr>
+<p><tr></p>
+<p><td><strong>Technical Lead</strong></td></p>
+</tr>
+<p><tr></p>
+<p><td><strong>Quality Assurance</strong></td></p>
+</tr>
+<p><tr></p>
+<p><td><strong>System Administrator</strong></td></p>
+</tr>
+</table>
+
+
+<hr>
+
+<p><strong>END OF SOFTWARE DESIGN SPECIFICATION</strong></p>
+
+
+    <!-- Document Approval -->
+    <h1>DOCUMENT APPROVAL</h1>
+    <table class="approval-table">
+        <tr>
+            <th>Role</th>
+            <th>Name</th>
+            <th>Signature</th>
+            <th>Date</th>
+        </tr>
+        <tr>
+            <td>Project Manager</td>
+            <td></td>
+            <td></td>
+            <td></td>
+        </tr>
+        <tr>
+            <td>Technical Lead</td>
+            <td></td>
+            <td></td>
+            <td></td>
+        </tr>
+        <tr>
+            <td>Quality Assurance</td>
+            <td></td>
+            <td></td>
+            <td></td>
+        </tr>
+        <tr>
+            <td>System Administrator</td>
+            <td></td>
+            <td></td>
+            <td></td>
+        </tr>
+    </table>
+</body>
+</html>

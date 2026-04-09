@@ -7,6 +7,7 @@
  */
 
 import { supabase } from "@/integrations/supabase/client";
+import { logger } from "@/lib/logger";
 
 // ============================================================================
 // INTERFACES & TYPES
@@ -156,7 +157,7 @@ export class MikrotikAPIClient {
       this.connected = true;
       return { success: true, message: 'Connected to Mikrotik router' };
     } catch (error: any) {
-      console.error('Failed to connect to Mikrotik:', error);
+      logger.error('Failed to connect to Mikrotik:', error);
       return { 
         success: false, 
         error: error.message || 'Failed to connect to router' 
@@ -233,7 +234,7 @@ export class MikrotikAPIClient {
         }
       };
     } catch (error: any) {
-      console.error('Failed to get system info:', error);
+      logger.error('Failed to get system info:', error);
       return { 
         success: false, 
         error: error.message || 'Failed to fetch system information' 
@@ -281,7 +282,7 @@ export class MikrotikAPIClient {
         data: interfaces
       };
     } catch (error: any) {
-      console.error('Failed to get interfaces:', error);
+      logger.error('Failed to get interfaces:', error);
       return { 
         success: false, 
         error: error.message || 'Failed to fetch interface information' 
@@ -367,7 +368,7 @@ export class MikrotikAPIClient {
         }
       };
     } catch (error: any) {
-      console.error('Failed to get wireless info:', error);
+      logger.error('Failed to get wireless info:', error);
       return { 
         success: false, 
         error: error.message || 'Failed to fetch wireless information' 
@@ -400,7 +401,7 @@ export class MikrotikAPIClient {
         data: wirelessInfos
       };
     } catch (error: any) {
-      console.error('Failed to get all wireless interfaces:', error);
+      logger.error('Failed to get all wireless interfaces:', error);
       return { 
         success: false, 
         error: error.message || 'Failed to fetch wireless interfaces' 
@@ -441,7 +442,7 @@ export class MikrotikAPIClient {
         data: poeInfo
       };
     } catch (error: any) {
-      console.error('Failed to get PoE info:', error);
+      logger.error('Failed to get PoE info:', error);
       return { 
         success: false, 
         error: error.message || 'Failed to fetch PoE information' 
@@ -485,7 +486,7 @@ export class MikrotikAPIClient {
         }
       };
     } catch (error: any) {
-      console.error('Failed to get resources:', error);
+      logger.error('Failed to get resources:', error);
       return { 
         success: false, 
         error: error.message || 'Failed to fetch resource information' 
@@ -514,7 +515,7 @@ export class MikrotikAPIClient {
         message: 'Command executed successfully'
       };
     } catch (error: any) {
-      console.error('Failed to execute command:', error);
+      logger.error('Failed to execute command:', error);
       return { 
         success: false, 
         error: error.message || 'Failed to execute command' 
@@ -587,7 +588,7 @@ export class MikrotikAPIClient {
         message: 'Wireless configuration applied successfully'
       };
     } catch (error: any) {
-      console.error('Failed to apply wireless config:', error);
+      logger.error('Failed to apply wireless config:', error);
       return { 
         success: false, 
         error: error.message || 'Failed to apply wireless configuration' 
@@ -626,7 +627,7 @@ export class MikrotikAPIClient {
         message: 'Ethernet configuration applied successfully'
       };
     } catch (error: any) {
-      console.error('Failed to apply ethernet config:', error);
+      logger.error('Failed to apply ethernet config:', error);
       return { 
         success: false, 
         error: error.message || 'Failed to apply ethernet configuration' 
@@ -664,7 +665,7 @@ export class MikrotikAPIClient {
         data: response.data?.result || []
       };
     } catch (error: any) {
-      console.error('Failed to send command:', error);
+      logger.error('Failed to send command:', error);
       return { 
         success: false, 
         error: error.message || 'Failed to send command' 
@@ -764,7 +765,7 @@ export async function fetchMikrotikDeviceInfo(mikrotik: {
       resources: resources.success ? resources.data : undefined
     };
   } catch (error: any) {
-    console.error('Failed to fetch device info:', error);
+    logger.error('Failed to fetch device info:', error);
     return { error: error.message || 'Failed to fetch device information' };
   }
 }
